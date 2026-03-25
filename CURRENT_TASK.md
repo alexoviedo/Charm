@@ -1,64 +1,87 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-001
-- Title: Establish and approve initial repo control scaffolding
+- ID: CT-002
+- Title: Complete contract-first implementation boundary definition
 - Status: active
 
 ## Goal
-Create the initial contents for the repo control files so future work is bounded by stable architecture, explicit decisions, clear interfaces, and validation gates.
+Define the complete implementation boundary before any logic is written.
 
 ## In Scope
-- ARCHITECTURE.md
-- MEMORY.md
-- TODO.md
-- CURRENT_TASK.md
-- DECISIONS.md
-- INTERFACES.md
-- VALIDATION.md
-- CHANGELOG_AI.md
+- Contract inventory grouped by module
+- Dependency map
+- Risk map
+- Contract approval gate
+- Documentation-only updates to repo control files
 
 ## Out Of Scope
 - Application code
-- Implementation logic
 - Tests
-- Refactors
-- Dependency changes
+- Pseudocode
+- Algorithms
+- File layout refactors
 - Runtime behavior changes
+- Dependency changes
 
 ## Assumptions
-- The provided architecture document is the current source of truth.
-- These files are control artifacts, not product documentation.
-- Repo process must be established before implementation begins.
+- The merged repo control scaffolding on `main` is authoritative.
+- The architecture document remains the source of stable system truth.
+- This slice is documentation-only and contract-first.
 
 ## Dependencies
-- Approved architecture handoff
-- Tech Lead approval of initial control-file contents
-
-## Risks
-- Accidentally storing unstable or speculative content as permanent truth
-- Mixing architecture with unresolved decisions
-- Allowing task scope to drift into implementation planning
+- ARCHITECTURE.md
+- MEMORY.md
+- DECISIONS.md
+- INTERFACES.md
+- TODO.md
+- Tech Lead review of this contract pass
 
 ## Touched Files
-- ARCHITECTURE.md — stable architectural truth
-- MEMORY.md — persistent facts and constraints
-- TODO.md — prioritized micro-backlog
-- CURRENT_TASK.md — single active task
-- DECISIONS.md — accepted/rejected/unresolved decisions
-- INTERFACES.md — high-level boundaries and contracts
-- VALIDATION.md — slice validation policy
-- CHANGELOG_AI.md — plain-English AI change history
+- INTERFACES.md — add complete contract inventory, dependency map, and boundary-level error categories
+- VALIDATION.md — add CONTRACT APPROVAL GATE
+- TODO.md — reflect contract-pass backlog state
+- CURRENT_TASK.md — switch to the active contract-first slice
+- CHANGELOG_AI.md — record AI-made documentation changes
+
+## Risk Map
+
+### Likely Regression Points
+- Stable HID identity drifting from semantic identity to parser-local numbering
+- Mapping/transport coupling re-entering through profile-specific state fields
+- USB callback responsibilities expanding into teardown or business logic
+- Control-plane events becoming mixed with raw data-plane ownership
+- Persistence contracts accidentally capturing transient runtime handles
+- Adapter-native SDK types leaking into shared/core contracts
+- Supervisor absorbing mapping, parsing, or packing responsibilities
+- Durable schema decisions being implied before explicit approval
+
+### Likely Ambiguity Points
+- Canonical BLE adapter scope
+- Initial supported output profile set
+- Config compiler placement
+- Queue depth and memory-budget decisions
+- Interface claim policy specifics
+- Runtime task-model specifics
+- Exact normalization surface for canonical logical gamepad state
+- Exact persistence versioning and integrity metadata
+
+### Likely AI Overreach Points
+- Writing implementation types and logic while defining contracts
+- Inventing concrete schema fields that require unresolved decisions
+- Defining adapter internals instead of adapter boundaries
+- Collapsing multiple future implementation slices into one “starter framework”
+- Adding tests, stubs, or pseudocode not requested in this pass
+- Backfilling architecture changes that were not approved
+- Touching product docs or repo layout without explicit authorization
 
 ## Acceptance Gates
-- Exactly one active task is present
-- No application code is introduced
-- No implementation logic is defined
-- Architecture file contains only stable truth
-- Decisions and unresolved items are separated cleanly
-- Interfaces remain high-level and contract-only
-- Validation defines approval gates before implementation
-- Changelog describes AI-made documentation changes in plain English
+- Contract inventory is grouped by module and complete at the boundary level
+- Dependency map lists allowed dependencies, forbidden dependencies, and isolation boundaries
+- Risk map captures regression, ambiguity, and AI-overreach risks
+- VALIDATION.md contains a CONTRACT APPROVAL GATE
+- No application code, tests, pseudocode, or algorithms are introduced
+- Exactly one active task remains in this file
 
 ## Stop Condition
-Stop after the initial control-file contents are proposed and await Tech Lead review/approval.
+Stop after the contract-first pass is documented and submitted as a PR against `main`.

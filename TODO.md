@@ -14,24 +14,28 @@ Each item must be small, reviewable, and separable.
 
 | ID | Priority | Status | Task | Depends On | Notes |
 |---|---|---:|---|---|---|
-| T-001 | P0 | ready | Review and approve initial repo control files | none | Current active slice is tracked in CURRENT_TASK.md |
-| T-002 | P0 | queued | Normalize stable architecture into repo-approved ARCHITECTURE.md wording | T-001 | No behavior changes |
-| T-003 | P0 | queued | Approve persistent project memory content and exclusions | T-001 | MEMORY.md only |
-| T-004 | P0 | queued | Approve project execution policy and slice workflow | T-001 | DECISIONS.md + VALIDATION.md alignment |
-| T-005 | P1 | queued | Finalize unresolved BLE adapter scope decision | T-001 | NimBLE vs Bluedroid vs both |
-| T-006 | P1 | queued | Finalize initial output profile scope decision | T-001 | Select initial supported profile set |
-| T-007 | P1 | queued | Decide config compiler placement | T-001 | On-device, web companion, or both |
-| T-008 | P1 | queued | Define control-plane event catalog contract | T-001 | INTERFACES.md update only |
-| T-009 | P1 | queued | Define USB host port contract details | T-001 | Interface-only slice |
-| T-010 | P1 | queued | Define BLE transport port contract details | T-001 | Interface-only slice |
-| T-011 | P1 | queued | Define config store contract and persistence metadata | T-001 | Interface-only slice |
-| T-012 | P1 | queued | Define time port contract and timing assumptions | T-001 | Interface-only slice |
-| T-013 | P1 | queued | Define canonical logical state surface and invariants | T-001 | Interface-only slice |
-| T-014 | P1 | queued | Define stable HID identity schema and persistence invariants | T-001 | Interface-only slice |
-| T-015 | P1 | queued | Define validation plan for first implementation slice | T-001 | VALIDATION.md first, code later |
-| T-016 | P2 | queued | Select the first implementation slice after contracts are approved | T-005,T-006,T-008,T-009,T-010,T-011,T-012,T-013,T-014,T-015 | Must stay narrowly scoped |
+| T-001 | P0 | done | Review and approve initial repo control files | none | Merged in PR #1 |
+| T-002 | P0 | done | Normalize stable architecture into repo-approved ARCHITECTURE.md wording | T-001 | Completed by merged control scaffolding |
+| T-003 | P0 | done | Approve persistent project memory content and exclusions | T-001 | Completed by merged control scaffolding |
+| T-004 | P0 | done | Approve project execution policy and slice workflow | T-001 | Completed by merged control scaffolding |
+| T-005 | P0 | queued | Finalize unresolved BLE adapter scope decision | T-004 | NimBLE vs Bluedroid vs both |
+| T-006 | P0 | queued | Finalize initial output profile scope decision | T-004 | Select initial supported profile set |
+| T-007 | P0 | queued | Decide config compiler placement | T-004 | On-device, companion web app, or both |
+| T-008 | P0 | done | Define complete contract inventory grouped by module | T-004 | Captured in INTERFACES.md in this PR |
+| T-009 | P0 | done | Define dependency map and forbidden dependency rules | T-008 | Captured in INTERFACES.md in this PR |
+| T-010 | P0 | done | Define boundary-level error categories | T-008 | Captured in INTERFACES.md in this PR |
+| T-011 | P0 | done | Define contract approval gate before implementation | T-008,T-009,T-010 | Captured in VALIDATION.md in this PR |
+| T-012 | P1 | ready | Approve contract inventory, dependency map, and contract gate | T-005,T-006,T-007,T-008,T-009,T-010,T-011 | No implementation before this approval |
+| T-013 | P1 | blocked | Select first implementation slice | T-012 | Must remain narrow and contract-scoped |
+| T-014 | P1 | blocked | Define file-level touch list for first implementation slice | T-013 | No code before this is approved |
+| T-015 | P1 | blocked | Define validation evidence for first implementation slice | T-013 | Validation-first before code |
+| T-016 | P1 | blocked | Implement first approved slice | T-014,T-015 | No broad refactors |
+| T-017 | P2 | queued | Finalize queue sizes and memory budget | T-012 | Needed before performance-sensitive implementation |
+| T-018 | P2 | queued | Finalize persistence schema/version/integrity details | T-012 | Needed before config-store implementation |
+| T-019 | P2 | queued | Finalize interface claim policy details | T-012 | Needed before USB-host adapter implementation |
+| T-020 | P2 | queued | Finalize runtime task model | T-012 | Must preserve architecture boundaries |
 
 ## Backlog Rules
-- No backlog item may combine unrelated concerns.
+- No backlog item may combine unrelated concerns unless the Tech Lead explicitly asks for a combined documentation pass.
 - If an item cannot be completed safely in one slice, split it.
 - No implementation item moves to ready until contracts and validation are approved.

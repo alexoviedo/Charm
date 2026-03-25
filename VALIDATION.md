@@ -33,12 +33,16 @@ Use for:
 - event shapes
 - schema boundaries
 - invariants
+- dependency rules
+- error categories
 
 Required checks:
 - no platform leakage into core contracts
 - no transport/translation coupling
 - invariants stated clearly
 - unresolved items called out explicitly
+- allowed and forbidden dependency rules are explicit
+- persistence boundaries are stated without inventing backend details
 
 ### V2 — Unit Validation Slice
 Use for:
@@ -77,6 +81,46 @@ Required checks:
 - actual outcome recorded
 - regressions and anomalies captured
 
+## CONTRACT APPROVAL GATE
+Implementation must not begin until all items below are explicitly approved or explicitly deferred.
+
+### Architecture Alignment
+- ARCHITECTURE.md and INTERFACES.md do not conflict
+- No stable architecture truth has been replaced with implementation detail
+- Unresolved architecture choices remain unresolved in DECISIONS.md unless explicitly decided
+
+### Contract Inventory Approval
+- Each major module has an approved public interface boundary
+- Shared data contracts are approved
+- Request/response shapes are approved at boundary level
+- Event/message shapes are approved at boundary level
+- Persistence boundaries are approved
+- External adapter boundaries are approved
+- Boundary-level error categories are approved
+- Cross-cutting invariants are approved
+
+### Dependency Approval
+- Allowed module dependencies are approved
+- Forbidden module dependencies are approved
+- Required isolation boundaries are approved
+
+### Decision / Ambiguity Approval
+- Required pre-implementation decisions are either:
+  - explicitly decided, or
+  - explicitly deferred with no blocking impact on the first slice
+- The first slice does not silently assume unresolved decisions
+
+### Slice Readiness Approval
+- CURRENT_TASK.md reflects exactly one active slice
+- TODO.md identifies the next implementation slice as a narrow task
+- Touched files for the first implementation slice are listed before coding
+- Validation evidence required for the first implementation slice is defined before coding
+
+### Scope-Control Approval
+- No unrelated concerns have been merged into the first implementation slice
+- No broad refactor is implied by the first implementation slice
+- No product documentation work is mixed into the first implementation slice
+
 ## Required Evidence Per Slice
 Every completed slice must record:
 - slice id/title
@@ -105,13 +149,14 @@ Stop and split the task if any of these occur:
 - unresolved architecture decisions block safe progress
 
 ## Current Default For This Slice
-Current slice type: V0 — Documentation / Control Slice
+Current slice type: V1 — Contract / Interface Slice
 
 Current acceptance checks:
-- eight repo control files defined
+- contract inventory is complete at the module boundary level
+- dependency map is explicit
+- boundary-level error categories are explicit
+- CONTRACT APPROVAL GATE is present
 - no application code
 - no tests
+- no pseudocode
 - no implementation logic
-- architecture captured as stable truth only
-- decisions separated into accepted/rejected/unresolved
-- interfaces remain high-level and contract-only

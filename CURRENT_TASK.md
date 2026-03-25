@@ -1,87 +1,65 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-002
-- Title: Complete contract-first implementation boundary definition
+- ID: CT-003
+- Title: S-001 — Shared core contract code foundation
 - Status: active
 
 ## Goal
-Define the complete implementation boundary before any logic is written.
+Create the minimal code-bearing foundation required to start implementation without introducing any runtime behavior.
 
 ## In Scope
-- Contract inventory grouped by module
-- Dependency map
-- Risk map
-- Contract approval gate
-- Documentation-only updates to repo control files
+- minimal build/module scaffold required to host shared contract code
+- shared scalar contract definitions
+- shared identity contract definitions
+- shared status and error contract definitions
 
 ## Out Of Scope
-- Application code
-- Tests
-- Pseudocode
-- Algorithms
-- File layout refactors
-- Runtime behavior changes
-- Dependency changes
+- request/response shapes
+- event/message contracts
+- port declarations
+- supervisor, registry, parser, decoder, mapping, profile, compiler, or adapter logic
+- app bootstrap or wiring
+- tests unless absolutely required for the scaffold to compile
+- runtime behavior changes
 
 ## Assumptions
-- The merged repo control scaffolding on `main` is authoritative.
-- The architecture document remains the source of stable system truth.
-- This slice is documentation-only and contract-first.
+- `IMPLEMENTATION_SLICES.md` is the approved slice plan.
+- The first code slice should have the lowest rollback cost and no dependency on unresolved decisions.
+- Minimal build/module scaffold is acceptable here because the repo currently has no approved code layout.
 
 ## Dependencies
-- ARCHITECTURE.md
-- MEMORY.md
-- DECISIONS.md
-- INTERFACES.md
-- TODO.md
-- Tech Lead review of this contract pass
+- merged implementation-slice planning PR
+- `INTERFACES.md`
+- `VALIDATION.md`
+- `MEMORY.md`
+- no unresolved architecture decision blocks S-001
 
-## Touched Files
-- INTERFACES.md — add complete contract inventory, dependency map, and boundary-level error categories
-- VALIDATION.md — add CONTRACT APPROVAL GATE
-- TODO.md — reflect contract-pass backlog state
-- CURRENT_TASK.md — switch to the active contract-first slice
-- CHANGELOG_AI.md — record AI-made documentation changes
+## Touched Files Likely
+- `CMakeLists.txt`
+- `main/CMakeLists.txt`
+- `components/charm_contracts/CMakeLists.txt`
+- `components/charm_contracts/include/charm/contracts/common_types.hpp`
+- `components/charm_contracts/include/charm/contracts/identity_types.hpp`
+- `components/charm_contracts/include/charm/contracts/status_types.hpp`
+- `components/charm_contracts/include/charm/contracts/error_types.hpp`
+- `CURRENT_TASK.md`
+- `TODO.md`
+- `CHANGELOG_AI.md`
 
-## Risk Map
-
-### Likely Regression Points
-- Stable HID identity drifting from semantic identity to parser-local numbering
-- Mapping/transport coupling re-entering through profile-specific state fields
-- USB callback responsibilities expanding into teardown or business logic
-- Control-plane events becoming mixed with raw data-plane ownership
-- Persistence contracts accidentally capturing transient runtime handles
-- Adapter-native SDK types leaking into shared/core contracts
-- Supervisor absorbing mapping, parsing, or packing responsibilities
-- Durable schema decisions being implied before explicit approval
-
-### Likely Ambiguity Points
-- Canonical BLE adapter scope
-- Initial supported output profile set
-- Config compiler placement
-- Queue depth and memory-budget decisions
-- Interface claim policy specifics
-- Runtime task-model specifics
-- Exact normalization surface for canonical logical gamepad state
-- Exact persistence versioning and integrity metadata
-
-### Likely AI Overreach Points
-- Writing implementation types and logic while defining contracts
-- Inventing concrete schema fields that require unresolved decisions
-- Defining adapter internals instead of adapter boundaries
-- Collapsing multiple future implementation slices into one “starter framework”
-- Adding tests, stubs, or pseudocode not requested in this pass
-- Backfilling architecture changes that were not approved
-- Touching product docs or repo layout without explicit authorization
+## Risks
+- the scaffold expands into thin app wiring or other non-contract concerns
+- platform-native SDK types leak into shared contract headers
+- the slice grows to include requests/events/ports before S-001 is reviewed
+- extra files are touched without explicit justification
 
 ## Acceptance Gates
-- Contract inventory is grouped by module and complete at the boundary level
-- Dependency map lists allowed dependencies, forbidden dependencies, and isolation boundaries
-- Risk map captures regression, ambiguity, and AI-overreach risks
-- VALIDATION.md contains a CONTRACT APPROVAL GATE
-- No application code, tests, pseudocode, or algorithms are introduced
-- Exactly one active task remains in this file
+- only the files required for S-001 are touched
+- shared contract headers compile
+- no runtime behavior is introduced
+- no request/event/port/core-module/adaptor logic is introduced
+- validation is compile-only plus include-path sanity checks
+- rollback remains low-cost
 
 ## Stop Condition
-Stop after the contract-first pass is documented and submitted as a PR against `main`.
+Stop after S-001 is implemented and submitted as a PR against `main`.

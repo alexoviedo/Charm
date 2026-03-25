@@ -10,7 +10,7 @@ Each item must be small, reviewable, and separable.
 - blocked
 - done
 
-## Backlog
+## Decision Backlog
 
 | ID | Priority | Status | Task | Depends On | Notes |
 |---|---|---:|---|---|---|
@@ -21,21 +21,44 @@ Each item must be small, reviewable, and separable.
 | T-005 | P0 | queued | Finalize unresolved BLE adapter scope decision | T-004 | NimBLE vs Bluedroid vs both |
 | T-006 | P0 | queued | Finalize initial output profile scope decision | T-004 | Select initial supported profile set |
 | T-007 | P0 | queued | Decide config compiler placement | T-004 | On-device, companion web app, or both |
-| T-008 | P0 | done | Define complete contract inventory grouped by module | T-004 | Captured in INTERFACES.md in this PR |
-| T-009 | P0 | done | Define dependency map and forbidden dependency rules | T-008 | Captured in INTERFACES.md in this PR |
-| T-010 | P0 | done | Define boundary-level error categories | T-008 | Captured in INTERFACES.md in this PR |
-| T-011 | P0 | done | Define contract approval gate before implementation | T-008,T-009,T-010 | Captured in VALIDATION.md in this PR |
-| T-012 | P1 | ready | Approve contract inventory, dependency map, and contract gate | T-005,T-006,T-007,T-008,T-009,T-010,T-011 | No implementation before this approval |
-| T-013 | P1 | blocked | Select first implementation slice | T-012 | Must remain narrow and contract-scoped |
-| T-014 | P1 | blocked | Define file-level touch list for first implementation slice | T-013 | No code before this is approved |
-| T-015 | P1 | blocked | Define validation evidence for first implementation slice | T-013 | Validation-first before code |
-| T-016 | P1 | blocked | Implement first approved slice | T-014,T-015 | No broad refactors |
-| T-017 | P2 | queued | Finalize queue sizes and memory budget | T-012 | Needed before performance-sensitive implementation |
-| T-018 | P2 | queued | Finalize persistence schema/version/integrity details | T-012 | Needed before config-store implementation |
-| T-019 | P2 | queued | Finalize interface claim policy details | T-012 | Needed before USB-host adapter implementation |
-| T-020 | P2 | queued | Finalize runtime task model | T-012 | Must preserve architecture boundaries |
+| T-008 | P0 | done | Define complete contract inventory grouped by module | T-004 | Captured in INTERFACES.md |
+| T-009 | P0 | done | Define dependency map and forbidden dependency rules | T-008 | Captured in INTERFACES.md |
+| T-010 | P0 | done | Define boundary-level error categories | T-008 | Captured in INTERFACES.md |
+| T-011 | P0 | done | Define contract approval gate before implementation | T-008,T-009,T-010 | Captured in VALIDATION.md |
+| T-012 | P0 | done | Approve contract inventory, dependency map, and contract gate | T-005,T-006,T-007,T-008,T-009,T-010,T-011 | Merged in PR #2 |
+| T-013 | P0 | done | Plan implementation slices and select the first slice | T-012 | Captured in IMPLEMENTATION_SLICES.md |
+
+## Implementation Slice Queue
+
+| Order | Slice | Priority | Status | Depends On | Notes |
+|---|---|---:|---:|---|---|
+| 1 | S-001 | P0 | ready | T-013 | Shared core contract code foundation |
+| 2 | S-002 | P0 | queued | S-001 | Shared request/response and event/message contract code |
+| 3 | S-003 | P0 | queued | S-001,S-002 | Port interface declarations |
+| 4 | S-004 | P0 | queued | S-001,S-002,S-003 | Supervisor, control-plane, and registry interface declarations |
+| 5 | S-005 | P0 | queued | S-001,S-002 | Parser, decode-plan, and decoder interface declarations |
+| 6 | S-006 | P0 | queued | S-001,S-002,S-003 | Logical state, mapping, profile, and config-compiler interface declarations |
+| 7 | S-007 | P0 | queued | S-003,S-004,S-005,S-006 | Test-support foundation for pure-core modules |
+| 8 | S-008 | P1 | queued | S-004,S-007 | Device registry implementation |
+| 9 | S-009 | P1 | queued | S-005,S-007 | HID semantic descriptor model implementation |
+| 10 | S-010 | P1 | queued | S-009,S-007 | Decode-plan builder implementation |
+| 11 | S-011 | P1 | queued | S-010,S-007 | HID report decoder implementation |
+| 12 | S-012 | P1 | queued | S-006,S-007 | Logical gamepad state container implementation |
+| 13 | S-013 | P1 | queued | S-006,S-007 | Mapping bundle validator/loader implementation |
+| 14 | S-014 | P1 | queued | S-012,S-013,S-007 | Mapping engine base implementation |
+| 15 | S-015 | P1 | blocked | S-012,U-002 | Profile catalog and first output encoder implementation |
+| 16 | S-016 | P1 | queued | S-004,S-013,S-014 | Supervisor state machine implementation |
+| 17 | S-017 | P1 | queued | S-003 | Platform time adapter implementation |
+| 18 | S-018 | P1 | blocked | S-003,U-006 | Config-store adapter implementation |
+| 19 | S-019 | P1 | blocked | S-003,U-007 | USB host adapter implementation |
+| 20 | S-020 | P1 | blocked | S-003,U-001 | BLE transport adapter implementation |
+| 21 | S-021 | P1 | blocked | S-015,S-016,S-017,S-019,S-020 | Thin app bootstrap and run-mode wiring |
+| 22 | S-022 | P1 | blocked | S-013,S-016,S-018,U-003,U-006 | Config activation and persistence flow integration |
+| 23 | S-023 | P1 | blocked | S-016,S-021 | Recovery and fault integration |
+| 24 | S-024 | P2 | blocked | S-021,S-023 | Manual hardware validation pass |
 
 ## Backlog Rules
 - No backlog item may combine unrelated concerns unless the Tech Lead explicitly asks for a combined documentation pass.
 - If an item cannot be completed safely in one slice, split it.
 - No implementation item moves to ready until contracts and validation are approved.
+- The detailed per-slice plan lives in `IMPLEMENTATION_SLICES.md`.

@@ -10,9 +10,10 @@ Store durable facts, constraints, and working rules that should survive session 
 3. DECISIONS.md
 4. INTERFACES.md
 5. CURRENT_TASK.md
-6. TODO.md
-7. VALIDATION.md
-8. CHANGELOG_AI.md
+6. IMPLEMENTATION_SLICES.md
+7. TODO.md
+8. VALIDATION.md
+9. CHANGELOG_AI.md
 
 ## Project Constraints
 - This repo is controlled by architecture-first development.
@@ -21,6 +22,7 @@ Store durable facts, constraints, and working rules that should survive session 
 - Validation criteria are defined before implementation.
 - Broad refactors require explicit Tech Lead approval.
 - Repo Markdown control files are persistent project memory.
+- Implementation slice planning is stored in `IMPLEMENTATION_SLICES.md`.
 
 ## Core Architectural Facts
 - Platform-agnostic core is mandatory.

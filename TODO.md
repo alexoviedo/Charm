@@ -49,8 +49,8 @@ Each item must be small, reviewable, and separable.
 | 15 | S-015 | P1 | done | S-012,U-002 | Profile catalog and first output encoder implementation |
 | 16 | S-016 | P1 | done | S-004,S-013,S-014 | Supervisor state machine implementation |
 | 17 | S-017 | P1 | done | S-003 | Platform time adapter implementation |
-| 18 | S-018 | P1 | blocked | S-003,U-006 | Config-store adapter implementation |
-| 19 | S-019 | P1 | blocked | S-003,U-007 | USB host adapter implementation |
+| 18 | S-018 | P1 | done | S-003,U-006 | Config-store adapter implementation |
+| 19 | S-019 | P1 | ready | S-003,U-007 | USB host adapter implementation |
 | 20 | S-020 | P1 | blocked | S-003,U-001 | BLE transport adapter implementation |
 | 21 | S-021 | P1 | blocked | S-015,S-016,S-017,S-019,S-020 | Thin app bootstrap and run-mode wiring |
 | 22 | S-022 | P1 | blocked | S-013,S-016,S-018,U-003,U-006 | Config activation and persistence flow integration |

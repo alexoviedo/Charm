@@ -12,6 +12,9 @@
 #include "charm/ports/time_port.hpp"
 #include "charm/ports/usb_host_port.hpp"
 #include "charm/core/control_plane.hpp"
+#include "charm/core/decode_plan.hpp"
+#include "charm/core/hid_decoder.hpp"
+#include "charm/core/hid_semantic_model.hpp"
 #include "charm/core/device_registry.hpp"
 #include "charm/core/supervisor.hpp"
 

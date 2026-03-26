@@ -268,3 +268,76 @@ Validation:
 - Checked the declarations against `INTERFACES.md`
 - Checked that no platform SDK types leaked into the core headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-005 — Parser, decode-plan, and decoder interface declarations.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_semantic_model.hpp
+- components/charm_core/include/charm/core/decode_plan.hpp
+- components/charm_core/include/charm/core/hid_decoder.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared parser-facing semantic HID descriptor model contracts and parse request/result shapes
+- Declared decode-plan input/build/result contracts and decode binding plan structures
+- Declared HID decoder request/result contracts and pure interface boundary
+- Updated include-path sanity wiring in `main/main.cpp` for the new S-005 headers
+- Updated project-control files for the active S-005 slice
+
+What did not change:
+- No parser implementation
+- No decode-plan builder implementation
+- No decoder implementation
+- No adapters
+- No mapping/profile/config/compiler/app logic
+- No tests
+- No runtime behavior
+
+Why:
+- To establish parser/decode/decoder boundary contracts required for subsequent pure-core implementation slices while preserving strict contract-first progression
+
+Validation:
+- Checked declarations against `INTERFACES.md` parser and decoder boundaries
+- Checked that no platform SDK types leaked into new core headers
+- Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-007 — Test-support foundation for pure-core modules.
+
+Files covered:
+- components/charm_test_support/CMakeLists.txt
+- components/charm_test_support/include/charm/test_support/fake_time_port.hpp
+- components/charm_test_support/include/charm/test_support/fake_config_store_port.hpp
+- components/charm_test_support/include/charm/test_support/fake_usb_host_port.hpp
+- components/charm_test_support/include/charm/test_support/fake_ble_transport_port.hpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added header-only `charm_test_support` component registration
+- Added fake port contracts for time, config-store, USB-host, and BLE-transport boundaries
+- Added `tests/unit/CMakeLists.txt` placeholder for future unit-target wiring
+- Updated project-control files for the active S-007 slice
+
+What did not change:
+- No production runtime behavior
+- No adapter implementations
+- No pure-core behavior implementation
+- No hardware/integration tests
+
+Why:
+- To provide minimal reusable fake adapters required by upcoming unit-validation slices without introducing production coupling
+
+Validation:
+- Checked fake port declarations against existing S-003 port interfaces
+- Performed compile-only include-path sanity checks for test-support headers

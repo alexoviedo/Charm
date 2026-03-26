@@ -414,3 +414,38 @@ Why:
 
 Validation:
 - V2 standalone unit testing: generated and executed successfully with capacity rejection testing and hashing deduplication verified.
+
+---
+
+## 2026-03-26
+Executed Slice S-011 — HID report decoder implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_decoder.hpp
+- components/charm_core/src/hid_decoder.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_hid_decoder.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `DefaultHidDecoder` concrete class inheriting from `HidDecoder` interface.
+- Implemented `DecodeReport` using a pre-allocated static array to bound memory allocations correctly and stay out of the heap for constant time execution.
+- Extracted bits safely across byte boundaries supporting both signed and unsigned 8, 12, 16, etc bit fields.
+- Verified expected capacities matching max decode bindings to prevent out-of-bounds mapping issues.
+- Integrated `test_hid_decoder` in the unit testing harness and ensured 100% test coverage for boundaries, misconfigurations, sizes and signed extensions.
+- Addressed project-control state to mark S-011 as done and prime S-012.
+
+What did not change:
+- No mapping or profile behavior.
+- No logical gamepad state container logic.
+- No BLE integration or device registries modification.
+- Transport-dependent packaging.
+
+Why:
+- To implement canonical data-plane decoding bridging raw USB bytes into structured events according to the defined decode plan generated in S-010.
+
+Validation:
+- Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_hid_decoder` standalone execution covering mismatch lengths, missed plan, valid decodes and out of bounds parsing.

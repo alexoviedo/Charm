@@ -268,3 +268,41 @@ Validation:
 - Checked the declarations against `INTERFACES.md`
 - Checked that no platform SDK types leaked into the core headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-005 — Parser, decode-plan, and decoder interface declarations.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_semantic_model.hpp
+- components/charm_core/include/charm/core/decode_plan.hpp
+- components/charm_core/include/charm/core/hid_decoder.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared parser-facing semantic HID descriptor model contracts and parse request/result shapes
+- Declared decode-plan input/build/result contracts and decode binding plan structures
+- Declared HID decoder request/result contracts and pure interface boundary
+- Updated include-path sanity wiring in `main/main.cpp` for the new S-005 headers
+- Updated project-control files for the active S-005 slice
+
+What did not change:
+- No parser implementation
+- No decode-plan builder implementation
+- No decoder implementation
+- No adapters
+- No mapping/profile/config/compiler/app logic
+- No tests
+- No runtime behavior
+
+Why:
+- To establish parser/decode/decoder boundary contracts required for subsequent pure-core implementation slices while preserving strict contract-first progression
+
+Validation:
+- Checked declarations against `INTERFACES.md` parser and decoder boundaries
+- Checked that no platform SDK types leaked into new core headers
+- Prepared compile-only and include-path sanity validation for PR review

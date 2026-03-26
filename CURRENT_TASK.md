@@ -1,76 +1,76 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-005
-- Title: S-003 — Port interface declarations
+- ID: CT-006
+- Title: S-004 — Supervisor, control-plane, and registry interface declarations
 - Status: active
 
 ## Goal
-Declare the four external port interfaces and the minimal boundary types they require, without introducing any runtime behavior.
+Declare the supervisor, control-plane, and device-registry interfaces and the minimal support contracts they require, without introducing any runtime behavior.
 
 ## In Scope
-- USB host port declarations
-- BLE transport port declarations
-- config store port declarations
-- time port declarations
-- minimal shared support contracts required to declare those ports cleanly
+- supervisor interface declarations
+- control-plane interface declarations
+- device-registry interface declarations
+- minimal shared support contracts required to declare those interfaces cleanly
 - compile/include sanity wiring in `main`
 
 ## Out Of Scope
-- adapter implementations
-- supervisor, registry, parser, decoder, mapping, profile, compiler, or app logic
+- implementations
+- adapters
+- parser, decoder, mapping, profile, compiler, or app logic
 - tests unless absolutely required for compile validation
 - runtime behavior changes
-- refactors of S-001 or S-002 beyond include/dependency sanity wiring
+- refactors outside the minimum include/dependency wiring for validation
 
 ## Assumptions
-- S-001 and S-002 are merged on `main` and form the dependency base for this slice.
-- `RawDescriptorRef` and `EncodedInputReport` are required support contracts for clean port declarations and can be introduced as a small shared support header in this slice.
-- Port-specific boundary types may be co-located with their port headers in this slice to avoid widening the scope into unrelated modules.
+- S-001, S-002, and S-003 are merged on `main` and form the dependency base for this slice.
+- `ActiveProfileRef`, `ActiveMappingBundleRef`, `FaultRecordRef`, `DecodePlanRef`, and `RegistryEntry` are required support contracts for clean S-004 declarations and can be introduced in one small shared support header.
+- `ModeState` and `RecoveryState` can be defined concretely in this slice because they are supervisor-owned state contracts already referenced opaquely from S-002.
 
 ## Dependencies
 - merged S-001 PR
 - merged S-002 PR
+- merged S-003 PR
 - `INTERFACES.md`
 - `VALIDATION.md`
 - `MEMORY.md`
-- no unresolved architecture decision blocks S-003
+- no unresolved architecture decision blocks S-004
 
 ## Touched Files
-- `components/charm_contracts/include/charm/contracts/transport_types.hpp` — minimal shared support contracts for ports
-- `components/charm_ports/CMakeLists.txt` — header-only `charm_ports` component registration
-- `components/charm_ports/include/charm/ports/usb_host_port.hpp` — USB host port declarations and boundary types
-- `components/charm_ports/include/charm/ports/ble_transport_port.hpp` — BLE transport port declarations and boundary types
-- `components/charm_ports/include/charm/ports/config_store_port.hpp` — config store port declarations and boundary types
-- `components/charm_ports/include/charm/ports/time_port.hpp` — time port declarations and boundary types
-- `main/CMakeLists.txt` — add `charm_ports` dependency for compile/include sanity only
-- `main/main.cpp` — include new port headers for sanity only
+- `components/charm_contracts/include/charm/contracts/registry_types.hpp` — minimal shared support contracts for S-004
+- `components/charm_core/CMakeLists.txt` — header-only `charm_core` component registration
+- `components/charm_core/include/charm/core/supervisor.hpp` — supervisor declarations and boundary types
+- `components/charm_core/include/charm/core/control_plane.hpp` — control-plane declarations
+- `components/charm_core/include/charm/core/device_registry.hpp` — registry declarations and request/result shapes
+- `main/CMakeLists.txt` — add `charm_core` dependency for compile/include sanity only
+- `main/main.cpp` — include new core headers for sanity only
 - `CURRENT_TASK.md` — active slice update and actual validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-002/S-003
-- `CHANGELOG_AI.md` — change log entry for S-003
+- `TODO.md` — implementation queue bookkeeping for S-003/S-004
+- `CHANGELOG_AI.md` — change log entry for S-004
 
 ## Risks
-- port-local boundary types could tempt later slices to backfill too much behavior into the port headers
-- port headers could accidentally leak platform-native SDK types if later edits are not disciplined
-- the slice could expand into adapter implementation work if not kept narrow
+- support contracts added for S-004 could tempt later slices to mix interface declaration work with implementation work
+- `ModeState` and `RecoveryState` are now concrete and must remain supervisor-owned rather than becoming cross-module dumping grounds
+- registry declarations could accidentally start depending on adapter details if later edits are not disciplined
 
 ## Validation Plan
 - V1 review against `INTERFACES.md`
-- compile-only validation for the new `charm_ports` component
+- compile-only validation for the new `charm_core` component
 - include-path sanity check through `main/main.cpp`
-- forbidden-dependency spot check to ensure no ESP-IDF, BLE stack, or storage SDK headers leak through the port interfaces
+- dependency-boundary spot check to ensure no platform SDK types leak into the core headers and no adapter details appear in them
 
 ## Rollback Plan
-- revert the S-003 PR to remove only the header-only port component, the minimal shared support header, the main include wiring, and control-file bookkeeping
-- no later slice should be based on the branch until S-003 is reviewed and merged
+- revert the S-004 PR to remove only the header-only `charm_core` component, the minimal shared support header, the `main` include wiring, and control-file bookkeeping
+- no later slice should be based on the branch until S-004 is reviewed and merged
 
 ## Acceptance Gates
-- only the files required for S-003 are touched
-- all four port interfaces are declared with approved boundary methods only
-- no adapter implementation details appear in port headers
-- no platform SDK types leak through the ports
+- only the files required for S-004 are touched
+- declarations match approved module boundaries
+- supervisor contracts do not absorb parsing, mapping, encoding, or adapter internals
+- registry contracts do not imply persistence or parser-local identity
 - validation remains contract review plus compile-only/include-path sanity checks
 - rollback remains low-cost
 
 ## Stop Condition
-Stop after S-003 is implemented and submitted as a PR against `main`.
+Stop after S-004 is implemented and submitted as a PR against `main`.

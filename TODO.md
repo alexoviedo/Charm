@@ -34,8 +34,8 @@ Each item must be small, reviewable, and separable.
 |---|---|---:|---:|---|---|
 | 1 | S-001 | P0 | done | T-013 | Merged in PR #4 |
 | 2 | S-002 | P0 | done | S-001 | Merged in PR #5 |
-| 3 | S-003 | P0 | ready | S-001,S-002 | Active in CURRENT_TASK.md |
-| 4 | S-004 | P0 | queued | S-001,S-002,S-003 | Supervisor, control-plane, and registry interface declarations |
+| 3 | S-003 | P0 | done | S-001,S-002 | Merged in PR #6 |
+| 4 | S-004 | P0 | ready | S-001,S-002,S-003 | Active in CURRENT_TASK.md |
 | 5 | S-005 | P0 | queued | S-001,S-002 | Parser, decode-plan, and decoder interface declarations |
 | 6 | S-006 | P0 | queued | S-001,S-002,S-003 | Logical state, mapping, profile, and config-compiler interface declarations |
 | 7 | S-007 | P0 | queued | S-003,S-004,S-005,S-006 | Test-support foundation for pure-core modules |

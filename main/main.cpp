@@ -6,9 +6,13 @@
 #include "charm/contracts/requests.hpp"
 #include "charm/contracts/status_types.hpp"
 #include "charm/contracts/transport_types.hpp"
+#include "charm/contracts/registry_types.hpp"
 #include "charm/ports/ble_transport_port.hpp"
 #include "charm/ports/config_store_port.hpp"
 #include "charm/ports/time_port.hpp"
 #include "charm/ports/usb_host_port.hpp"
+#include "charm/core/control_plane.hpp"
+#include "charm/core/device_registry.hpp"
+#include "charm/core/supervisor.hpp"
 
 extern "C" void app_main(void) {}

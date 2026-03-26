@@ -379,3 +379,38 @@ Why:
 
 Validation:
 - V2 unit validation for parsing successfully passed with `./test_hid_semantic_model`.
+
+---
+
+## 2026-03-26
+Executed Slice S-010 — Decode-plan builder implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/decode_plan.hpp
+- components/charm_core/src/decode_plan.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_decode_plan.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `DecodePlanBuilder` interface and `DefaultDecodePlanBuilder` class in `components/charm_core/include/charm/core/decode_plan.hpp`.
+- Implemented logic in `components/charm_core/src/decode_plan.cpp` to iterate through semantic descriptor model fields and emit decoding bindings.
+- Added FNV-1a element key hashing for stable mapping identity using byte-wise evaluation of padded-or-packed `ElementKey` structs.
+- Included basic InputElementType deduction heuristics for axes, hats, and buttons.
+- Setup `tests/unit/test_decode_plan.cpp` with unit tests for mapping identity rules and capacity bounds.
+- Updated project control documents (`CURRENT_TASK.md`, `TODO.md`) with S-010 active tracking.
+
+What did not change:
+- No execution logic for raw reports to canonical events (decoder execution).
+- No adapter bindings.
+- No mapping or profile behavior.
+- Core types were kept isolated.
+
+Why:
+- To transform structural, semantic descriptor boundaries (S-009) into runtime map targets (DecodePlan) to drive the data-plane execution step safely.
+
+Validation:
+- V2 standalone unit testing: generated and executed successfully with capacity rejection testing and hashing deduplication verified.

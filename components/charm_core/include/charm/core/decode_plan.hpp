@@ -46,4 +46,16 @@ struct BuildDecodePlanResult {
   DecodePlan decode_plan{};
 };
 
+class DecodePlanBuilder {
+ public:
+  virtual ~DecodePlanBuilder() = default;
+
+  virtual BuildDecodePlanResult BuildDecodePlan(const BuildDecodePlanRequest& request) const = 0;
+};
+
+class DefaultDecodePlanBuilder final : public DecodePlanBuilder {
+ public:
+  BuildDecodePlanResult BuildDecodePlan(const BuildDecodePlanRequest& request) const override;
+};
+
 }  // namespace charm::core

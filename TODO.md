@@ -40,8 +40,8 @@ Each item must be small, reviewable, and separable.
 | 6 | S-006 | P0 | done | S-001,S-002,S-003 | Completed in merged S-006 PR |
 | 7 | S-007 | P0 | done | S-003,S-004,S-005,S-006 | Completed in merged S-007 PR |
 | 8 | S-008 | P1 | done | S-004,S-007 | Completed in merged S-008 PR |
-| 9 | S-009 | P1 | ready | S-005,S-007 | Active in CURRENT_TASK.md |
-| 10 | S-010 | P1 | queued | S-009,S-007 | Decode-plan builder implementation |
+| 9 | S-009 | P1 | done | S-005,S-007 | Completed in merged S-009 PR |
+| 10 | S-010 | P1 | ready | S-009,S-007 | Active in CURRENT_TASK.md |
 | 11 | S-011 | P1 | queued | S-010,S-007 | HID report decoder implementation |
 | 12 | S-012 | P1 | queued | S-006,S-007 | Logical gamepad state container implementation |
 | 13 | S-013 | P1 | queued | S-006,S-007 | Mapping bundle validator/loader implementation |

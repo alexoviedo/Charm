@@ -1,66 +1,60 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-011
-- Title: S-009 — HID semantic descriptor model implementation
+- ID: CT-012
+- Title: S-010 — Decode-plan builder implementation
 - Status: active
 
 ## Goal
-Implement only semantic descriptor parsing and model construction needed to represent HID semantics and stable identity inputs, without implementing mapping, profile, or decoding logic.
+Implement deterministic conversion from semantic descriptor model to decode-plan structures, hashing `ElementKey` into `ElementKeyHash` and defining `InputElementType`.
 
 ## In Scope
-- semantic HID descriptor parsing logic
-- core component CMake wiring for hid semantic model implementation source
-- unit test coverage for semantic parsing
+- Decode-plan builder logic mapping parsed fields to decoding metadata bindings.
+- FNV-1a hashing logic for `ElementKey`.
+- Type heuristics for assigning inputs as buttons, axes, or hats.
+- CMake wiring and unit testing.
 
 ## Out Of Scope
-- decode-plan building, decoder, mapping, profile, compiler, or supervisor implementations
-- adapter implementations
-- persistence behavior
-- broad refactors outside semantic model implementation path
+- decoder execution logic.
+- semantic parser implementation (already in S-009).
+- adapters, mapping, and profiles.
 
 ## Assumptions
-- current semantic model request/result contracts in `hid_semantic_model.hpp` remain valid for implementation.
-- unresolved architecture decisions do not block parsing behavior for this slice.
+- Current interface `decode_plan.hpp` and structs are stable.
+- FNV-1a matches the memory constraint requirements.
 
 ## Dependencies
+- merged S-009 PR
 - merged S-005 PR
 - merged S-007 PR
-- `INTERFACES.md`
-- `VALIDATION.md`
-- `MEMORY.md`
 
 ## Touched Files
-- `components/charm_core/include/charm/core/hid_semantic_model.hpp` — add parser class declaration
-- `components/charm_core/src/hid_semantic_model.cpp` — parser implementation
-- `components/charm_core/CMakeLists.txt` — compile source wiring
-- `tests/unit/test_hid_semantic_model.cpp` — unit behavior checks
-- `tests/unit/CMakeLists.txt` — unit test placeholder update for S-009
-- `CURRENT_TASK.md` — active slice update and validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-009
-- `CHANGELOG_AI.md` — change log entry for S-009
+- `components/charm_core/include/charm/core/decode_plan.hpp`
+- `components/charm_core/src/decode_plan.cpp`
+- `components/charm_core/CMakeLists.txt`
+- `tests/unit/test_decode_plan.cpp`
+- `tests/unit/CMakeLists.txt`
+- `CURRENT_TASK.md`
+- `TODO.md`
+- `CHANGELOG_AI.md`
 
 ## Risks
-- parsing may require handling specific quirk reports in the future
-- long item support is deferred, which may be needed for very complex descriptors
-- unit test remains standalone compile/run
+- Hashing padded structs is problematic unless `__attribute__((packed))` is respected on `ElementKey`, per memory requirements.
+- Heuristics for `InputElementType` might need to be refined for weird usage pages (e.g. simulation).
 
 ## Validation Plan
-- V2 unit validation for valid and malformed descriptor parse paths
-- compile validation for updated `charm_core` component source wiring
+- V2 unit tests verifying deterministic plan generation and capacity boundaries.
 
 ## Rollback Plan
-- revert the S-009 PR to remove `hid_semantic_model.cpp`, header implementation declaration additions, unit test file, CMake wiring, and control-file bookkeeping
-- no adapter/runtime integration rollback complexity expected
+- revert S-010 PR deleting `decode_plan.cpp` and unit tests.
 
 ## Acceptance Gates
-- parser logic maps global and local items properly into `SemanticDescriptorModel`
-- malformed descriptors are rejected
-- no persistence or adapter behavior is introduced
-- scope remains limited to S-009 files
+- FNV-1a hashing generates identical hashes for identical data.
+- Decode plans generate correct decoding metadata limits per input field.
+- Type deduction maps Generic Desktop X/Y to Axis, Generic Desktop Hat Switch to Hat, Button Page to Button.
 
 ## Stop Condition
-Stop after S-009 is implemented and submitted as a PR against `main`.
+Stop after S-010 is implemented and submitted as a PR against `main`.
 - ID: CT-007
 - Title: S-005 — Parser, decode-plan, and decoder interface declarations
 - Status: active

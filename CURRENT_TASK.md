@@ -1,55 +1,56 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-016
-- Title: S-015 — Profile catalog and first output encoder implementation
+- ID: CT-017
+- Title: S-016 — Supervisor state machine implementation
 - Status: done
 
 ## Goal
-Implement only profile selection metadata and the first approved output encoder.
+Implement only mode transitions, activation sequencing, and recovery state handling at the supervisor level.
 
 ## In Scope
-- Implement profile selection metadata.
-- Implement first approved output encoder.
+- Create `DefaultSupervisor` in `supervisor.cpp`.
+- Implement state transitions for supervisor mode, profile, and mapping bundles.
+- Implement recovery state handling.
+- Unit tests for supervisor logic.
 
 ## Out Of Scope
 - USB parsing logic.
 - Mapping logic.
-- Multiple output profiles (unless specified).
+- Decoding or transport encoding logic.
 
 ## Assumptions
 - N/A
 
 ## Dependencies
-- merged S-006 PR
-- merged S-012 PR
-- U-002 decision.
+- S-004
+- S-007
+- S-013
+- S-014
 
 ## Touched Files
-- `components/charm_core/src/profile_manager.cpp`
-- `components/charm_core/src/profile_generic_gamepad_encoder.cpp`
-- `components/charm_core/include/charm/core/profile_manager.hpp`
+- `components/charm_core/src/supervisor.cpp`
+- `components/charm_core/include/charm/core/supervisor.hpp`
 - `components/charm_core/CMakeLists.txt`
-- `tests/unit/test_profile_manager.cpp`
-- `tests/unit/test_profile_generic_gamepad_encoder.cpp`
+- `tests/unit/test_supervisor.cpp`
 - `tests/unit/CMakeLists.txt`
 - `CURRENT_TASK.md`
 - `TODO.md`
 - `CHANGELOG_AI.md`
 
 ## Risks
-- Output profile encoding is wrong for the chosen output structure.
+- Incorrect state transitions could lead to invalid runtime states.
 
 ## Validation Plan
-- V2 unit tests for profile selection and encoding behavior.
+- V2 unit tests for mode transitions, invalid-state paths, and recovery transitions.
 
 ## Rollback Plan
-- revert S-015 PR deleting encoding tests and components.
+- Revert S-016 PR.
 
 ## Acceptance Gates
-- One approved initial profile is encoded from canonical logical state.
-- Profile selection remains explicit and versionable.
-- No USB parsing or mapping logic is introduced.
+- run/config modes remain mutually exclusive.
+- supervisor coordinates state only and does not absorb parser, mapping, or encoding logic.
+- recovery state entry/exit follows approved contract rules.
 
 ## Stop Condition
-Stop after S-015 is implemented and submitted as a PR against `main`.
+Stop after S-016 is implemented and submitted as a PR against `main`.

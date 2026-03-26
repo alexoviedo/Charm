@@ -802,7 +802,7 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 13 | S-013 | queued | yes | depends on S-006 and S-007 |
 | 14 | S-014 | queued | yes | depends on S-012, S-013, and S-007 |
 | 15 | S-015 | done | yes | implemented in S-015 PR |
-| 16 | S-016 | queued | yes | depends on S-004 and earlier pure-core slices |
+| 16 | S-016 | done | yes | implemented in S-016 PR |
 | 17 | S-017 | queued | no | thin adapter |
 | 18 | S-018 | blocked | no | blocked on U-006 |
 | 19 | S-019 | blocked | no | blocked on U-007 |

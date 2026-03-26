@@ -34,6 +34,7 @@ add_library(charm_core_obj OBJECT
     "../../components/charm_core/src/mapping_engine.cpp"
     "../../components/charm_core/src/profile_manager.cpp"
     "../../components/charm_core/src/profile_generic_gamepad_encoder.cpp"
+    "../../components/charm_core/src/supervisor.cpp"
 )
 target_include_directories(charm_core_obj PUBLIC
     ${CONTRACTS_INC}
@@ -85,6 +86,11 @@ add_executable(test_profile_generic_gamepad_encoder test_profile_generic_gamepad
 target_include_directories(test_profile_generic_gamepad_encoder PRIVATE ${CONTRACTS_INC} ${CORE_INC})
 target_link_libraries(test_profile_generic_gamepad_encoder PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 
+# S-016 Supervisor
+add_executable(test_supervisor test_supervisor.cpp)
+target_include_directories(test_supervisor PRIVATE ${CONTRACTS_INC} ${CORE_INC})
+target_link_libraries(test_supervisor PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+
 # Register tests
 include(CTest)
 add_test(NAME DeviceRegistryTest COMMAND test_device_registry)
@@ -96,3 +102,4 @@ add_test(NAME MappingBundleTest COMMAND test_mapping_bundle)
 add_test(NAME MappingEngineTest COMMAND test_mapping_engine)
 add_test(NAME ProfileManagerTest COMMAND test_profile_manager)
 add_test(NAME ProfileGenericGamepadEncoderTest COMMAND test_profile_generic_gamepad_encoder)
+add_test(NAME SupervisorTest COMMAND test_supervisor)

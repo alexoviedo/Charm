@@ -149,14 +149,10 @@ Stop and split the task if any of these occur:
 - unresolved architecture decisions block safe progress
 
 ## Current Default For This Slice
-Current slice type: V1 — Contract / Interface Slice
+Current slice type: V2 — Unit Validation Slice
 
 Current acceptance checks:
-- contract inventory is complete at the module boundary level
-- dependency map is explicit
-- boundary-level error categories are explicit
-- CONTRACT APPROVAL GATE is present
-- no application code
-- no tests
-- no pseudocode
-- no implementation logic
+- supervisor state transitions are tested and enforced
+- invalid states and modes are correctly rejected
+- tests pass without any hardware dependency
+- no decoding, mapping, or parsing logic is implemented

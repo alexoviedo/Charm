@@ -47,7 +47,7 @@ Each item must be small, reviewable, and separable.
 | 13 | S-013 | P1 | done | S-006,S-007 | Completed in S-013 PR |
 | 14 | S-014 | P1 | done | S-012,S-013,S-007 | Completed in S-014 PR |
 | 15 | S-015 | P1 | done | S-012,U-002 | Profile catalog and first output encoder implementation |
-| 16 | S-016 | P1 | queued | S-004,S-013,S-014 | Supervisor state machine implementation |
+| 16 | S-016 | P1 | done | S-004,S-013,S-014 | Supervisor state machine implementation |
 | 17 | S-017 | P1 | queued | S-003 | Platform time adapter implementation |
 | 18 | S-018 | P1 | blocked | S-003,U-006 | Config-store adapter implementation |
 | 19 | S-019 | P1 | blocked | S-003,U-007 | USB host adapter implementation |

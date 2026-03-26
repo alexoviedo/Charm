@@ -153,3 +153,39 @@ Validation:
 - Checked the header contracts against `INTERFACES.md`
 - Checked that no platform SDK types leaked into shared contract headers
 - Prepared compile-only scaffold validation and include-path sanity checks for the PR review
+
+---
+
+## 2026-03-25
+Executed Slice S-002 — Shared request/response and event/message contract code.
+
+Files covered:
+- components/charm_contracts/include/charm/contracts/report_types.hpp
+- components/charm_contracts/include/charm/contracts/requests.hpp
+- components/charm_contracts/include/charm/contracts/events.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added shared report metadata contract types
+- Added shared request/result contract shapes
+- Added shared event/message contract shapes
+- Updated the main include-path sanity check to include the new shared headers
+- Updated project-control files for the active S-002 slice
+
+What did not change:
+- No port declarations
+- No supervisor, registry, parser, decoder, mapping, profile, compiler, adapter, or app logic
+- No tests
+- No runtime behavior
+- No changes to S-001 shared scalar/identity/status/error contracts
+
+Why:
+- To extend the shared contract surface needed by later interface and pure-core slices without introducing behavior
+
+Validation:
+- Checked the new contracts against `INTERFACES.md`
+- Checked that no platform SDK types leaked into the new headers
+- Prepared compile-only and include-path sanity validation for PR review

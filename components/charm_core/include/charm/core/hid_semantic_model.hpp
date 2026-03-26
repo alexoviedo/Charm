@@ -59,4 +59,16 @@ struct ParseDescriptorResult {
   SemanticDescriptorModel semantic_model{};
 };
 
+class HidDescriptorParser {
+ public:
+  virtual ~HidDescriptorParser() = default;
+
+  virtual ParseDescriptorResult ParseDescriptor(const ParseDescriptorRequest& request) = 0;
+};
+
+class DefaultHidDescriptorParser final : public HidDescriptorParser {
+ public:
+  ParseDescriptorResult ParseDescriptor(const ParseDescriptorRequest& request) override;
+};
+
 }  // namespace charm::core

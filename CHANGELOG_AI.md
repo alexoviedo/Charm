@@ -342,3 +342,40 @@ Validation:
 - Ran standalone unit compile/run for `tests/unit/test_device_registry.cpp`
 - Ran compile-only sanity for `main/main.cpp` with updated component wiring
 - Spot-checked device-registry behavior against interface invariants in `INTERFACES.md`
+
+---
+
+## 2026-03-26
+Executed Slice S-009 — HID semantic descriptor model implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_semantic_model.hpp
+- components/charm_core/src/hid_semantic_model.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_hid_semantic_model.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared `HidDescriptorParser` interface and `DefaultHidDescriptorParser` implementation in `components/charm_core/include/charm/core/hid_semantic_model.hpp`.
+- Implemented `DefaultHidDescriptorParser::ParseDescriptor` in `components/charm_core/src/hid_semantic_model.cpp` to parse raw HID report descriptors and build a semantic model without executing device merging, mappings, or BLE packaging.
+- Created `tests/unit/test_hid_semantic_model.cpp` providing a standalone compile-and-run testing mechanism with assertions covering empty, valid, and malformed descriptors.
+- Added `src/hid_semantic_model.cpp` to `components/charm_core/CMakeLists.txt` build targets.
+- Updated `CURRENT_TASK.md` to reflect the active task ID CT-011 and slice S-009 requirements and acceptance criteria.
+- Updated `TODO.md` to indicate slice S-008 is complete and S-009 is now active.
+- Added placeholders in `tests/unit/CMakeLists.txt` for S-009.
+
+What did not change:
+- No decode-plan builder implementation
+- No decoder implementation
+- No adapters
+- No mapping/profile/config/compiler/app logic
+- No runtime behavior changes outside parsing logic
+
+Why:
+- To provide the first core parser logic mapping raw descriptors to stable semantic collections and fields for future decoding.
+
+Validation:
+- V2 unit validation for parsing successfully passed with `./test_hid_semantic_model`.

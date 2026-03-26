@@ -1,70 +1,66 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-010
-- Title: S-008 — Device registry implementation
+- ID: CT-011
+- Title: S-009 — HID semantic descriptor model implementation
 - Status: active
 
 ## Goal
-Implement runtime device/interface registration, lookup, detach, and decode-plan association behavior for the device registry without introducing parser, mapping, profile, or adapter behavior.
+Implement only semantic descriptor parsing and model construction needed to represent HID semantics and stable identity inputs, without implementing mapping, profile, or decoding logic.
 
 ## In Scope
-- concrete in-memory device-registry implementation
-- minimal concrete class declaration updates required to expose implementation
-- core component CMake wiring for device-registry implementation source
-- unit test coverage for register/lookup/detach/attach-decode-plan behavior
+- semantic HID descriptor parsing logic
+- core component CMake wiring for hid semantic model implementation source
+- unit test coverage for semantic parsing
 
 ## Out Of Scope
-- parser, decode-plan builder, decoder, mapping, profile, compiler, or supervisor implementations
+- decode-plan building, decoder, mapping, profile, compiler, or supervisor implementations
 - adapter implementations
 - persistence behavior
-- broad refactors outside registry implementation path
+- broad refactors outside semantic model implementation path
 
 ## Assumptions
-- current device-registry request/result contracts in `device_registry.hpp` remain valid for implementation.
-- interface registration currently provides interface-handle and interface-number metadata and can be tracked without adapter-native state.
-- unresolved architecture decisions do not block runtime registry behavior for this slice.
+- current semantic model request/result contracts in `hid_semantic_model.hpp` remain valid for implementation.
+- unresolved architecture decisions do not block parsing behavior for this slice.
 
 ## Dependencies
-- merged S-004 PR
+- merged S-005 PR
 - merged S-007 PR
 - `INTERFACES.md`
 - `VALIDATION.md`
 - `MEMORY.md`
 
 ## Touched Files
-- `components/charm_core/include/charm/core/device_registry.hpp` — concrete in-memory registry class declaration
-- `components/charm_core/src/device_registry.cpp` — registry implementation
+- `components/charm_core/include/charm/core/hid_semantic_model.hpp` — add parser class declaration
+- `components/charm_core/src/hid_semantic_model.cpp` — parser implementation
 - `components/charm_core/CMakeLists.txt` — compile source wiring
-- `tests/unit/test_device_registry.cpp` — unit behavior checks
-- `tests/unit/CMakeLists.txt` — unit test placeholder update for S-008
+- `tests/unit/test_hid_semantic_model.cpp` — unit behavior checks
+- `tests/unit/CMakeLists.txt` — unit test placeholder update for S-009
 - `CURRENT_TASK.md` — active slice update and validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-007/S-008
-- `CHANGELOG_AI.md` — change log entry for S-008
+- `TODO.md` — implementation queue bookkeeping for S-009
+- `CHANGELOG_AI.md` — change log entry for S-009
 
 ## Risks
-- registry behavior may require contract expansion later if interface-to-device linkage metadata is strengthened
-- capacity limits and fault reason codes may require tuning in later memory-budget slices
-- unit test remains standalone compile/run and not yet integrated into CI test orchestration
+- parsing may require handling specific quirk reports in the future
+- long item support is deferred, which may be needed for very complex descriptors
+- unit test remains standalone compile/run
 
 ## Validation Plan
-- V2 unit validation for register/lookup/detach/attach-decode-plan paths
+- V2 unit validation for valid and malformed descriptor parse paths
 - compile validation for updated `charm_core` component source wiring
-- contract review spot-check against `INTERFACES.md` device-registry invariants
 
 ## Rollback Plan
-- revert the S-008 PR to remove `device_registry.cpp`, header implementation declaration additions, unit test file, CMake wiring, and control-file bookkeeping
+- revert the S-009 PR to remove `hid_semantic_model.cpp`, header implementation declaration additions, unit test file, CMake wiring, and control-file bookkeeping
 - no adapter/runtime integration rollback complexity expected
 
 ## Acceptance Gates
-- runtime handles stay stable for active registration lifetime
-- decode-plan association is supported for known interfaces
-- lookup/detach error handling paths are covered by unit checks
+- parser logic maps global and local items properly into `SemanticDescriptorModel`
+- malformed descriptors are rejected
 - no persistence or adapter behavior is introduced
-- scope remains limited to S-008 files
+- scope remains limited to S-009 files
 
 ## Stop Condition
-Stop after S-008 is implemented and submitted as a PR against `main`.
+Stop after S-009 is implemented and submitted as a PR against `main`.
 - ID: CT-007
 - Title: S-005 — Parser, decode-plan, and decoder interface declarations
 - Status: active

@@ -35,6 +35,8 @@ TEST_F(MappingEngineTest, DirectEventApplicationAxis) {
   bundle.entries[0] = entry;
 
   ApplyInputEventRequest request{};
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
   request.active_bundle = &bundle;
   request.active_bundle_ref = bundle.bundle_ref;
   request.input_event.element_key_hash.value = 100;
@@ -71,6 +73,8 @@ TEST_F(MappingEngineTest, DirectEventApplicationButton) {
   bundle.entries[0] = entry;
 
   ApplyInputEventRequest request{};
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
   request.active_bundle = &bundle;
   request.active_bundle_ref = bundle.bundle_ref;
   request.input_event.element_key_hash.value = 200;
@@ -119,6 +123,8 @@ TEST_F(MappingEngineTest, UnmappedEventIgnored) {
   bundle.entries[0] = entry;
 
   ApplyInputEventRequest request{};
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
   request.active_bundle = &bundle;
   request.active_bundle_ref = bundle.bundle_ref;
   request.input_event.element_key_hash.value = 999; // Different key
@@ -153,6 +159,8 @@ TEST_F(MappingEngineTest, StateReset) {
   bundle.entries[0] = entry;
 
   ApplyInputEventRequest request{};
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
   request.active_bundle = &bundle;
   request.active_bundle_ref = bundle.bundle_ref;
   request.input_event.element_key_hash.value = 100;

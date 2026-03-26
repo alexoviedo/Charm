@@ -13,6 +13,8 @@ namespace charm::core {
 struct DecodeReportRequest {
   charm::contracts::RawHidReportRef report{};
   const DecodePlan* decode_plan{nullptr};
+  charm::contracts::InputElementEvent* events_buffer{nullptr};
+  std::size_t events_buffer_capacity{0};
 };
 
 struct DecodeReportResult {
@@ -32,9 +34,6 @@ class HidDecoder {
 class DefaultHidDecoder final : public HidDecoder {
  public:
   DecodeReportResult DecodeReport(const DecodeReportRequest& request) override;
-
- private:
-  std::array<charm::contracts::InputElementEvent, kMaxDecodeBindingsPerInterface> events_{};
 };
 
 }  // namespace charm::core

@@ -7,7 +7,8 @@
 namespace {
 // Struct definition duplicated to read the packed struct in test
 struct __attribute__((packed)) GenericGamepadReport {
-  std::uint16_t buttons{0};
+  std::uint8_t buttons_low{0};
+  std::uint8_t buttons_high{0};
   std::uint8_t hat{0};
   std::int8_t left_x{0};
   std::int8_t left_y{0};
@@ -21,6 +22,14 @@ struct __attribute__((packed)) GenericGamepadReport {
 class ProfileGenericGamepadEncoderTest : public ::testing::Test {
  protected:
   charm::contracts::LogicalGamepadState state{};
+  std::uint8_t buffer[64]{};
+  charm::core::EncodeLogicalStateRequest req{};
+
+  void SetUp() override {
+    req.logical_state = &state;
+    req.output_buffer = buffer;
+    req.output_buffer_capacity = sizeof(buffer);
+  }
 };
 
 TEST_F(ProfileGenericGamepadEncoderTest, CapabilitiesAreCorrect) {
@@ -35,14 +44,16 @@ TEST_F(ProfileGenericGamepadEncoderTest, CapabilitiesAreCorrect) {
 }
 
 TEST_F(ProfileGenericGamepadEncoderTest, NullStateFails) {
-  auto result = charm::core::profile_generic_gamepad::Encode(nullptr);
+  charm::core::EncodeLogicalStateRequest bad_req = req;
+  bad_req.logical_state = nullptr;
+  auto result = charm::core::profile_generic_gamepad::Encode(bad_req);
 
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kFailed);
   EXPECT_EQ(result.fault_code.category, charm::contracts::ErrorCategory::kInvalidRequest);
 }
 
 TEST_F(ProfileGenericGamepadEncoderTest, DefaultStateProducesZeroedReport) {
-  auto result = charm::core::profile_generic_gamepad::Encode(&state);
+  auto result = charm::core::profile_generic_gamepad::Encode(req);
 
   ASSERT_EQ(result.status, charm::contracts::ContractStatus::kOk);
   ASSERT_EQ(result.report.report_id, 1u);
@@ -51,7 +62,8 @@ TEST_F(ProfileGenericGamepadEncoderTest, DefaultStateProducesZeroedReport) {
   GenericGamepadReport report;
   std::memcpy(&report, result.report.bytes, sizeof(GenericGamepadReport));
 
-  EXPECT_EQ(report.buttons, 0);
+  EXPECT_EQ(report.buttons_low, 0);
+  EXPECT_EQ(report.buttons_high, 0);
   EXPECT_EQ(report.hat, 0);
   EXPECT_EQ(report.left_x, 0);
   EXPECT_EQ(report.left_y, 0);
@@ -72,14 +84,15 @@ TEST_F(ProfileGenericGamepadEncoderTest, EncodesAllFieldsCorrectly) {
   state.left_trigger.value = 200;
   state.right_trigger.value = 250;
 
-  auto result = charm::core::profile_generic_gamepad::Encode(&state);
+  auto result = charm::core::profile_generic_gamepad::Encode(req);
 
   ASSERT_EQ(result.status, charm::contracts::ContractStatus::kOk);
 
   GenericGamepadReport report;
   std::memcpy(&report, result.report.bytes, sizeof(GenericGamepadReport));
 
-  EXPECT_EQ(report.buttons, (1 << 0) | (1 << 15));
+  EXPECT_EQ(report.buttons_low, 1);
+  EXPECT_EQ(report.buttons_high, 128);
   EXPECT_EQ(report.hat, 5);
   EXPECT_EQ(report.left_x, 100);
   EXPECT_EQ(report.left_y, -100);
@@ -94,7 +107,7 @@ TEST_F(ProfileGenericGamepadEncoderTest, ClampsValuesCorrectly) {
   state.axes[1].value = -300;    // Clamp to -128
   state.left_trigger.value = 500; // Clamp to 255
 
-  auto result = charm::core::profile_generic_gamepad::Encode(&state);
+  auto result = charm::core::profile_generic_gamepad::Encode(req);
 
   ASSERT_EQ(result.status, charm::contracts::ContractStatus::kOk);
 

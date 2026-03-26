@@ -48,37 +48,57 @@ void UsbHostAdapter::SetListener(charm::ports::UsbHostPortListener* listener) {
 }
 
 void UsbHostAdapter::SimulateDeviceConnected(const charm::ports::UsbEnumerationInfo& info, const charm::ports::DeviceDescriptorRef& desc) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (started_ && listener_) {
-    listener_->OnDeviceConnected(info, desc);
+  charm::ports::UsbHostPortListener* listener = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (started_) listener = listener_;
+  }
+  if (listener) {
+    listener->OnDeviceConnected(info, desc);
   }
 }
 
 void UsbHostAdapter::SimulateDeviceDisconnected(charm::contracts::DeviceHandle device_handle) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (started_ && listener_) {
-    listener_->OnDeviceDisconnected(device_handle);
+  charm::ports::UsbHostPortListener* listener = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (started_) listener = listener_;
+  }
+  if (listener) {
+    listener->OnDeviceDisconnected(device_handle);
   }
 }
 
 void UsbHostAdapter::SimulateInterfaceDescriptorAvailable(const charm::ports::InterfaceDescriptorRef& desc) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (started_ && listener_) {
-    listener_->OnInterfaceDescriptorAvailable(desc);
+  charm::ports::UsbHostPortListener* listener = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (started_) listener = listener_;
+  }
+  if (listener) {
+    listener->OnInterfaceDescriptorAvailable(desc);
   }
 }
 
 void UsbHostAdapter::SimulateReportReceived(const charm::contracts::RawHidReportRef& report_ref) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (started_ && listener_) {
-    listener_->OnReportReceived(report_ref);
+  charm::ports::UsbHostPortListener* listener = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (started_) listener = listener_;
+  }
+  if (listener) {
+    listener->OnReportReceived(report_ref);
   }
 }
 
 void UsbHostAdapter::SimulateStatusChanged(const charm::ports::UsbHostStatus& status) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  if (listener_) {
-    listener_->OnStatusChanged(status);
+  charm::ports::UsbHostPortListener* listener = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    listener = listener_;
+  }
+  if (listener) {
+    listener->OnStatusChanged(status);
   }
 }
 

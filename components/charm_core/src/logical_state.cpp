@@ -25,6 +25,7 @@ GetLogicalStateResult CanonicalLogicalStateStore::GetLogicalState(
 ResetLogicalStateResult CanonicalLogicalStateStore::ResetLogicalState(
     const ResetLogicalStateRequest& /*request*/) {
   state_ = charm::contracts::LogicalGamepadState{};
+  last_update_time_ = charm::contracts::Timestamp{0};
   ResetLogicalStateResult result{};
   result.status = charm::contracts::ContractStatus::kOk;
   return result;

@@ -32,7 +32,7 @@ EncodeLogicalStateResult CanonicalProfileManager::EncodeLogicalState(
   }
 
   if (request.profile_id.value == kGenericGamepadProfileId.value) {
-    return profile_generic_gamepad::Encode(request.logical_state);
+    return profile_generic_gamepad::Encode(request);
   }
 
   result.status = charm::contracts::ContractStatus::kFailed;

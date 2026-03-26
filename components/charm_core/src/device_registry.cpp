@@ -58,6 +58,7 @@ RegisterInterfaceResult InMemoryDeviceRegistry::RegisterInterface(const Register
   }
 
   charm::contracts::RegistryEntry entry{};
+  entry.device_handle = request.interface_descriptor.device_handle;
   entry.interface_handle = interface_handle;
   entry.interface_number = request.interface_descriptor.interface_number;
   interfaces_.emplace(interface_handle.value, entry);

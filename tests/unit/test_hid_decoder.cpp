@@ -13,13 +13,17 @@ class HidDecoderTest : public ::testing::Test {
  protected:
   void SetUp() override {
     decoder_ = std::make_unique<DefaultHidDecoder>();
+    request_.events_buffer = events_buffer_;
+    request_.events_buffer_capacity = kMaxDecodeBindingsPerInterface;
   }
 
   std::unique_ptr<DefaultHidDecoder> decoder_;
+  DecodeReportRequest request_{};
+  charm::contracts::InputElementEvent events_buffer_[kMaxDecodeBindingsPerInterface]{};
 };
 
 TEST_F(HidDecoderTest, MissingDecodePlanReturnsRejected) {
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = nullptr;
   request.report.bytes = reinterpret_cast<const std::uint8_t*>("test");
   request.report.byte_length = 4;
@@ -35,7 +39,7 @@ TEST_F(HidDecoderTest, MissingDecodePlanReturnsRejected) {
 
 TEST_F(HidDecoderTest, EmptyReportReturnsRejected) {
   DecodePlan plan;
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = nullptr;
   request.report.byte_length = 0;
@@ -52,7 +56,7 @@ TEST_F(HidDecoderTest, ReportLengthMismatchReturnsRejected) {
   DecodePlan plan;
   std::uint8_t buffer[] = {0x00, 0x01};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 2;
@@ -89,7 +93,7 @@ TEST_F(HidDecoderTest, DecodesUnsignedButtonsCorrectly) {
   // Report byte: 0b00000101 -> bit 0 is 1, bit 2 is 1, bit 1 is 0
   std::uint8_t buffer[] = {0x05};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 1;
@@ -126,7 +130,7 @@ TEST_F(HidDecoderTest, DecodesSignedAxisCorrectly) {
   // Byte 0: ignored, Byte 1: 0xFE (-2 in 8-bit signed)
   std::uint8_t buffer[] = {0x00, 0xFE};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 2;
@@ -158,7 +162,7 @@ TEST_F(HidDecoderTest, SkipsBindingsForOtherReportIds) {
 
   std::uint8_t buffer[] = {0x42};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 1;
@@ -185,7 +189,7 @@ TEST_F(HidDecoderTest, ReadingBeyondBoundsReturnsRejected) {
 
   std::uint8_t buffer[] = {0x00, 0xFF};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 2;
@@ -216,7 +220,7 @@ TEST_F(HidDecoderTest, DecodesCrossByteBitsCorrectly) {
   // Expected 12 bit val: 0xA35 = 2613
   std::uint8_t buffer[] = {0x50, 0xA3};
 
-  DecodeReportRequest request;
+  DecodeReportRequest request = request_;
   request.decode_plan = &plan;
   request.report.bytes = buffer;
   request.report.byte_length = 2;

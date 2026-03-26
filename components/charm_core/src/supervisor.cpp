@@ -25,14 +25,14 @@ charm::contracts::ModeTransitionResult DefaultSupervisor::TransitionMode(const c
       return result;
   }
 
-  if (request.target_mode == state_.mode) {
-      result.status = charm::contracts::ContractStatus::kOk;
-      return result;
-  }
-
   if (request.target_mode == charm::contracts::ModeState::kUnknown) {
       result.status = charm::contracts::ContractStatus::kRejected;
       result.fault_code.category = charm::contracts::ErrorCategory::kInvalidRequest;
+      return result;
+  }
+
+  if (request.target_mode == state_.mode) {
+      result.status = charm::contracts::ContractStatus::kOk;
       return result;
   }
 

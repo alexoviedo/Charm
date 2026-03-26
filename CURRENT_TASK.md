@@ -1,70 +1,76 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-004
-- Title: S-002 — Shared request/response and event/message contract code
+- ID: CT-005
+- Title: S-003 — Port interface declarations
 - Status: active
 
 ## Goal
-Extend the shared `charm_contracts` surface with request/result shapes, report metadata, and event/message contracts without introducing any runtime behavior.
+Declare the four external port interfaces and the minimal boundary types they require, without introducing any runtime behavior.
 
 ## In Scope
-- shared request/result shapes
-- shared report metadata/types
-- shared event/message contracts
-- include-path sanity update in `main/main.cpp`
+- USB host port declarations
+- BLE transport port declarations
+- config store port declarations
+- time port declarations
+- minimal shared support contracts required to declare those ports cleanly
+- compile/include sanity wiring in `main`
 
 ## Out Of Scope
-- changes to S-001 scalar/identity/status/error contracts unless required to fix a compile issue
-- port declarations
-- supervisor, registry, parser, decoder, mapping, profile, compiler, adapter, or app logic
+- adapter implementations
+- supervisor, registry, parser, decoder, mapping, profile, compiler, or app logic
 - tests unless absolutely required for compile validation
 - runtime behavior changes
+- refactors of S-001 or S-002 beyond include/dependency sanity wiring
 
 ## Assumptions
-- S-001 is merged on `main` and is the required dependency base.
-- `ModeState` and `RecoveryState` may remain opaque enum declarations in this slice.
-- `LogicalStateSnapshot` may hold a pointer reference to `LogicalGamepadState` so S-002 does not pull S-006 into scope.
+- S-001 and S-002 are merged on `main` and form the dependency base for this slice.
+- `RawDescriptorRef` and `EncodedInputReport` are required support contracts for clean port declarations and can be introduced as a small shared support header in this slice.
+- Port-specific boundary types may be co-located with their port headers in this slice to avoid widening the scope into unrelated modules.
 
 ## Dependencies
 - merged S-001 PR
+- merged S-002 PR
 - `INTERFACES.md`
 - `VALIDATION.md`
 - `MEMORY.md`
-- no unresolved architecture decision blocks S-002
+- no unresolved architecture decision blocks S-003
 
 ## Touched Files
-- `components/charm_contracts/include/charm/contracts/report_types.hpp` — shared report metadata types
-- `components/charm_contracts/include/charm/contracts/requests.hpp` — shared request/result shapes
-- `components/charm_contracts/include/charm/contracts/events.hpp` — shared event/message contracts
-- `main/main.cpp` — include-path sanity check for the new headers only
+- `components/charm_contracts/include/charm/contracts/transport_types.hpp` — minimal shared support contracts for ports
+- `components/charm_ports/CMakeLists.txt` — header-only `charm_ports` component registration
+- `components/charm_ports/include/charm/ports/usb_host_port.hpp` — USB host port declarations and boundary types
+- `components/charm_ports/include/charm/ports/ble_transport_port.hpp` — BLE transport port declarations and boundary types
+- `components/charm_ports/include/charm/ports/config_store_port.hpp` — config store port declarations and boundary types
+- `components/charm_ports/include/charm/ports/time_port.hpp` — time port declarations and boundary types
+- `main/CMakeLists.txt` — add `charm_ports` dependency for compile/include sanity only
+- `main/main.cpp` — include new port headers for sanity only
 - `CURRENT_TASK.md` — active slice update and actual validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-001/S-002
-- `CHANGELOG_AI.md` — change log entry for S-002
+- `TODO.md` — implementation queue bookkeeping for S-002/S-003
+- `CHANGELOG_AI.md` — change log entry for S-003
 
 ## Risks
-- opaque/future-boundary types (`ModeState`, `RecoveryState`, `LogicalGamepadState`) could tempt later slices to backfill multiple concerns at once
-- report/message contracts could accidentally begin encoding ownership semantics or platform-native buffer types
-- the slice could expand into port declarations or core-module declarations if not kept narrow
+- port-local boundary types could tempt later slices to backfill too much behavior into the port headers
+- port headers could accidentally leak platform-native SDK types if later edits are not disciplined
+- the slice could expand into adapter implementation work if not kept narrow
 
 ## Validation Plan
-- V1 contract review against `INTERFACES.md`
-- compile-only validation for the `charm_contracts` component
-- include-path sanity check via `main/main.cpp`
-- verify no platform-native SDK types appear in the new contracts
-- verify `RawHidReportRef` remains ownership-neutral and uses only plain scalar pointer/length fields
+- V1 review against `INTERFACES.md`
+- compile-only validation for the new `charm_ports` component
+- include-path sanity check through `main/main.cpp`
+- forbidden-dependency spot check to ensure no ESP-IDF, BLE stack, or storage SDK headers leak through the port interfaces
 
 ## Rollback Plan
-- revert the S-002 PR to remove only the new contract headers, the main include-path update, and control-file bookkeeping
-- no later slice should be based on the branch until S-002 is reviewed and merged
+- revert the S-003 PR to remove only the header-only port component, the minimal shared support header, the main include wiring, and control-file bookkeeping
+- no later slice should be based on the branch until S-003 is reviewed and merged
 
 ## Acceptance Gates
-- only the files required for S-002 are touched
-- shared request/result and event/message headers compile
-- no runtime behavior is introduced
-- no port/core-module/adapter logic is introduced
+- only the files required for S-003 are touched
+- all four port interfaces are declared with approved boundary methods only
+- no adapter implementation details appear in port headers
+- no platform SDK types leak through the ports
 - validation remains contract review plus compile-only/include-path sanity checks
 - rollback remains low-cost
 
 ## Stop Condition
-Stop after S-002 is implemented and submitted as a PR against `main`.
+Stop after S-003 is implemented and submitted as a PR against `main`.

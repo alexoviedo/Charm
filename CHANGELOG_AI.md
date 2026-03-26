@@ -482,3 +482,37 @@ Why:
 
 Validation:
 - Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_logical_state` testing initialization, mismatched profile IDs, mutable updates, and resets.
+
+---
+
+## 2026-03-26
+Executed Slice S-013 — Mapping bundle validator/loader implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/mapping_bundle.hpp
+- components/charm_core/src/mapping_bundle.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_mapping_bundle.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `ValidateMappingBundleRequest`, `ValidateMappingBundleResult`, `LoadMappingBundleRequest`, `LoadMappingBundleResult`, and `GetActiveBundleResult` to `mapping_bundle.hpp`.
+- Added `MappingBundleValidator` and `MappingBundleLoader` interfaces and default implementations.
+- Implemented `DefaultMappingBundleValidator::Validate` verifying version bounds, entry capacity bounds, and checking bundle integrity with `ElementKeyHash`-like FNV-1a evaluation.
+- Implemented `DefaultMappingBundleLoader::Load` utilizing the validator before updating active cache state and exposing through `GetActiveBundle`.
+- Covered paths with V2 unit tests verifying hashing bounds and rejection conditions.
+- Handled transitioning `CURRENT_TASK.md` to S-014 requirements and marking S-013 as done in `TODO.md`.
+
+What did not change:
+- No mapping application logic or logic state mutators.
+- No dynamic parsing or external adapter implementations.
+- `MappingConfigDocument` wasn't converted or touched.
+
+Why:
+- To validate statically parsed mapping configurations effectively and to gate mapping runtime states with consistent inputs to achieve bounds correctness without platform specifics.
+
+Validation:
+- Evaluated `tests/unit/test_mapping_bundle.cpp` effectively with CMake/CTest hitting invalid hash rejections, max entries exceeding bounds, and successful loadings.

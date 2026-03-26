@@ -45,4 +45,65 @@ struct MappingConfigDocument {
   std::size_t size{0};
 };
 
+inline constexpr charm::contracts::BundleVersion kSupportedMappingBundleVersion = 1;
+
+struct ValidateMappingBundleRequest {
+  const CompiledMappingBundle* bundle{nullptr};
+};
+
+struct ValidateMappingBundleResult {
+  charm::contracts::ContractStatus status{charm::contracts::ContractStatus::kUnspecified};
+  charm::contracts::FaultCode fault_code{};
+};
+
+class MappingBundleValidator {
+ public:
+  virtual ~MappingBundleValidator() = default;
+
+  virtual ValidateMappingBundleResult Validate(const ValidateMappingBundleRequest& request) const = 0;
+};
+
+class DefaultMappingBundleValidator : public MappingBundleValidator {
+ public:
+  ValidateMappingBundleResult Validate(const ValidateMappingBundleRequest& request) const override;
+};
+
+struct LoadMappingBundleRequest {
+  const CompiledMappingBundle* bundle{nullptr};
+};
+
+struct LoadMappingBundleResult {
+  charm::contracts::ContractStatus status{charm::contracts::ContractStatus::kUnspecified};
+  charm::contracts::FaultCode fault_code{};
+};
+
+struct GetActiveBundleRequest {};
+
+struct GetActiveBundleResult {
+  charm::contracts::ContractStatus status{charm::contracts::ContractStatus::kUnspecified};
+  charm::contracts::FaultCode fault_code{};
+  const CompiledMappingBundle* bundle{nullptr};
+};
+
+class MappingBundleLoader {
+ public:
+  virtual ~MappingBundleLoader() = default;
+
+  virtual LoadMappingBundleResult Load(const LoadMappingBundleRequest& request) = 0;
+  virtual GetActiveBundleResult GetActiveBundle(const GetActiveBundleRequest& request) const = 0;
+};
+
+class DefaultMappingBundleLoader : public MappingBundleLoader {
+ public:
+  explicit DefaultMappingBundleLoader(const MappingBundleValidator& validator);
+
+  LoadMappingBundleResult Load(const LoadMappingBundleRequest& request) override;
+  GetActiveBundleResult GetActiveBundle(const GetActiveBundleRequest& request) const override;
+
+ private:
+  const MappingBundleValidator& validator_;
+  CompiledMappingBundle active_bundle_{};
+  bool has_active_bundle_{false};
+};
+
 }  // namespace charm::core

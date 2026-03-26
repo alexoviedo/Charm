@@ -110,3 +110,11 @@ add_test(NAME MappingEngineTest COMMAND test_mapping_engine)
 add_test(NAME ProfileManagerTest COMMAND test_profile_manager)
 add_test(NAME ProfileGenericGamepadEncoderTest COMMAND test_profile_generic_gamepad_encoder)
 add_test(NAME SupervisorTest COMMAND test_supervisor)
+
+# S-019 USB Host Adapter
+add_executable(test_usb_host_adapter test_usb_host_adapter.cpp)
+target_include_directories(test_usb_host_adapter PRIVATE ${CONTRACTS_INC} ${PORTS_INC} "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_platform_usb/include")
+# We need to link the adapter logic and obj library
+target_sources(test_usb_host_adapter PRIVATE "../../components/charm_platform_usb/src/usb_host_adapter.cpp")
+target_link_libraries(test_usb_host_adapter PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME UsbHostAdapterTest COMMAND test_usb_host_adapter)

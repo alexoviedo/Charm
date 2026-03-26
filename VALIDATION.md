@@ -156,3 +156,14 @@ Current acceptance checks:
 - invalid states and modes are correctly rejected
 - tests pass without any hardware dependency
 - no decoding, mapping, or parsing logic is implemented
+
+## Validation Evidence for S-019
+- **Slice:** S-019 — USB host adapter implementation
+- **Scope:** Implementation of normalized enumeration, descriptor delivery, report delivery, and serialized teardown behavior behind the USB host port.
+- **Touched files:** `components/charm_platform_usb/CMakeLists.txt`, `components/charm_platform_usb/include/charm/platform/usb_host_adapter.hpp`, `components/charm_platform_usb/src/usb_host_adapter.cpp`, `tests/unit/test_usb_host_adapter.cpp`
+- **Contracts affected:** `charm::ports::UsbHostPort`
+- **Validation level:** V2/V3 Unit & Integration
+- **Checks performed:** Successfully executed start/stop behaviour and listener hook unit tests verifying pure core mocks.
+- **Result:** Pass
+- **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
+- **Next safe step:** Open PR and proceed to S-020.

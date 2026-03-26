@@ -1,4 +1,10 @@
-# CHANGELOG_AI.md
+# Changelog (AI)
+
+## [Unreleased]
+### Added
+- Implemented `charm::platform::UsbHostAdapter` implementing the `charm::ports::UsbHostPort` to satisfy slice S-019.
+- Added test coverage in `tests/unit/test_usb_host_adapter.cpp`.
+- Exposed simulated enumeration and callback dispatcher capabilities behind a C++20 pure mock layout as per S-019 objective ("no parser or mapping logic is introduced").
 
 ## Purpose
 Plain-English log of AI-made repo changes.

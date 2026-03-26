@@ -229,3 +229,42 @@ Validation:
 - Checked the port declarations against `INTERFACES.md`
 - Checked that no platform SDK types leaked through the port headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-25
+Executed Slice S-004 — Supervisor, control-plane, and registry interface declarations.
+
+Files covered:
+- components/charm_contracts/include/charm/contracts/registry_types.hpp
+- components/charm_core/CMakeLists.txt
+- components/charm_core/include/charm/core/supervisor.hpp
+- components/charm_core/include/charm/core/control_plane.hpp
+- components/charm_core/include/charm/core/device_registry.hpp
+- main/CMakeLists.txt
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added the header-only `charm_core` component
+- Declared the supervisor, control-plane, and device-registry interfaces
+- Added the minimal shared support contracts needed to declare those interfaces cleanly
+- Added compile/include sanity wiring in `main`
+- Updated project-control files for the active S-004 slice
+
+What did not change:
+- No implementations
+- No adapters
+- No parser, decoder, mapping, profile, compiler, or app logic
+- No tests
+- No runtime behavior
+
+Why:
+- To establish the core orchestration and registry seams required before later pure-core implementation slices can be added safely
+
+Validation:
+- Checked the declarations against `INTERFACES.md`
+- Checked that no platform SDK types leaked into the core headers
+- Prepared compile-only and include-path sanity validation for PR review

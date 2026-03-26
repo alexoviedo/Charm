@@ -25,32 +25,49 @@ charm::contracts::LoadConfigResult ConfigStoreNvs::LoadConfig(const charm::contr
     return result;
   }
 
-  size_t length = sizeof(cached_config_.mapping_bundle);
-  nvs_get_blob(handle, kBundleKey, &cached_config_.mapping_bundle, &length);
+  charm::contracts::MappingBundleRef temp_bundle{};
+  charm::contracts::ProfileId temp_profile_id{};
 
-  length = sizeof(cached_config_.profile_id);
-  nvs_get_blob(handle, kProfileKey, &cached_config_.profile_id, &length);
+  size_t length = sizeof(temp_bundle);
+  if (nvs_get_blob(handle, kBundleKey, &temp_bundle, &length) != 0) {
+    result.status = charm::contracts::ContractStatus::kFailed;
+    nvs_close(handle);
+    return result;
+  }
 
-  // Free existing bonding material if loaded
-  if (cached_config_.bonding_material != nullptr) {
-    delete[] cached_config_.bonding_material;
-    cached_config_.bonding_material = nullptr;
-    cached_config_.bonding_material_size = 0;
+  length = sizeof(temp_profile_id);
+  if (nvs_get_blob(handle, kProfileKey, &temp_profile_id, &length) != 0) {
+    result.status = charm::contracts::ContractStatus::kFailed;
+    nvs_close(handle);
+    return result;
   }
 
   // Load bonding material length
   size_t bond_length = 0;
+  std::uint8_t* temp_bonding_material = nullptr;
+
   if (nvs_get_blob(handle, kBondKey, nullptr, &bond_length) == 0 && bond_length > 0) {
-    std::uint8_t* new_bonding_material = new std::uint8_t[bond_length];
-    if (nvs_get_blob(handle, kBondKey, new_bonding_material, &bond_length) == 0) {
-      cached_config_.bonding_material = new_bonding_material;
-      cached_config_.bonding_material_size = bond_length;
-    } else {
-      delete[] new_bonding_material;
+    temp_bonding_material = new std::uint8_t[bond_length];
+    if (nvs_get_blob(handle, kBondKey, temp_bonding_material, &bond_length) != 0) {
+      delete[] temp_bonding_material;
+      result.status = charm::contracts::ContractStatus::kFailed;
+      nvs_close(handle);
+      return result;
     }
   }
 
   nvs_close(handle);
+
+  // Successfully loaded everything, update cache
+  cached_config_.mapping_bundle = temp_bundle;
+  cached_config_.profile_id = temp_profile_id;
+
+  if (cached_config_.bonding_material != nullptr) {
+    delete[] cached_config_.bonding_material;
+  }
+
+  cached_config_.bonding_material = temp_bonding_material;
+  cached_config_.bonding_material_size = bond_length;
 
   result.status = charm::contracts::ContractStatus::kOk;
   result.mapping_bundle = cached_config_.mapping_bundle;
@@ -69,34 +86,38 @@ charm::contracts::PersistConfigResult ConfigStoreNvs::PersistConfig(const charm:
     return result;
   }
 
-  cached_config_.mapping_bundle = request.mapping_bundle;
-  cached_config_.profile_id = request.profile_id;
-
-  if (cached_config_.bonding_material != nullptr) {
-    delete[] cached_config_.bonding_material;
-    cached_config_.bonding_material = nullptr;
-    cached_config_.bonding_material_size = 0;
-  }
+  std::uint8_t* new_bonding_material = nullptr;
 
   if (request.bonding_material != nullptr && request.bonding_material_size > 0) {
-    std::uint8_t* new_bonding_material = new std::uint8_t[request.bonding_material_size];
-    std::memcpy(new_bonding_material, request.bonding_material, request.bonding_material_size);
-    cached_config_.bonding_material = new_bonding_material;
-    cached_config_.bonding_material_size = request.bonding_material_size;
-    if (nvs_set_blob(handle, kBondKey, cached_config_.bonding_material, cached_config_.bonding_material_size) != 0) {
+    if (nvs_set_blob(handle, kBondKey, request.bonding_material, request.bonding_material_size) != 0) {
       result.status = charm::contracts::ContractStatus::kFailed;
       nvs_close(handle);
       return result;
     }
+    new_bonding_material = new std::uint8_t[request.bonding_material_size];
+    std::memcpy(new_bonding_material, request.bonding_material, request.bonding_material_size);
   } else {
-    nvs_erase_key(handle, kBondKey);
+    nvs_erase_key(handle, kBondKey); // ignoring result because it might legitimately not exist
   }
 
-  if (nvs_set_blob(handle, kBundleKey, &cached_config_.mapping_bundle, sizeof(cached_config_.mapping_bundle)) != 0 ||
-      nvs_set_blob(handle, kProfileKey, &cached_config_.profile_id, sizeof(cached_config_.profile_id)) != 0 ||
+  if (nvs_set_blob(handle, kBundleKey, &request.mapping_bundle, sizeof(request.mapping_bundle)) != 0 ||
+      nvs_set_blob(handle, kProfileKey, &request.profile_id, sizeof(request.profile_id)) != 0 ||
       nvs_commit(handle) != 0) {
     result.status = charm::contracts::ContractStatus::kFailed;
+    if (new_bonding_material != nullptr) {
+      delete[] new_bonding_material;
+    }
   } else {
+    // Commit was successful, update the cache
+    if (cached_config_.bonding_material != nullptr) {
+      delete[] cached_config_.bonding_material;
+    }
+
+    cached_config_.mapping_bundle = request.mapping_bundle;
+    cached_config_.profile_id = request.profile_id;
+    cached_config_.bonding_material = new_bonding_material;
+    cached_config_.bonding_material_size = new_bonding_material ? request.bonding_material_size : 0;
+
     result.status = charm::contracts::ContractStatus::kOk;
   }
 
@@ -109,18 +130,19 @@ charm::ports::ClearConfigResult ConfigStoreNvs::ClearConfig(const charm::ports::
   charm::ports::ClearConfigResult result{};
   nvs_handle_t handle;
 
+  result.status = charm::contracts::ContractStatus::kFailed;
+
   if (nvs_open(kNvsNamespace, 1, &handle) == 0) {
-    nvs_erase_all(handle);
-    nvs_commit(handle);
+    if (nvs_erase_all(handle) == 0 && nvs_commit(handle) == 0) {
+      result.status = charm::contracts::ContractStatus::kOk;
+      if (cached_config_.bonding_material != nullptr) {
+        delete[] cached_config_.bonding_material;
+      }
+      cached_config_ = charm::ports::PersistedConfigRecord{};
+    }
     nvs_close(handle);
   }
 
-  if (cached_config_.bonding_material != nullptr) {
-    delete[] cached_config_.bonding_material;
-  }
-  cached_config_ = charm::ports::PersistedConfigRecord{};
-
-  result.status = charm::contracts::ContractStatus::kOk;
   return result;
 }
 

@@ -549,3 +549,42 @@ Why:
 
 Validation:
 - Ran CTest for `MappingEngineTest` with 100% success checking offset computations, out-of-bounds state handling, state persistence, and reset requests.
+
+---
+
+## 2026-03-26
+Executed Slice S-015 — Profile catalog and first output encoder implementation.
+
+Files covered:
+- components/charm_core/src/profile_manager.cpp
+- components/charm_core/src/profile_generic_gamepad_encoder.cpp
+- components/charm_core/include/charm/core/profile_manager.hpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_profile_manager.cpp
+- tests/unit/test_profile_generic_gamepad_encoder.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- IMPLEMENTATION_SLICES.md
+- DECISIONS.md
+
+What changed:
+- Added `CanonicalProfileManager` to handle profile selection and encoding delegation.
+- Added `GenericGamepadReport` packed struct to define the Generic Gamepad report shape.
+- Added `profile_generic_gamepad::Encode` logic to map `LogicalGamepadState` variables to packed report arrays and fields.
+- Clamped trigger ranges and axis ranges according to 8-bit sizing bounds.
+- Resolved unresolved decision `U-002` to single profile first.
+- Ensured proper routing of capabilities and rejection of unknown profile IDs.
+- Validated logic state transformation mathematically through GTest expectations.
+
+What did not change:
+- No USB parsing or decoding code was manipulated.
+- No BLE advertising or GATT server definitions were embedded into the core.
+- No dynamic memory allocation used.
+
+Why:
+- To prepare an encoded array of bytes representing physical state independent of the BLE stack implementation safely and correctly.
+
+Validation:
+- Tested using CTest with a 100% passing rate. `ProfileManagerTest` checked correct delegation. `ProfileGenericGamepadEncoderTest` checked specific field assignments and boundary limit clamps.

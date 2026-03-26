@@ -96,10 +96,11 @@ Only approved decisions belong in accepted/rejected sections.
 - Impact: Adapter work, persistence details, validation surface
 
 ### U-002
-- Status: unresolved
+- Status: accepted
 - Decision Needed: Initial supported output profile set
 - Options: single profile first / multiple selectable profiles
 - Impact: Encoder contract and validation scope
+- Decision: single profile first (Generic Gamepad)
 
 ### U-003
 - Status: unresolved

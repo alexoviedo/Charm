@@ -3,7 +3,7 @@
 ## Active Task
 - ID: CT-016
 - Title: S-015 — Profile catalog and first output encoder implementation
-- Status: active
+- Status: done
 
 ## Goal
 Implement only profile selection metadata and the first approved output encoder.

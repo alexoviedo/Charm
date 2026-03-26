@@ -1,56 +1,53 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-017
-- Title: S-016 — Supervisor state machine implementation
+- ID: CT-018
+- Title: S-017 — Platform time adapter implementation
 - Status: done
 
 ## Goal
-Implement only mode transitions, activation sequencing, and recovery state handling at the supervisor level.
+Implement only the platform monotonic time adapter behind the time port.
 
 ## In Scope
-- Create `DefaultSupervisor` in `supervisor.cpp`.
-- Implement state transitions for supervisor mode, profile, and mapping bundles.
-- Implement recovery state handling.
-- Unit tests for supervisor logic.
+- Create `TimePortEspIdf` in `time_port_esp_idf.cpp`.
+- Implement ESP-IDF `esp_timer_get_time` call to fulfill `TimePort` contract.
+- Component structural files (`CMakeLists.txt`, `time_port_esp_idf.hpp`).
 
 ## Out Of Scope
-- USB parsing logic.
-- Mapping logic.
-- Decoding or transport encoding logic.
+- Implementing other adapters (USB, BLE, Config Store).
+- App wiring.
 
 ## Assumptions
-- N/A
+- Tests run purely natively, meaning ESP-IDF mocking is needed for native validation.
 
 ## Dependencies
-- S-004
-- S-007
-- S-013
-- S-014
+- S-003
 
 ## Touched Files
-- `components/charm_core/src/supervisor.cpp`
-- `components/charm_core/include/charm/core/supervisor.hpp`
-- `components/charm_core/CMakeLists.txt`
-- `tests/unit/test_supervisor.cpp`
+- `components/charm_platform_time/CMakeLists.txt`
+- `components/charm_platform_time/include/charm/platform/time_port_esp_idf.hpp`
+- `components/charm_platform_time/src/time_port_esp_idf.cpp`
+- `components/charm_test_support/include/esp_timer.h`
+- `components/charm_test_support/src/esp_timer_mock.cpp`
 - `tests/unit/CMakeLists.txt`
 - `CURRENT_TASK.md`
 - `TODO.md`
+- `IMPLEMENTATION_SLICES.md`
 - `CHANGELOG_AI.md`
 
 ## Risks
-- Incorrect state transitions could lead to invalid runtime states.
+- Microsecond timing might wrap or need correct scaling in the core logic later, but `Timestamp` uses ticks so we pass it directly per contract.
 
 ## Validation Plan
-- V2 unit tests for mode transitions, invalid-state paths, and recovery transitions.
+- V3 compile/integration validation for the adapter component via the native test runner.
 
 ## Rollback Plan
-- Revert S-016 PR.
+- Revert S-017 PR.
 
 ## Acceptance Gates
-- run/config modes remain mutually exclusive.
-- supervisor coordinates state only and does not absorb parser, mapping, or encoding logic.
-- recovery state entry/exit follows approved contract rules.
+- Adapter satisfies the approved time port only.
+- No other platform services are introduced.
+- No core contracts are modified.
 
 ## Stop Condition
-Stop after S-016 is implemented and submitted as a PR against `main`.
+Stop after S-017 is implemented and submitted as a PR against `main`.

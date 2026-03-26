@@ -5,12 +5,19 @@ namespace charm::platform {
 charm::contracts::StartResult BleTransportAdapter::Start(const charm::contracts::StartRequest& /* request */) {
   // Pure mock implementation: no actual NimBLE stack logic yet
   charm::contracts::StartResult result;
+
+  if (state_ == charm::contracts::AdapterState::kRunning) {
+    result.status = charm::contracts::ContractStatus::kRejected;
+    return result;
+  }
+
+  state_ = charm::contracts::AdapterState::kRunning;
   result.status = charm::contracts::ContractStatus::kOk;
 
   if (listener_ != nullptr) {
     charm::ports::BleTransportStatus status_event{};
     status_event.status = charm::contracts::ContractStatus::kOk;
-    status_event.state = charm::contracts::AdapterState::kRunning;
+    status_event.state = state_;
     listener_->OnStatusChanged(status_event);
   }
 
@@ -20,12 +27,19 @@ charm::contracts::StartResult BleTransportAdapter::Start(const charm::contracts:
 charm::contracts::StopResult BleTransportAdapter::Stop(const charm::contracts::StopRequest& /* request */) {
   // Pure mock implementation
   charm::contracts::StopResult result;
+
+  if (state_ == charm::contracts::AdapterState::kStopped) {
+    result.status = charm::contracts::ContractStatus::kRejected;
+    return result;
+  }
+
+  state_ = charm::contracts::AdapterState::kStopped;
   result.status = charm::contracts::ContractStatus::kOk;
 
   if (listener_ != nullptr) {
     charm::ports::BleTransportStatus status_event{};
     status_event.status = charm::contracts::ContractStatus::kOk;
-    status_event.state = charm::contracts::AdapterState::kStopped;
+    status_event.state = state_;
     listener_->OnStatusChanged(status_event);
   }
 
@@ -35,6 +49,12 @@ charm::contracts::StopResult BleTransportAdapter::Stop(const charm::contracts::S
 charm::ports::NotifyInputReportResult BleTransportAdapter::NotifyInputReport(const charm::ports::NotifyInputReportRequest& /* request */) {
   // Pure mock implementation
   charm::ports::NotifyInputReportResult result;
+
+  if (state_ != charm::contracts::AdapterState::kRunning) {
+    result.status = charm::contracts::ContractStatus::kRejected;
+    return result;
+  }
+
   result.status = charm::contracts::ContractStatus::kOk;
   return result;
 }

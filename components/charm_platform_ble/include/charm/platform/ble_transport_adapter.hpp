@@ -20,6 +20,7 @@ class BleTransportAdapter : public charm::ports::BleTransportPort {
 
  private:
   charm::ports::BleTransportPortListener* listener_{nullptr};
+  charm::contracts::AdapterState state_{charm::contracts::AdapterState::kStopped};
 };
 
 }  // namespace charm::platform

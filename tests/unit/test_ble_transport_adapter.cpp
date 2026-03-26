@@ -47,6 +47,10 @@ TEST_F(BleTransportAdapterTest, StartSucceedsAndNotifiesListener) {
 }
 
 TEST_F(BleTransportAdapterTest, StopSucceedsAndNotifiesListener) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+  listener.status_changed_count = 0; // reset
+
   charm::contracts::StopRequest req;
   auto result = adapter.Stop(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
@@ -56,12 +60,38 @@ TEST_F(BleTransportAdapterTest, StopSucceedsAndNotifiesListener) {
 }
 
 TEST_F(BleTransportAdapterTest, NotifyInputReportSucceeds) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
   charm::ports::NotifyInputReportRequest req;
   req.report.report_id = 1;
   req.report.size = 10;
 
   auto result = adapter.NotifyInputReport(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+}
+
+TEST_F(BleTransportAdapterTest, StartWhenAlreadyRunningIsRejected) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  auto result = adapter.Start(start_req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kRejected);
+}
+
+TEST_F(BleTransportAdapterTest, StopWhenAlreadyStoppedIsRejected) {
+  charm::contracts::StopRequest stop_req;
+  auto result = adapter.Stop(stop_req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kRejected);
+}
+
+TEST_F(BleTransportAdapterTest, NotifyWhenStoppedIsRejected) {
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 1;
+  req.report.size = 10;
+
+  auto result = adapter.NotifyInputReport(req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kRejected);
 }
 
 }  // namespace charm::platform::test

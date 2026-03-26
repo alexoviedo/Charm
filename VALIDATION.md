@@ -167,3 +167,14 @@ Current acceptance checks:
 - **Result:** Pass
 - **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
 - **Next safe step:** Open PR and proceed to S-020.
+
+## Validation Evidence for S-020
+- **Slice:** S-020 — BLE transport adapter implementation
+- **Scope:** Implementation of BLE transport adapter component and its mock implementation for unit testing.
+- **Touched files:** `components/charm_platform_ble/CMakeLists.txt`, `components/charm_platform_ble/include/charm/platform/ble_transport_adapter.hpp`, `components/charm_platform_ble/src/ble_transport_adapter.cpp`, `tests/unit/test_ble_transport_adapter.cpp`
+- **Contracts affected:** `charm::ports::BleTransportPort`
+- **Validation level:** V2/V3 Unit & Integration
+- **Checks performed:** Successfully executed start/stop/notify behaviour and listener hook unit tests verifying pure core mocks.
+- **Result:** Pass
+- **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
+- **Next safe step:** Open PR and proceed to next task.

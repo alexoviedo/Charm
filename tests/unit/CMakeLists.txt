@@ -118,3 +118,10 @@ target_include_directories(test_usb_host_adapter PRIVATE ${CONTRACTS_INC} ${PORT
 target_sources(test_usb_host_adapter PRIVATE "../../components/charm_platform_usb/src/usb_host_adapter.cpp")
 target_link_libraries(test_usb_host_adapter PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 add_test(NAME UsbHostAdapterTest COMMAND test_usb_host_adapter)
+
+# S-020 BLE Transport Adapter
+add_executable(test_ble_transport_adapter test_ble_transport_adapter.cpp)
+target_include_directories(test_ble_transport_adapter PRIVATE ${CONTRACTS_INC} ${PORTS_INC} "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_platform_ble/include")
+target_sources(test_ble_transport_adapter PRIVATE "../../components/charm_platform_ble/src/ble_transport_adapter.cpp")
+target_link_libraries(test_ble_transport_adapter PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME BleTransportAdapterTest COMMAND test_ble_transport_adapter)

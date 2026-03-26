@@ -268,3 +268,82 @@ Validation:
 - Checked the declarations against `INTERFACES.md`
 - Checked that no platform SDK types leaked into the core headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-005 — Parser, decode-plan, and decoder interface declarations.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_semantic_model.hpp
+- components/charm_core/include/charm/core/decode_plan.hpp
+- components/charm_core/include/charm/core/hid_decoder.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared parser-facing semantic HID descriptor model contracts and parse request/result shapes
+- Declared decode-plan input/build/result contracts and decode binding plan structures
+- Declared HID decoder request/result contracts and pure interface boundary
+- Updated include-path sanity wiring in `main/main.cpp` for the new S-005 headers
+- Updated project-control files for the active S-005 slice
+
+What did not change:
+- No parser implementation
+- No decode-plan builder implementation
+- No decoder implementation
+- No adapters
+- No mapping/profile/config/compiler/app logic
+- No tests
+- No runtime behavior
+
+Why:
+- To establish parser/decode/decoder boundary contracts required for subsequent pure-core implementation slices while preserving strict contract-first progression
+
+Validation:
+- Checked declarations against `INTERFACES.md` parser and decoder boundaries
+- Checked that no platform SDK types leaked into new core headers
+- Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-006 — Logical state, mapping, profile, and config-compiler interface declarations.
+
+Files covered:
+- components/charm_core/include/charm/core/logical_state.hpp
+- components/charm_core/include/charm/core/mapping_bundle.hpp
+- components/charm_core/include/charm/core/mapping_engine.hpp
+- components/charm_core/include/charm/core/profile_manager.hpp
+- components/charm_core/include/charm/core/config_compiler.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared canonical logical gamepad state contracts and logical-state query/reset interfaces
+- Declared mapping bundle/config document contracts and mapping-engine request/result interfaces
+- Declared profile manager selection/capability/encoding interfaces
+- Declared config compiler validation/compile request/result contracts and diagnostics interfaces
+- Updated include-path sanity wiring in `main/main.cpp` for the new S-006 headers
+- Updated project-control files for the active S-006 slice
+
+What did not change:
+- No logical-state implementation
+- No mapping-engine implementation
+- No profile encoder implementation
+- No config-compiler implementation
+- No adapters
+- No tests
+- No runtime behavior
+
+Why:
+- To complete the remaining pure-core declaration surfaces required before behavior slices while preserving contract-first and one-slice scope control
+
+Validation:
+- Checked declarations against `INTERFACES.md` logical-state/mapping/profile/config-compiler boundaries
+- Checked that no platform SDK types leaked into the new core headers
+- Prepared compile-only and include-path sanity validation for PR review

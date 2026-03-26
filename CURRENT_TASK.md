@@ -1,9 +1,9 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: None
-- Title: None
-- Status: waiting
+- ID: S-020
+- Title: BLE transport adapter implementation
+- Status: ready
 
 ## Goal
 Awaiting next execution prompt.

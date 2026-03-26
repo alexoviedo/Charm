@@ -516,3 +516,36 @@ Why:
 
 Validation:
 - Evaluated `tests/unit/test_mapping_bundle.cpp` effectively with CMake/CTest hitting invalid hash rejections, max entries exceeding bounds, and successful loadings.
+
+---
+
+## 2026-03-26
+Executed Slice S-014 — Mapping engine base implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/mapping_engine.hpp
+- components/charm_core/src/mapping_engine.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_mapping_engine.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `DefaultMappingEngine` implementation inheriting from `MappingEngine`.
+- Implemented `ApplyInputEvent` to lookup mappings from the active bundle and mutate the underlying canonical gamepad state.
+- Supported mapping scales and offsets for axis, button, trigger, and hat inputs.
+- Handled rejection of invalid bundle references gracefully.
+- Added unit test coverage for direct event application, contract violations, missing/rejected bundle paths, and unmapped events.
+- Updated `charm_core_obj` CMake targets to include `mapping_engine.cpp`.
+
+What did not change:
+- No BLE packing, profile processing, or transport behaviors were introduced.
+- No direct device parsing or adapter calls were included.
+
+Why:
+- To apply validated input events onto a normalized canonical logical state according to an active mapping bundle deterministically and without hardware context.
+
+Validation:
+- Ran CTest for `MappingEngineTest` with 100% success checking offset computations, out-of-bounds state handling, state persistence, and reset requests.

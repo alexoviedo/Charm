@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 
 #include "charm/contracts/events.hpp"
@@ -26,6 +27,14 @@ class HidDecoder {
   virtual ~HidDecoder() = default;
 
   virtual DecodeReportResult DecodeReport(const DecodeReportRequest& request) = 0;
+};
+
+class DefaultHidDecoder final : public HidDecoder {
+ public:
+  DecodeReportResult DecodeReport(const DecodeReportRequest& request) override;
+
+ private:
+  std::array<charm::contracts::InputElementEvent, kMaxDecodeBindingsPerInterface> events_{};
 };
 
 }  // namespace charm::core

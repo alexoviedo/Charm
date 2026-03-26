@@ -3,6 +3,7 @@
 namespace charm::platform {
 
 charm::contracts::StartResult UsbHostAdapter::Start(const charm::contracts::StartRequest& request) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (started_) {
     return {charm::contracts::ContractStatus::kRejected, charm::contracts::FaultCode{}};
   }
@@ -17,6 +18,7 @@ charm::contracts::StartResult UsbHostAdapter::Start(const charm::contracts::Star
 }
 
 charm::contracts::StopResult UsbHostAdapter::Stop(const charm::contracts::StopRequest& request) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (!started_) {
     return {charm::contracts::ContractStatus::kRejected, charm::contracts::FaultCode{}};
   }
@@ -31,42 +33,50 @@ charm::contracts::StopResult UsbHostAdapter::Stop(const charm::contracts::StopRe
 }
 
 charm::ports::ClaimInterfaceResult UsbHostAdapter::ClaimInterface(const charm::ports::ClaimInterfaceRequest& request) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (!started_) {
     return {charm::contracts::ContractStatus::kRejected, charm::contracts::FaultCode{}, {}};
   }
-  // Currently, we just return Success with a dummy InterfaceHandle
-  return {charm::contracts::ContractStatus::kOk, charm::contracts::FaultCode{}, charm::contracts::InterfaceHandle{request.interface_number}};
+
+  uint32_t handle_id = next_interface_handle_id_++;
+  return {charm::contracts::ContractStatus::kOk, charm::contracts::FaultCode{}, charm::contracts::InterfaceHandle{handle_id}};
 }
 
 void UsbHostAdapter::SetListener(charm::ports::UsbHostPortListener* listener) {
+  std::lock_guard<std::mutex> lock(mutex_);
   listener_ = listener;
 }
 
 void UsbHostAdapter::SimulateDeviceConnected(const charm::ports::UsbEnumerationInfo& info, const charm::ports::DeviceDescriptorRef& desc) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (started_ && listener_) {
     listener_->OnDeviceConnected(info, desc);
   }
 }
 
 void UsbHostAdapter::SimulateDeviceDisconnected(charm::contracts::DeviceHandle device_handle) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (started_ && listener_) {
     listener_->OnDeviceDisconnected(device_handle);
   }
 }
 
 void UsbHostAdapter::SimulateInterfaceDescriptorAvailable(const charm::ports::InterfaceDescriptorRef& desc) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (started_ && listener_) {
     listener_->OnInterfaceDescriptorAvailable(desc);
   }
 }
 
 void UsbHostAdapter::SimulateReportReceived(const charm::contracts::RawHidReportRef& report_ref) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (started_ && listener_) {
     listener_->OnReportReceived(report_ref);
   }
 }
 
 void UsbHostAdapter::SimulateStatusChanged(const charm::ports::UsbHostStatus& status) {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (listener_) {
     listener_->OnStatusChanged(status);
   }

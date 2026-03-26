@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "charm/ports/usb_host_port.hpp"
 
 namespace charm::platform {
@@ -23,8 +25,10 @@ class UsbHostAdapter : public charm::ports::UsbHostPort {
   void SimulateStatusChanged(const charm::ports::UsbHostStatus& status);
 
  private:
+  std::mutex mutex_;
   charm::ports::UsbHostPortListener* listener_{nullptr};
   bool started_{false};
+  uint32_t next_interface_handle_id_{1};
 };
 
 }  // namespace charm::platform

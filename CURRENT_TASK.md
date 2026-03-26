@@ -1,53 +1,55 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-015
-- Title: S-014 — Mapping engine base implementation
+- ID: CT-016
+- Title: S-015 — Profile catalog and first output encoder implementation
 - Status: active
 
 ## Goal
-Implement only canonical event application into canonical logical state using an approved active mapping bundle.
+Implement only profile selection metadata and the first approved output encoder.
 
 ## In Scope
-- Implement canonical event application into canonical logical state using an approved active mapping bundle.
+- Implement profile selection metadata.
+- Implement first approved output encoder.
 
 ## Out Of Scope
-- Event-application or profile logic.
-- Mapping compilation implementation details.
-- BLE packing, parser internals, or adapter calls.
+- USB parsing logic.
+- Mapping logic.
+- Multiple output profiles (unless specified).
 
 ## Assumptions
-- The metadata format aligns with the `CompiledMappingBundle` structure.
+- N/A
 
 ## Dependencies
 - merged S-006 PR
 - merged S-012 PR
-- merged S-013 PR
-- merged S-007 PR
+- U-002 decision.
 
 ## Touched Files
-- `components/charm_core/src/mapping_engine.cpp`
-- `components/charm_core/include/charm/core/mapping_engine.hpp`
+- `components/charm_core/src/profile_manager.cpp`
+- `components/charm_core/src/profile_generic_gamepad_encoder.cpp`
+- `components/charm_core/include/charm/core/profile_manager.hpp`
 - `components/charm_core/CMakeLists.txt`
-- `tests/unit/test_mapping_engine.cpp`
+- `tests/unit/test_profile_manager.cpp`
+- `tests/unit/test_profile_generic_gamepad_encoder.cpp`
 - `tests/unit/CMakeLists.txt`
 - `CURRENT_TASK.md`
 - `TODO.md`
 - `CHANGELOG_AI.md`
 
 ## Risks
-- Canonical event application may be incorrect.
+- Output profile encoding is wrong for the chosen output structure.
 
 ## Validation Plan
-- V2 unit tests for direct event application, contract violations, and missing/rejected bundle paths.
+- V2 unit tests for profile selection and encoding behavior.
 
 ## Rollback Plan
-- revert S-014 PR deleting mapping engine logic and tests.
+- revert S-015 PR deleting encoding tests and components.
 
 ## Acceptance Gates
-- Mapping output is canonical logical state only.
-- No BLE packing, parser internals, or adapter calls appear in the implementation.
-- Engine behavior remains unit-testable without hardware.
+- One approved initial profile is encoded from canonical logical state.
+- Profile selection remains explicit and versionable.
+- No USB parsing or mapping logic is introduced.
 
 ## Stop Condition
-Stop after S-014 is implemented and submitted as a PR against `main`.
+Stop after S-015 is implemented and submitted as a PR against `main`.

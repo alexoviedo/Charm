@@ -58,4 +58,23 @@ class ProfileManager {
   virtual GetProfileCapabilitiesResult GetProfileCapabilities(const GetProfileCapabilitiesRequest& request) const = 0;
 };
 
+class CanonicalProfileManager final : public ProfileManager {
+ public:
+  CanonicalProfileManager() = default;
+  ~CanonicalProfileManager() override = default;
+
+  charm::contracts::SelectProfileResult SelectProfile(const charm::contracts::SelectProfileRequest& request) override;
+  EncodeLogicalStateResult EncodeLogicalState(const EncodeLogicalStateRequest& request) const override;
+  GetProfileCapabilitiesResult GetProfileCapabilities(const GetProfileCapabilitiesRequest& request) const override;
+
+ private:
+  charm::contracts::ProfileId selected_profile_{};
+};
+
+// Expose generic gamepad encoding for the manager to use
+namespace profile_generic_gamepad {
+  EncodeLogicalStateResult Encode(const charm::contracts::LogicalGamepadState* logical_state);
+  GetProfileCapabilitiesResult GetCapabilities();
+}
+
 }  // namespace charm::core

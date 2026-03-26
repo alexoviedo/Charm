@@ -449,3 +449,36 @@ Why:
 
 Validation:
 - Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_hid_decoder` standalone execution covering mismatch lengths, missed plan, valid decodes and out of bounds parsing.
+
+---
+
+## 2026-03-26
+Executed Slice S-012 — Logical gamepad state container implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/logical_state.hpp
+- components/charm_core/src/logical_state.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_logical_state.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `CanonicalLogicalStateStore` to hold canonical gamepad state in `components/charm_core/src/logical_state.cpp` and `components/charm_core/include/charm/core/logical_state.hpp`.
+- Implemented initialization, resetting, and mutable-fetching semantics for state container.
+- Added unit tests for state container into `tests/unit/test_logical_state.cpp` and passed them via `CMakeLists.txt`.
+- Updated CURRENT_TASK.md to point to S-013.
+- Updated TODO.md marking S-012 as done and S-013 as ready.
+
+What did not change:
+- No mapping logic, profile logic, or adapter logic was introduced.
+- Transport-dependent structures were not added.
+- The `LogicalGamepadState` structure in `events.hpp` was not changed.
+
+Why:
+- To provide an isolated container for holding the canonical logical gamepad state, enabling the mapping engine to update it later.
+
+Validation:
+- Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_logical_state` testing initialization, mismatched profile IDs, mutable updates, and resets.

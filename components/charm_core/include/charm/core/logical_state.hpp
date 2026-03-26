@@ -67,4 +67,21 @@ class LogicalStateStore {
   virtual ResetLogicalStateResult ResetLogicalState(const ResetLogicalStateRequest& request) = 0;
 };
 
+class CanonicalLogicalStateStore final : public LogicalStateStore {
+ public:
+  explicit CanonicalLogicalStateStore(charm::contracts::ProfileId profile_id);
+  ~CanonicalLogicalStateStore() override = default;
+
+  GetLogicalStateResult GetLogicalState(const GetLogicalStateRequest& request) const override;
+  ResetLogicalStateResult ResetLogicalState(const ResetLogicalStateRequest& request) override;
+
+  // Mutable access for the mapping engine
+  charm::contracts::LogicalGamepadState& GetMutableState(charm::contracts::Timestamp current_time);
+
+ private:
+  charm::contracts::LogicalGamepadState state_{};
+  charm::contracts::ProfileId profile_id_{};
+  charm::contracts::Timestamp last_update_time_{};
+};
+
 }  // namespace charm::core

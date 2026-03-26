@@ -1,53 +1,51 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-013
-- Title: S-012 — Logical gamepad state container implementation
+- ID: CT-014
+- Title: S-013 — Mapping bundle validator/loader implementation
 - Status: active
 
 ## Goal
-Implement only the canonical logical-state container and reset/read semantics.
+Implement only loading and validating compiled mapping-bundle metadata needed by the mapping engine.
 
 ## In Scope
-- Canonical logical-state container.
-- Reset and read semantics for the logical gamepad state.
+- Load and validate mapping bundle metadata.
+- Provide `MappingBundleRef` handling and version/integrity validation.
 
 ## Out Of Scope
-- Mapping, profile, or adapter logic.
-- Transport-dependent structures.
+- Event-application or profile logic.
+- Mapping compilation implementation details.
 
 ## Assumptions
-- State remains transport-independent.
-- Range/initialization rules are enforced at the contract level.
+- The metadata format aligns with the `CompiledMappingBundle` structure.
 
 ## Dependencies
 - merged S-006 PR
 - merged S-007 PR
-- merged S-011 PR
+- merged S-012 PR
 
 ## Touched Files
-- `components/charm_core/src/logical_state.cpp`
-- `components/charm_core/include/charm/core/logical_state.hpp`
+- `components/charm_core/src/mapping_bundle.cpp`
+- `components/charm_core/include/charm/core/mapping_bundle.hpp`
 - `components/charm_core/CMakeLists.txt`
-- `tests/unit/test_logical_state.cpp`
+- `tests/unit/test_mapping_bundle.cpp`
 - `tests/unit/CMakeLists.txt`
 - `CURRENT_TASK.md`
 - `TODO.md`
 - `CHANGELOG_AI.md`
 
 ## Risks
-- Implicit assumptions about data ranges or endianness from profiles.
+- Incorrect integrity or version checks leading to broken states.
 
 ## Validation Plan
-- V2 unit tests for initialization, reset, snapshot, and range-contract behavior.
+- V2 unit tests for version/integrity acceptance and rejection paths.
 
 ## Rollback Plan
-- revert S-012 PR deleting `logical_state.cpp` and unit tests.
+- revert S-013 PR deleting mapping bundle logic and tests.
 
 ## Acceptance Gates
-- State remains transport-independent.
-- Range/initialization rules are enforced at the contract level.
-- No mapping, profile, or adapter logic is introduced.
+- Mapping-bundle metadata can be loaded/validated without storage or compiler placement assumptions.
+- No event-application or profile logic is introduced.
 
 ## Stop Condition
-Stop after S-012 is implemented and submitted as a PR against `main`.
+Stop after S-013 is implemented and submitted as a PR against `main`.

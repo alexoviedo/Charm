@@ -622,3 +622,37 @@ Why:
 
 Validation:
 - Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_supervisor` covering valid state transitions, invalid transitions, profile/mapping bundle selection, and recovery states.
+
+---
+
+## 2026-03-26
+Executed Slice S-017 — Platform time adapter implementation.
+
+Files covered:
+- components/charm_platform_time/CMakeLists.txt
+- components/charm_platform_time/include/charm/platform/time_port_esp_idf.hpp
+- components/charm_platform_time/src/time_port_esp_idf.cpp
+- components/charm_test_support/include/esp_timer.h
+- components/charm_test_support/src/esp_timer_mock.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- IMPLEMENTATION_SLICES.md
+
+What changed:
+- Added `TimePortEspIdf` implementing `charm::ports::TimePort`.
+- Used `esp_timer_get_time` to return system ticks in microseconds.
+- Registered the ESP-IDF component in its `CMakeLists.txt`.
+- Mocked `esp_timer.h` and its get_time function locally so pure-core native tests can compile the adapter code and detect syntax errors.
+- Updated project control documents for S-017 completion.
+
+What did not change:
+- No other adapters were implemented.
+- Core logic contracts remained untouched.
+- App wiring was untouched.
+
+Why:
+- To bridge the monotonic time requirement of the core domain to the underlying ESP-IDF timer implementation without tightly coupling core logic to platform headers.
+
+Validation:
+- V3 compile validation: Added the adapter and its mock to `tests/unit/CMakeLists.txt` and built the target natively.

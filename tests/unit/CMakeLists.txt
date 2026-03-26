@@ -35,11 +35,15 @@ add_library(charm_core_obj OBJECT
     "../../components/charm_core/src/profile_manager.cpp"
     "../../components/charm_core/src/profile_generic_gamepad_encoder.cpp"
     "../../components/charm_core/src/supervisor.cpp"
+    "../../components/charm_platform_time/src/time_port_esp_idf.cpp"
+    "../../components/charm_test_support/src/esp_timer_mock.cpp"
 )
 target_include_directories(charm_core_obj PUBLIC
     ${CONTRACTS_INC}
     ${PORTS_INC}
     ${CORE_INC}
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_platform_time/include"
+    ${TEST_SUPPORT_INC}
 )
 
 # S-008 Device Registry

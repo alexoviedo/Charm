@@ -806,7 +806,7 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 17 | S-017 | done | no | implemented in S-017 PR |
 | 18 | S-018 | blocked | no | blocked on U-006 |
 | 19 | S-019 | done | no | implemented in S-019 PR |
-| 20 | S-020 | blocked | no | blocked on U-001 |
+| 20 | S-020 | done | no | implemented in S-020 PR |
 | 21 | S-021 | blocked | no | depends on S-015, S-016, S-017, S-019, S-020 |
 | 22 | S-022 | blocked | yes | blocked on U-003 and U-006 |
 | 23 | S-023 | blocked | yes | depends on S-016 and S-021 |

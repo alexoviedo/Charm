@@ -5,6 +5,9 @@
 - Implemented `charm::platform::UsbHostAdapter` implementing the `charm::ports::UsbHostPort` to satisfy slice S-019.
 - Added test coverage in `tests/unit/test_usb_host_adapter.cpp`.
 - Exposed simulated enumeration and callback dispatcher capabilities behind a C++20 pure mock layout as per S-019 objective ("no parser or mapping logic is introduced").
+- Implemented `charm::platform::BleTransportAdapter` implementing `charm::ports::BleTransportPort` to satisfy slice S-020.
+- Added test coverage in `tests/unit/test_ble_transport_adapter.cpp`.
+- Mocked out start, stop, notify and listener interactions.
 
 ## Purpose
 Plain-English log of AI-made repo changes.
@@ -662,3 +665,41 @@ Why:
 
 Validation:
 - V3 compile validation: Added the adapter and its mock to `tests/unit/CMakeLists.txt` and built the target natively.
+
+---
+
+## 2026-03-27
+Executed Slice S-020 — BLE transport adapter implementation.
+
+Files covered:
+- components/charm_platform_ble/CMakeLists.txt
+- components/charm_platform_ble/include/charm/platform/ble_transport_adapter.hpp
+- components/charm_platform_ble/src/ble_transport_adapter.cpp
+- tests/unit/test_ble_transport_adapter.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- IMPLEMENTATION_SLICES.md
+- VALIDATION.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added `charm_platform_ble` component to satisfy the BLE adapter slice.
+- Implemented `BleTransportAdapter` implementing `charm::ports::BleTransportPort`.
+- Added mock logic for Start, Stop, NotifyInputReport and SetListener methods.
+- Added V2/V3 unit tests in `tests/unit/test_ble_transport_adapter.cpp` using GTest.
+- Linked new components and tests in `tests/unit/CMakeLists.txt`.
+- Cleared the active task in `CURRENT_TASK.md` as per instruction not to start next slice.
+- Marked S-020 done in `TODO.md` and `IMPLEMENTATION_SLICES.md`.
+- Added validation evidence to `VALIDATION.md`.
+
+What did not change:
+- No integration with real NimBLE stack logic.
+- No hardware bindings were implemented.
+- No descriptor parsing or mapping logic was altered.
+
+Why:
+- To implement the adapter boundary for BLE transport while strictly preserving the V2/V3 testable design.
+
+Validation:
+- CTest successfully validated `BleTransportAdapterTest` with a 100% pass rate.

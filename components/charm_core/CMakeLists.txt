@@ -7,5 +7,6 @@ idf_component_register(SRCS "src/device_registry.cpp"
                             "src/mapping_engine.cpp"
                             "src/profile_manager.cpp"
                             "src/profile_generic_gamepad_encoder.cpp"
+                            "src/supervisor.cpp"
                        INCLUDE_DIRS "include"
                        REQUIRES charm_contracts charm_ports)

@@ -588,3 +588,37 @@ Why:
 
 Validation:
 - Tested using CTest with a 100% passing rate. `ProfileManagerTest` checked correct delegation. `ProfileGenericGamepadEncoderTest` checked specific field assignments and boundary limit clamps.
+
+---
+
+## 2026-03-26
+Executed Slice S-016 — Supervisor state machine implementation.
+
+Files covered:
+- components/charm_core/src/supervisor.cpp
+- components/charm_core/include/charm/core/supervisor.hpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_supervisor.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- IMPLEMENTATION_SLICES.md
+
+What changed:
+- Created `DefaultSupervisor` in `components/charm_core/src/supervisor.cpp`.
+- Implemented state transitions for supervisor mode, profile, and mapping bundles.
+- Implemented recovery state handling in accordance with `ModeState` and `RecoveryState` rules.
+- Added unit tests for supervisor logic in `tests/unit/test_supervisor.cpp`.
+- Updated project-control files to track the completion of S-016.
+
+What did not change:
+- No USB parsing or decoding logic was introduced.
+- No BLE advertising or adapter bindings were embedded.
+- Supervisor strictly coordinates state without absorbing parser, mapping, or encoding logic.
+
+Why:
+- To implement mode transitions, activation sequencing, and recovery state handling at the supervisor level to orchestrate runtime behavior safely.
+
+Validation:
+- Tested using CTest harness on `tests/unit/build/` directory with 100% success rate on `test_supervisor` covering valid state transitions, invalid transitions, profile/mapping bundle selection, and recovery states.

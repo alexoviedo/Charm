@@ -25,4 +25,21 @@ class Supervisor {
   virtual charm::contracts::RecoveryResult RequestRecovery(const charm::contracts::RecoveryRequest& request) = 0;
   virtual SupervisorState GetState() const = 0;
 };
+
+class DefaultSupervisor : public Supervisor {
+ public:
+  DefaultSupervisor() = default;
+  ~DefaultSupervisor() override = default;
+
+  charm::contracts::StartResult Start(const charm::contracts::StartRequest& request) override;
+  charm::contracts::StopResult Stop(const charm::contracts::StopRequest& request) override;
+  charm::contracts::ModeTransitionResult TransitionMode(const charm::contracts::ModeTransitionRequest& request) override;
+  charm::contracts::ActivateMappingBundleResult ActivateMappingBundle(const charm::contracts::ActivateMappingBundleRequest& request) override;
+  charm::contracts::SelectProfileResult SelectProfile(const charm::contracts::SelectProfileRequest& request) override;
+  charm::contracts::RecoveryResult RequestRecovery(const charm::contracts::RecoveryRequest& request) override;
+  SupervisorState GetState() const override;
+
+ private:
+  SupervisorState state_{};
+};
 }  // namespace charm::core

@@ -268,3 +268,77 @@ Validation:
 - Checked the declarations against `INTERFACES.md`
 - Checked that no platform SDK types leaked into the core headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-005 — Parser, decode-plan, and decoder interface declarations.
+
+Files covered:
+- components/charm_core/include/charm/core/hid_semantic_model.hpp
+- components/charm_core/include/charm/core/decode_plan.hpp
+- components/charm_core/include/charm/core/hid_decoder.hpp
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Declared parser-facing semantic HID descriptor model contracts and parse request/result shapes
+- Declared decode-plan input/build/result contracts and decode binding plan structures
+- Declared HID decoder request/result contracts and pure interface boundary
+- Updated include-path sanity wiring in `main/main.cpp` for the new S-005 headers
+- Updated project-control files for the active S-005 slice
+
+What did not change:
+- No parser implementation
+- No decode-plan builder implementation
+- No decoder implementation
+- No adapters
+- No mapping/profile/config/compiler/app logic
+- No tests
+- No runtime behavior
+
+Why:
+- To establish parser/decode/decoder boundary contracts required for subsequent pure-core implementation slices while preserving strict contract-first progression
+
+Validation:
+- Checked declarations against `INTERFACES.md` parser and decoder boundaries
+- Checked that no platform SDK types leaked into new core headers
+- Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-26
+Executed Slice S-008 — Device registry implementation.
+
+Files covered:
+- components/charm_core/include/charm/core/device_registry.hpp
+- components/charm_core/src/device_registry.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_device_registry.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added concrete `InMemoryDeviceRegistry` declaration and capacity defaults
+- Implemented register-device, register-interface, lookup, detach-device, and attach-decode-plan behavior
+- Added unit test covering key success and failure paths for S-008 behavior
+- Updated `charm_core` CMake to compile the new device-registry source
+- Updated project-control files for the active S-008 slice
+
+What did not change:
+- No parser/decode-plan builder/decoder implementation
+- No mapping/profile/compiler/supervisor implementation
+- No adapter or persistence implementation
+- No hardware/integration tests
+
+Why:
+- To deliver the first pure-core runtime behavior slice for registry state handling while maintaining strict slice isolation
+
+Validation:
+- Ran standalone unit compile/run for `tests/unit/test_device_registry.cpp`
+- Ran compile-only sanity for `main/main.cpp` with updated component wiring
+- Spot-checked device-registry behavior against interface invariants in `INTERFACES.md`

@@ -1,76 +1,67 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-006
-- Title: S-004 — Supervisor, control-plane, and registry interface declarations
+- ID: CT-010
+- Title: S-008 — Device registry implementation
 - Status: active
 
 ## Goal
-Declare the supervisor, control-plane, and device-registry interfaces and the minimal support contracts they require, without introducing any runtime behavior.
+Implement runtime device/interface registration, lookup, detach, and decode-plan association behavior for the device registry without introducing parser, mapping, profile, or adapter behavior.
 
 ## In Scope
-- supervisor interface declarations
-- control-plane interface declarations
-- device-registry interface declarations
-- minimal shared support contracts required to declare those interfaces cleanly
-- compile/include sanity wiring in `main`
+- concrete in-memory device-registry implementation
+- minimal concrete class declaration updates required to expose implementation
+- core component CMake wiring for device-registry implementation source
+- unit test coverage for register/lookup/detach/attach-decode-plan behavior
 
 ## Out Of Scope
-- implementations
-- adapters
-- parser, decoder, mapping, profile, compiler, or app logic
-- tests unless absolutely required for compile validation
-- runtime behavior changes
-- refactors outside the minimum include/dependency wiring for validation
+- parser, decode-plan builder, decoder, mapping, profile, compiler, or supervisor implementations
+- adapter implementations
+- persistence behavior
+- broad refactors outside registry implementation path
 
 ## Assumptions
-- S-001, S-002, and S-003 are merged on `main` and form the dependency base for this slice.
-- `ActiveProfileRef`, `ActiveMappingBundleRef`, `FaultRecordRef`, `DecodePlanRef`, and `RegistryEntry` are required support contracts for clean S-004 declarations and can be introduced in one small shared support header.
-- `ModeState` and `RecoveryState` can be defined concretely in this slice because they are supervisor-owned state contracts already referenced opaquely from S-002.
+- current device-registry request/result contracts in `device_registry.hpp` remain valid for implementation.
+- interface registration currently provides interface-handle and interface-number metadata and can be tracked without adapter-native state.
+- unresolved architecture decisions do not block runtime registry behavior for this slice.
 
 ## Dependencies
-- merged S-001 PR
-- merged S-002 PR
-- merged S-003 PR
+- merged S-004 PR
+- merged S-007 PR
 - `INTERFACES.md`
 - `VALIDATION.md`
 - `MEMORY.md`
-- no unresolved architecture decision blocks S-004
 
 ## Touched Files
-- `components/charm_contracts/include/charm/contracts/registry_types.hpp` — minimal shared support contracts for S-004
-- `components/charm_core/CMakeLists.txt` — header-only `charm_core` component registration
-- `components/charm_core/include/charm/core/supervisor.hpp` — supervisor declarations and boundary types
-- `components/charm_core/include/charm/core/control_plane.hpp` — control-plane declarations
-- `components/charm_core/include/charm/core/device_registry.hpp` — registry declarations and request/result shapes
-- `main/CMakeLists.txt` — add `charm_core` dependency for compile/include sanity only
-- `main/main.cpp` — include new core headers for sanity only
-- `CURRENT_TASK.md` — active slice update and actual validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-003/S-004
-- `CHANGELOG_AI.md` — change log entry for S-004
+- `components/charm_core/include/charm/core/device_registry.hpp` — concrete in-memory registry class declaration
+- `components/charm_core/src/device_registry.cpp` — registry implementation
+- `components/charm_core/CMakeLists.txt` — compile source wiring
+- `tests/unit/test_device_registry.cpp` — unit behavior checks
+- `tests/unit/CMakeLists.txt` — unit test placeholder update for S-008
+- `CURRENT_TASK.md` — active slice update and validation/rollback notes
+- `TODO.md` — implementation queue bookkeeping for S-007/S-008
+- `CHANGELOG_AI.md` — change log entry for S-008
 
 ## Risks
-- support contracts added for S-004 could tempt later slices to mix interface declaration work with implementation work
-- `ModeState` and `RecoveryState` are now concrete and must remain supervisor-owned rather than becoming cross-module dumping grounds
-- registry declarations could accidentally start depending on adapter details if later edits are not disciplined
+- registry behavior may require contract expansion later if interface-to-device linkage metadata is strengthened
+- capacity limits and fault reason codes may require tuning in later memory-budget slices
+- unit test remains standalone compile/run and not yet integrated into CI test orchestration
 
 ## Validation Plan
-- V1 review against `INTERFACES.md`
-- compile-only validation for the new `charm_core` component
-- include-path sanity check through `main/main.cpp`
-- dependency-boundary spot check to ensure no platform SDK types leak into the core headers and no adapter details appear in them
+- V2 unit validation for register/lookup/detach/attach-decode-plan paths
+- compile validation for updated `charm_core` component source wiring
+- contract review spot-check against `INTERFACES.md` device-registry invariants
 
 ## Rollback Plan
-- revert the S-004 PR to remove only the header-only `charm_core` component, the minimal shared support header, the `main` include wiring, and control-file bookkeeping
-- no later slice should be based on the branch until S-004 is reviewed and merged
+- revert the S-008 PR to remove `device_registry.cpp`, header implementation declaration additions, unit test file, CMake wiring, and control-file bookkeeping
+- no adapter/runtime integration rollback complexity expected
 
 ## Acceptance Gates
-- only the files required for S-004 are touched
-- declarations match approved module boundaries
-- supervisor contracts do not absorb parsing, mapping, encoding, or adapter internals
-- registry contracts do not imply persistence or parser-local identity
-- validation remains contract review plus compile-only/include-path sanity checks
-- rollback remains low-cost
+- runtime handles stay stable for active registration lifetime
+- decode-plan association is supported for known interfaces
+- lookup/detach error handling paths are covered by unit checks
+- no persistence or adapter behavior is introduced
+- scope remains limited to S-008 files
 
 ## Stop Condition
-Stop after S-004 is implemented and submitted as a PR against `main`.
+Stop after S-008 is implemented and submitted as a PR against `main`.

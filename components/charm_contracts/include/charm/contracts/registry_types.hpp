@@ -2,6 +2,7 @@
 #include "charm/contracts/error_types.hpp"
 #include "charm/contracts/identity_types.hpp"
 #include "charm/contracts/common_types.hpp"
+#include "charm/contracts/status_types.hpp"
 namespace charm::contracts {
 struct ActiveProfileRef { ProfileId profile_id{}; };
 struct ActiveMappingBundleRef { MappingBundleRef mapping_bundle{}; };

@@ -1,69 +1,70 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: CT-009
-- Title: S-007 — Test-support foundation for pure-core modules
+- ID: CT-007
+- Title: S-005 — Parser, decode-plan, and decoder interface declarations
 - Status: active
 
 ## Goal
-Add the minimum header-only test-support layer required to unit-test pure-core modules against port contracts without binding tests to real adapters.
+Declare the semantic HID model, decode-plan surface, and runtime decoder interface contracts without introducing descriptor parsing or report decoding behavior.
 
 ## In Scope
-- `charm_test_support` header-only component registration
-- fake port implementations for time, config-store, USB-host, and BLE-transport ports
-- minimal unit-test CMake placeholder for future test targets
+- parser-facing semantic descriptor model declarations
+- decode-plan contract declarations
+- HID decoder interface declarations
+- minimal compile/include sanity wiring in `main`
 
 ## Out Of Scope
-- production runtime implementations
-- adapter implementations
-- pure-core behavior implementations
-- integration or hardware tests
-- refactors outside minimum test-support wiring
+- implementations
+- adapters
+- mapping, logical-state, profile, config-compiler, or app logic
+- tests unless absolutely required for compile validation
+- runtime behavior changes
+- refactors outside the minimum include/dependency wiring for validation
 
 ## Assumptions
-- S-003 port contracts are stable enough to implement simple fake adapters for tests.
-- S-004 through S-006 declaration surfaces can consume test fakes in later slices without production coupling.
-- unresolved architecture decisions do not block header-only test-support contracts.
+- S-001, S-002, S-003, and S-004 are merged on `main` and form the dependency base for this slice.
+- Existing shared contracts (`RawDescriptorRef`, `RawHidReportRef`, `InputElementEvent`, `ElementKey`, `ElementKeyHash`) are sufficient for declaration-only parser/decoder boundaries.
+- Unresolved decisions U-001..U-008 remain explicit and do not block declaration-only S-005 scope.
 
 ## Dependencies
-- merged S-003 PR
-- merged S-004 PR
-- merged S-005 PR
-- merged S-006 PR
+- merged S-001 PR
+- merged S-002 PR
 - `INTERFACES.md`
 - `VALIDATION.md`
 - `MEMORY.md`
+- no unresolved architecture decision blocks declaration-only S-005
 
 ## Touched Files
-- `components/charm_test_support/CMakeLists.txt` — register header-only test-support component
-- `components/charm_test_support/include/charm/test_support/fake_time_port.hpp` — fake monotonic time port
-- `components/charm_test_support/include/charm/test_support/fake_config_store_port.hpp` — fake config-store port
-- `components/charm_test_support/include/charm/test_support/fake_usb_host_port.hpp` — fake USB-host port
-- `components/charm_test_support/include/charm/test_support/fake_ble_transport_port.hpp` — fake BLE-transport port
-- `tests/unit/CMakeLists.txt` — placeholder test-target root for later unit slices
+- `components/charm_core/include/charm/core/hid_semantic_model.hpp` — parser-facing semantic descriptor model and parse request/result declarations
+- `components/charm_core/include/charm/core/decode_plan.hpp` — decode-plan input/plan/build request-result declarations
+- `components/charm_core/include/charm/core/hid_decoder.hpp` — decoder request/result and interface declaration
+- `main/main.cpp` — include new core headers for compile/include sanity only
 - `CURRENT_TASK.md` — active slice update and validation/rollback notes
-- `TODO.md` — implementation queue bookkeeping for S-006/S-007
-- `CHANGELOG_AI.md` — change log entry for S-007
+- `TODO.md` — implementation queue bookkeeping for S-004/S-005
+- `CHANGELOG_AI.md` — change log entry for S-005
 
 ## Risks
-- fake adapters could drift from port signatures if later contract changes are made without synchronized test-support updates
-- convenience helper methods in fakes must remain test-only and never leak into production components
-- placeholder unit CMake can become stale if later test-target wiring is not updated in lockstep
+- semantic/decode contracts could accidentally become persistence-coupled if later edits introduce parser-local identity assumptions
+- decode-plan declarations may become over-specified before runtime limits are finalized
+- declaration-only result payloads use pointer-based event views and require explicit ownership rules at implementation time
 
 ## Validation Plan
-- V2 compile validation for header-only fake port contracts
-- fake-to-port conformance spot-check against S-003 headers
-- include-path sanity compile for fake headers
+- V1 review against `INTERFACES.md`
+- compile-only validation for the updated `charm_core` declarations
+- include-path sanity check through `main/main.cpp`
+- identity-rule spot check to ensure parser-local numbering is not introduced as persistence identity
 
 ## Rollback Plan
-- revert the S-007 PR to remove only `charm_test_support`, `tests/unit/CMakeLists.txt`, and control-file bookkeeping
-- no behavior or adapter runtime rollback complexity expected
+- revert the S-005 PR to remove only the new parser/decode/decoder declaration headers, include sanity wiring, and control-file bookkeeping
+- no later slice should be based on the branch until S-005 is reviewed and merged
 
 ## Acceptance Gates
-- test-support declarations satisfy existing port interfaces
-- no production behavior is introduced
-- no platform SDK types leak through test-support surfaces
-- scope remains limited to S-007 files only
+- only the files required for S-005 are touched
+- parser and decoder declarations remain separated from transport and persistence behavior
+- stable semantic identity expectations are represented without parser-local persistence coupling
+- validation remains contract review plus compile-only/include-path sanity checks
+- rollback remains low-cost
 
 ## Stop Condition
-Stop after S-007 is implemented and submitted as a PR against `main`.
+Stop after S-005 is implemented and submitted as a PR against `main`.

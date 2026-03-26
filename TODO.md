@@ -36,9 +36,9 @@ Each item must be small, reviewable, and separable.
 | 2 | S-002 | P0 | done | S-001 | Merged in PR #5 |
 | 3 | S-003 | P0 | done | S-001,S-002 | Merged in PR #6 |
 | 4 | S-004 | P0 | done | S-001,S-002,S-003 | Completed in S-004 PR |
-| 5 | S-005 | P0 | done | S-001,S-002 | Completed in merged S-005 PR |
-| 6 | S-006 | P0 | done | S-001,S-002,S-003 | Completed in merged S-006 PR |
-| 7 | S-007 | P0 | ready | S-003,S-004,S-005,S-006 | Active in CURRENT_TASK.md |
+| 5 | S-005 | P0 | ready | S-001,S-002 | Active in CURRENT_TASK.md |
+| 6 | S-006 | P0 | queued | S-001,S-002,S-003 | Logical state, mapping, profile, and config-compiler interface declarations |
+| 7 | S-007 | P0 | queued | S-003,S-004,S-005,S-006 | Test-support foundation for pure-core modules |
 | 8 | S-008 | P1 | queued | S-004,S-007 | Device registry implementation |
 | 9 | S-009 | P1 | queued | S-005,S-007 | HID semantic descriptor model implementation |
 | 10 | S-010 | P1 | queued | S-009,S-007 | Decode-plan builder implementation |

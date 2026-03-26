@@ -44,8 +44,8 @@ Each item must be small, reviewable, and separable.
 | 10 | S-010 | P1 | ready | S-009,S-007 | Active in CURRENT_TASK.md |
 | 11 | S-011 | P1 | done | S-010,S-007 | HID report decoder implementation |
 | 12 | S-012 | P1 | done | S-006,S-007 | Logical gamepad state container implementation |
-| 13 | S-013 | P1 | ready | S-006,S-007 | Mapping bundle validator/loader implementation |
-| 14 | S-014 | P1 | queued | S-012,S-013,S-007 | Mapping engine base implementation |
+| 13 | S-013 | P1 | done | S-006,S-007 | Completed in S-013 PR |
+| 14 | S-014 | P1 | ready | S-012,S-013,S-007 | Active in CURRENT_TASK.md |
 | 15 | S-015 | P1 | blocked | S-012,U-002 | Profile catalog and first output encoder implementation |
 | 16 | S-016 | P1 | queued | S-004,S-013,S-014 | Supervisor state machine implementation |
 | 17 | S-017 | P1 | queued | S-003 | Platform time adapter implementation |

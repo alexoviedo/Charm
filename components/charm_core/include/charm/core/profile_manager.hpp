@@ -31,6 +31,8 @@ struct ProfileDescriptor {
 struct EncodeLogicalStateRequest {
   charm::contracts::ProfileId profile_id{};
   const charm::contracts::LogicalGamepadState* logical_state{nullptr};
+  std::uint8_t* output_buffer{nullptr};
+  std::size_t output_buffer_capacity{0};
 };
 
 struct EncodeLogicalStateResult {
@@ -73,7 +75,7 @@ class CanonicalProfileManager final : public ProfileManager {
 
 // Expose generic gamepad encoding for the manager to use
 namespace profile_generic_gamepad {
-  EncodeLogicalStateResult Encode(const charm::contracts::LogicalGamepadState* logical_state);
+  EncodeLogicalStateResult Encode(const EncodeLogicalStateRequest& request);
   GetProfileCapabilitiesResult GetCapabilities();
 }
 

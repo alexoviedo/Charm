@@ -68,6 +68,8 @@ class DefaultMappingBundleValidator : public MappingBundleValidator {
   ValidateMappingBundleResult Validate(const ValidateMappingBundleRequest& request) const override;
 };
 
+std::uint32_t ComputeMappingBundleHash(const CompiledMappingBundle& bundle);
+
 struct LoadMappingBundleRequest {
   const CompiledMappingBundle* bundle{nullptr};
 };
@@ -95,13 +97,13 @@ class MappingBundleLoader {
 
 class DefaultMappingBundleLoader : public MappingBundleLoader {
  public:
-  explicit DefaultMappingBundleLoader(const MappingBundleValidator& validator);
+  explicit DefaultMappingBundleLoader(const MappingBundleValidator* validator);
 
   LoadMappingBundleResult Load(const LoadMappingBundleRequest& request) override;
   GetActiveBundleResult GetActiveBundle(const GetActiveBundleRequest& request) const override;
 
  private:
-  const MappingBundleValidator& validator_;
+  const MappingBundleValidator* validator_;
   CompiledMappingBundle active_bundle_{};
   bool has_active_bundle_{false};
 };

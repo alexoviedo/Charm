@@ -89,7 +89,9 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
   ParserState global_state;
   LocalState local_state;
 
-  std::uint16_t bit_offset = 0;
+  std::uint16_t bit_offset_input = 0;
+  std::uint16_t bit_offset_output = 0;
+  std::uint16_t bit_offset_feature = 0;
   charm::contracts::ReportId current_report_id = 0;
 
   std::array<charm::contracts::CollectionIndex, kMaxCollectionsPerInterface> collection_stack{};
@@ -105,6 +107,13 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
       if (ptr < end) {
         std::uint8_t size = *ptr++;
         if (ptr < end) ptr++; // Skip data item tag
+        if (ptr + size > end) {
+          result.status = charm::contracts::ContractStatus::kRejected;
+          result.fault_code = charm::contracts::FaultCode{
+              .category = charm::contracts::ErrorCategory::kContractViolation,
+              .reason = 2}; // Malformed descriptor
+          return result;
+        }
         ptr += size;
       }
       continue;
@@ -152,7 +161,9 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
           global_state.report_id = static_cast<charm::contracts::ReportId>(raw_value);
           if (global_state.report_id != current_report_id) {
             current_report_id = global_state.report_id;
-            bit_offset = 0; // Reset bit offset for a new report ID
+            bit_offset_input = 0; // Reset bit offset for a new report ID
+            bit_offset_output = 0;
+            bit_offset_feature = 0;
           }
           break;
         default:
@@ -214,6 +225,12 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
         case kTagOutput:
         case kTagFeature: {
           bool is_constant = (raw_value & 0x01) != 0;
+          std::uint16_t* target_bit_offset = &bit_offset_input;
+          if (tag == kTagOutput) {
+            target_bit_offset = &bit_offset_output;
+          } else if (tag == kTagFeature) {
+            target_bit_offset = &bit_offset_feature;
+          }
 
           if (!is_constant) {
             for (std::uint16_t i = 0; i < global_state.report_count; ++i) {
@@ -237,7 +254,7 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
 
                 field.collection_index = collection_depth > 0 ? collection_stack[collection_depth - 1] : 0;
                 field.logical_index = i;
-                field.bit_offset = bit_offset;
+                field.bit_offset = *target_bit_offset;
                 field.bit_size = global_state.report_size;
                 field.is_signed = (global_state.logical_min < 0);
               } else {
@@ -247,10 +264,10 @@ ParseDescriptorResult DefaultHidDescriptorParser::ParseDescriptor(const ParseDes
                     .reason = 4}; // Fields capacity exceeded
                 return result;
               }
-              bit_offset += global_state.report_size;
+              *target_bit_offset += global_state.report_size;
             }
           } else {
-            bit_offset += (global_state.report_size * global_state.report_count);
+            *target_bit_offset += (global_state.report_size * global_state.report_count);
           }
           local_state.Clear();
           break;

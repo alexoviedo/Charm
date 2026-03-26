@@ -14,7 +14,8 @@ constexpr charm::contracts::ReportId kInputReportId{1};
 // C-structs used for deterministic byte-wise hashing and transport encoding
 // must use __attribute__((packed)) to guarantee the absence of hidden compiler padding.
 struct __attribute__((packed)) GenericGamepadReport {
-  std::uint16_t buttons{0};
+  std::uint8_t buttons_low{0};
+  std::uint8_t buttons_high{0};
   std::uint8_t hat{0};
   std::int8_t left_x{0};
   std::int8_t left_y{0};
@@ -30,9 +31,6 @@ const ProfileCapability kCapabilities[] = {
 };
 
 constexpr const char* kProfileName = "Generic Gamepad";
-
-// Static storage for the encoded report so we can return a stable pointer
-GenericGamepadReport g_last_encoded_report{};
 
 std::int8_t ClampAxis(std::int32_t logical_value) {
   // Logical axes might exceed standard int8 bounds.
@@ -66,42 +64,43 @@ GetProfileCapabilitiesResult GetCapabilities() {
   return result;
 }
 
-EncodeLogicalStateResult Encode(const charm::contracts::LogicalGamepadState* logical_state) {
+EncodeLogicalStateResult Encode(const EncodeLogicalStateRequest& request) {
   EncodeLogicalStateResult result{};
 
-  if (logical_state == nullptr) {
+  if (request.logical_state == nullptr || request.output_buffer == nullptr || request.output_buffer_capacity < sizeof(GenericGamepadReport)) {
     result.status = charm::contracts::ContractStatus::kFailed;
     result.fault_code.category = charm::contracts::ErrorCategory::kInvalidRequest;
     return result;
   }
 
-  g_last_encoded_report = GenericGamepadReport{};
+  GenericGamepadReport* report_ptr = new (request.output_buffer) GenericGamepadReport();
 
   // Encode buttons
   std::uint16_t buttons_mask = 0;
   for (std::size_t i = 0; i < 16; ++i) {
-    if (logical_state->buttons[i].pressed) {
+    if (request.logical_state->buttons[i].pressed) {
       buttons_mask |= (1 << i);
     }
   }
-  g_last_encoded_report.buttons = buttons_mask;
+  report_ptr->buttons_low = static_cast<std::uint8_t>(buttons_mask & 0xFF);
+  report_ptr->buttons_high = static_cast<std::uint8_t>((buttons_mask >> 8) & 0xFF);
 
   // Encode hat
-  g_last_encoded_report.hat = logical_state->hat.value;
+  report_ptr->hat = request.logical_state->hat.value;
 
   // Encode axes (assumes 0=Lx, 1=Ly, 2=Rx, 3=Ry)
-  g_last_encoded_report.left_x = ClampAxis(logical_state->axes[0].value);
-  g_last_encoded_report.left_y = ClampAxis(logical_state->axes[1].value);
-  g_last_encoded_report.right_x = ClampAxis(logical_state->axes[2].value);
-  g_last_encoded_report.right_y = ClampAxis(logical_state->axes[3].value);
+  report_ptr->left_x = ClampAxis(request.logical_state->axes[0].value);
+  report_ptr->left_y = ClampAxis(request.logical_state->axes[1].value);
+  report_ptr->right_x = ClampAxis(request.logical_state->axes[2].value);
+  report_ptr->right_y = ClampAxis(request.logical_state->axes[3].value);
 
   // Encode triggers
-  g_last_encoded_report.left_trigger = ClampTrigger(logical_state->left_trigger.value);
-  g_last_encoded_report.right_trigger = ClampTrigger(logical_state->right_trigger.value);
+  report_ptr->left_trigger = ClampTrigger(request.logical_state->left_trigger.value);
+  report_ptr->right_trigger = ClampTrigger(request.logical_state->right_trigger.value);
 
   result.status = charm::contracts::ContractStatus::kOk;
   result.report.report_id = kInputReportId;
-  result.report.bytes = reinterpret_cast<const std::uint8_t*>(&g_last_encoded_report);
+  result.report.bytes = request.output_buffer;
   result.report.size = sizeof(GenericGamepadReport);
 
   return result;

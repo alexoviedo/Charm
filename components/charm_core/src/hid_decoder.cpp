@@ -79,6 +79,14 @@ DecodeReportResult DefaultHidDecoder::DecodeReport(const DecodeReportRequest& re
     return result;
   }
 
+  if (request.decode_plan->binding_count > kMaxDecodeBindingsPerInterface) {
+    result.status = charm::contracts::ContractStatus::kRejected;
+    result.fault_code = charm::contracts::FaultCode{
+        .category = charm::contracts::ErrorCategory::kCapacityExceeded,
+        .reason = 7}; // Too many bindings
+    return result;
+  }
+
   std::size_t current_event_count = 0;
 
   for (std::size_t i = 0; i < request.decode_plan->binding_count; ++i) {
@@ -94,6 +102,14 @@ DecodeReportResult DefaultHidDecoder::DecodeReport(const DecodeReportRequest& re
           .category = charm::contracts::ErrorCategory::kCapacityExceeded,
           .reason = 4}; // Event count capacity exceeded
        return result;
+    }
+
+    if (binding.bit_size > 32) {
+      result.status = charm::contracts::ContractStatus::kRejected;
+      result.fault_code = charm::contracts::FaultCode{
+          .category = charm::contracts::ErrorCategory::kInvalidRequest,
+          .reason = 6}; // Binding size too large
+      return result;
     }
 
     // Check if the bit extraction goes out of bounds
@@ -115,20 +131,22 @@ DecodeReportResult DefaultHidDecoder::DecodeReport(const DecodeReportRequest& re
       final_value = static_cast<std::int32_t>(raw_value);
     }
 
-    auto& event = events_[current_event_count];
-    event.element_key_hash = binding.element_key_hash;
-    event.element_type = binding.element_type;
-    event.value = final_value;
-    event.timestamp = request.report.timestamp;
-    event.device_handle = request.report.device_handle;
-    event.interface_handle = request.report.interface_handle;
+    if (request.events_buffer != nullptr && current_event_count < request.events_buffer_capacity) {
+      auto& event = request.events_buffer[current_event_count];
+      event.element_key_hash = binding.element_key_hash;
+      event.element_type = binding.element_type;
+      event.value = final_value;
+      event.timestamp = request.report.timestamp;
+      event.device_handle = request.report.device_handle;
+      event.interface_handle = request.report.interface_handle;
+    }
 
     current_event_count++;
   }
 
   result.status = charm::contracts::ContractStatus::kOk;
-  result.events = events_.data();
-  result.event_count = current_event_count;
+  result.events = request.events_buffer;
+  result.event_count = std::min(current_event_count, request.events_buffer_capacity);
 
   return result;
 }

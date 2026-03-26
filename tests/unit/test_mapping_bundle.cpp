@@ -9,18 +9,6 @@ namespace {
 constexpr std::uint32_t kFnvPrime32 = 16777619;
 constexpr std::uint32_t kFnvOffsetBasis32 = 2166136261;
 
-std::uint32_t ComputeHash(const CompiledMappingBundle& bundle) {
-  std::uint32_t hash = kFnvOffsetBasis32;
-  const std::uint8_t* entries_ptr = reinterpret_cast<const std::uint8_t*>(bundle.entries.data());
-  std::size_t bytes_to_hash = bundle.entry_count * sizeof(MappingEntry);
-
-  for (std::size_t i = 0; i < bytes_to_hash; ++i) {
-    hash ^= entries_ptr[i];
-    hash *= kFnvPrime32;
-  }
-  return hash;
-}
-
 }  // namespace
 
 TEST(MappingBundleTest, ValidateValidBundle) {
@@ -33,8 +21,13 @@ TEST(MappingBundleTest, ValidateValidBundle) {
       .target = {LogicalElementType::kButton, 1},
       .scale = 1,
       .offset = 0};
+  bundle.bundle_ref.integrity = 1822546468;
 
-  bundle.bundle_ref.integrity = ComputeHash(bundle);
+
+
+
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
 
   DefaultMappingBundleValidator validator;
   ValidateMappingBundleRequest request{&bundle};
@@ -56,7 +49,7 @@ TEST(MappingBundleTest, ValidateUnsupportedVersion) {
   CompiledMappingBundle bundle{};
   bundle.bundle_ref.version = kSupportedMappingBundleVersion + 1;
   bundle.entry_count = 0;
-  bundle.bundle_ref.integrity = ComputeHash(bundle);
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
 
   DefaultMappingBundleValidator validator;
   ValidateMappingBundleRequest request{&bundle};
@@ -89,8 +82,13 @@ TEST(MappingBundleTest, ValidateIntegrityFailure) {
       .target = {LogicalElementType::kButton, 1},
       .scale = 1,
       .offset = 0};
+  bundle.bundle_ref.integrity = 1822546468;
 
-  bundle.bundle_ref.integrity = ComputeHash(bundle) + 1;
+
+
+
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle) + 1;
 
   DefaultMappingBundleValidator validator;
   ValidateMappingBundleRequest request{&bundle};
@@ -110,11 +108,16 @@ TEST(MappingBundleTest, LoadValidBundle) {
       .target = {LogicalElementType::kButton, 1},
       .scale = 1,
       .offset = 0};
+  bundle.bundle_ref.integrity = 1822546468;
 
-  bundle.bundle_ref.integrity = ComputeHash(bundle);
+
+
+
+
+  bundle.bundle_ref.integrity = charm::core::ComputeMappingBundleHash(bundle);
 
   DefaultMappingBundleValidator validator;
-  DefaultMappingBundleLoader loader(validator);
+  DefaultMappingBundleLoader loader(&validator);
 
   LoadMappingBundleRequest load_request{&bundle};
   auto load_result = loader.Load(load_request);
@@ -136,7 +139,7 @@ TEST(MappingBundleTest, LoadInvalidBundle) {
   bundle.bundle_ref.version = kSupportedMappingBundleVersion + 1;
 
   DefaultMappingBundleValidator validator;
-  DefaultMappingBundleLoader loader(validator);
+  DefaultMappingBundleLoader loader(&validator);
 
   LoadMappingBundleRequest load_request{&bundle};
   auto load_result = loader.Load(load_request);
@@ -152,7 +155,7 @@ TEST(MappingBundleTest, LoadInvalidBundle) {
 
 TEST(MappingBundleTest, LoadNullBundle) {
   DefaultMappingBundleValidator validator;
-  DefaultMappingBundleLoader loader(validator);
+  DefaultMappingBundleLoader loader(&validator);
 
   LoadMappingBundleRequest load_request{nullptr};
   auto load_result = loader.Load(load_request);
@@ -163,7 +166,7 @@ TEST(MappingBundleTest, LoadNullBundle) {
 
 TEST(MappingBundleTest, GetActiveBundleWhenEmpty) {
   DefaultMappingBundleValidator validator;
-  DefaultMappingBundleLoader loader(validator);
+  DefaultMappingBundleLoader loader(&validator);
 
   GetActiveBundleRequest get_request{};
   auto get_result = loader.GetActiveBundle(get_request);

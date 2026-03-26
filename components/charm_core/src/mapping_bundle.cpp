@@ -9,6 +9,45 @@ constexpr std::uint32_t kFnvOffsetBasis32 = 2166136261;
 
 }  // namespace
 
+std::uint32_t ComputeMappingBundleHash(const CompiledMappingBundle& bundle) {
+  std::uint32_t hash = kFnvOffsetBasis32;
+  for (std::size_t i = 0; i < bundle.entry_count; ++i) {
+    const auto& entry = bundle.entries[i];
+    std::uint32_t val;
+
+    val = entry.source.value;
+    for (int b = 0; b < 4; ++b) {
+      hash ^= ((val >> (b * 8)) & 0xFF);
+      hash *= kFnvPrime32;
+    }
+
+    hash ^= static_cast<std::uint8_t>(entry.source_type);
+    hash *= kFnvPrime32;
+
+    val = entry.target.index;
+    for (int b = 0; b < 4; ++b) {
+      hash ^= ((val >> (b * 8)) & 0xFF);
+      hash *= kFnvPrime32;
+    }
+
+    hash ^= static_cast<std::uint8_t>(entry.target.type);
+    hash *= kFnvPrime32;
+
+    val = static_cast<std::uint32_t>(entry.scale);
+    for (int b = 0; b < 4; ++b) {
+      hash ^= ((val >> (b * 8)) & 0xFF);
+      hash *= kFnvPrime32;
+    }
+
+    val = static_cast<std::uint32_t>(entry.offset);
+    for (int b = 0; b < 4; ++b) {
+      hash ^= ((val >> (b * 8)) & 0xFF);
+      hash *= kFnvPrime32;
+    }
+  }
+  return hash;
+}
+
 ValidateMappingBundleResult DefaultMappingBundleValidator::Validate(
     const ValidateMappingBundleRequest& request) const {
   ValidateMappingBundleResult result{};
@@ -33,16 +72,7 @@ ValidateMappingBundleResult DefaultMappingBundleValidator::Validate(
     return result;
   }
 
-  std::uint32_t hash = kFnvOffsetBasis32;
-  const std::uint8_t* entries_ptr = reinterpret_cast<const std::uint8_t*>(bundle.entries.data());
-  std::size_t bytes_to_hash = bundle.entry_count * sizeof(MappingEntry);
-
-  for (std::size_t i = 0; i < bytes_to_hash; ++i) {
-    hash ^= entries_ptr[i];
-    hash *= kFnvPrime32;
-  }
-
-  if (bundle.bundle_ref.integrity != hash) {
+  if (bundle.bundle_ref.integrity != ComputeMappingBundleHash(bundle)) {
     result.status = charm::contracts::ContractStatus::kRejected;
     result.fault_code = {charm::contracts::ErrorCategory::kIntegrityFailure, 0};
     return result;
@@ -52,20 +82,20 @@ ValidateMappingBundleResult DefaultMappingBundleValidator::Validate(
   return result;
 }
 
-DefaultMappingBundleLoader::DefaultMappingBundleLoader(const MappingBundleValidator& validator)
+DefaultMappingBundleLoader::DefaultMappingBundleLoader(const MappingBundleValidator* validator)
     : validator_(validator) {}
 
 LoadMappingBundleResult DefaultMappingBundleLoader::Load(const LoadMappingBundleRequest& request) {
   LoadMappingBundleResult result{};
 
-  if (request.bundle == nullptr) {
+  if (request.bundle == nullptr || validator_ == nullptr) {
     result.status = charm::contracts::ContractStatus::kRejected;
     result.fault_code = {charm::contracts::ErrorCategory::kInvalidRequest, 0};
     return result;
   }
 
   ValidateMappingBundleRequest validate_req{request.bundle};
-  auto validate_res = validator_.Validate(validate_req);
+  auto validate_res = validator_->Validate(validate_req);
 
   if (validate_res.status != charm::contracts::ContractStatus::kOk) {
     result.status = validate_res.status;

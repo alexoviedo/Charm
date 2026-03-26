@@ -46,7 +46,10 @@ TEST_F(ProfileManagerTest, EncodeWithSelectionSucceeds) {
   charm::core::EncodeLogicalStateRequest enc_req{};
   enc_req.profile_id.value = 1;
   charm::contracts::LogicalGamepadState state{};
+  std::uint8_t buffer[64];
   enc_req.logical_state = &state;
+  enc_req.output_buffer = buffer;
+  enc_req.output_buffer_capacity = sizeof(buffer);
 
   auto result = manager.EncodeLogicalState(enc_req);
 

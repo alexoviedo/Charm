@@ -27,6 +27,7 @@ struct DeviceDescriptorRef {
 };
 
 struct InterfaceDescriptorRef {
+  charm::contracts::DeviceHandle device_handle{};
   charm::contracts::InterfaceHandle interface_handle{};
   charm::contracts::InterfaceNumber interface_number{0};
   charm::contracts::RawDescriptorRef descriptor{};

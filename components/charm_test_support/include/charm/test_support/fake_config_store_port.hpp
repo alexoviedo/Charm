@@ -15,7 +15,15 @@ class FakeConfigStorePort : public charm::ports::ConfigStorePort {
     return load_result_;
   }
 
-  charm::contracts::PersistConfigResult PersistConfig(const charm::contracts::PersistConfigRequest&) override {
+  charm::contracts::PersistConfigResult PersistConfig(const charm::contracts::PersistConfigRequest& req) override {
+    if (persist_result_.status == charm::contracts::ContractStatus::kOk) {
+      persisted_config_.mapping_bundle = req.mapping_bundle;
+      persisted_config_.profile_id = req.profile_id;
+      // We don't allocate or free in fake store for bonding material to keep it simple,
+      // but we update the pointer/size if provided.
+      persisted_config_.bonding_material = req.bonding_material;
+      persisted_config_.bonding_material_size = req.bonding_material_size;
+    }
     return persist_result_;
   }
 

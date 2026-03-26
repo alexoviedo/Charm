@@ -1,0 +1,17 @@
+- [x] `components/charm_platform_usb/src/usb_host_adapter.cpp`: Serialize callback dispatch with teardown state updates
+- [x] `components/charm_core/src/supervisor.cpp`: Reject `kUnknown` mode before treating it as no-op
+- [x] `components/charm_core/src/profile_generic_gamepad_encoder.cpp`: Serialize button mask in a fixed byte order
+- [x] `components/charm_core/src/profile_generic_gamepad_encoder.cpp`: Stop reusing one global report buffer for every encode
+- [x] `components/charm_core/src/mapping_engine.cpp`: Defer mutable-state access until a mapping is matched
+- [x] `components/charm_core/src/mapping_engine.cpp`: Cap entry_count before iterating mapping entries
+- [x] `components/charm_core/src/mapping_engine.cpp`: Validate bundle integrity before applying mappings
+- [x] `components/charm_core/include/charm/core/mapping_bundle.hpp`: Avoid storing validator as borrowed reference
+- [x] `components/charm_core/src/mapping_bundle.cpp`: Hash canonical mapping fields, not struct memory
+- [x] `components/charm_core/src/logical_state.cpp`: Clear last-update timestamp when resetting state
+- [x] `components/charm_core/src/hid_decoder.cpp`: Reject bindings larger than 32 bits before bit extraction
+- [x] `components/charm_core/src/hid_decoder.cpp`: Validate decode-plan binding count before indexing bindings
+- [x] `components/charm_core/src/hid_semantic_model.cpp`: Separate bit offsets by HID report type
+- [x] `components/charm_core/src/hid_semantic_model.cpp`: Reject malformed long-item payloads before pointer advance
+- [x] `components/charm_core/src/device_registry.cpp`: Store device handle on interface registration
+- [x] `components/charm_test_support/include/charm/test_support/fake_config_store_port.hpp`: Make fake config store persist write requests
+- [x] `components/charm_core/include/charm/core/hid_decoder.hpp`: Define bounded ownership for decoded event output

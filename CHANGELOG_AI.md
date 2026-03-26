@@ -112,3 +112,44 @@ Validation:
 - Checked that each slice addressed one concern only
 - Checked that unresolved decisions remained explicit blockers where required
 - Checked that `CURRENT_TASK.md` points to a single selected first slice
+
+---
+
+## 2026-03-25
+Executed Slice S-001 — Shared core contract code foundation.
+
+Files covered:
+- CMakeLists.txt
+- main/CMakeLists.txt
+- main/main.cpp
+- components/charm_contracts/CMakeLists.txt
+- components/charm_contracts/include/charm/contracts/common_types.hpp
+- components/charm_contracts/include/charm/contracts/identity_types.hpp
+- components/charm_contracts/include/charm/contracts/status_types.hpp
+- components/charm_contracts/include/charm/contracts/error_types.hpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added the minimal ESP-IDF project scaffold required to host shared contract code
+- Added a header-only `charm_contracts` component for shared contract definitions
+- Implemented shared scalar, identity, status, and error contract types for S-001 only
+- Added a minimal placeholder `main/main.cpp` entrypoint solely to support scaffold compilation
+- Updated project-control files for the active S-001 slice
+
+What did not change:
+- No request/response shapes
+- No event/message contracts
+- No port declarations
+- No core business logic
+- No adapters or app wiring beyond the placeholder entrypoint
+- No tests
+
+Why:
+- To establish the smallest low-risk code foundation required before later contract and behavior slices
+
+Validation:
+- Checked the header contracts against `INTERFACES.md`
+- Checked that no platform SDK types leaked into shared contract headers
+- Prepared compile-only scaffold validation and include-path sanity checks for the PR review

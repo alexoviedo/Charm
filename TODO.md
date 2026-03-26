@@ -32,7 +32,7 @@ Each item must be small, reviewable, and separable.
 
 | Order | Slice | Priority | Status | Depends On | Notes |
 |---|---|---:|---:|---|---|
-| 1 | S-001 | P0 | ready | T-013 | Shared core contract code foundation |
+| 1 | S-001 | P0 | ready | T-013 | Shared core contract code foundation; active in CURRENT_TASK.md |
 | 2 | S-002 | P0 | queued | S-001 | Shared request/response and event/message contract code |
 | 3 | S-003 | P0 | queued | S-001,S-002 | Port interface declarations |
 | 4 | S-004 | P0 | queued | S-001,S-002,S-003 | Supervisor, control-plane, and registry interface declarations |

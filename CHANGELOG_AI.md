@@ -189,3 +189,43 @@ Validation:
 - Checked the new contracts against `INTERFACES.md`
 - Checked that no platform SDK types leaked into the new headers
 - Prepared compile-only and include-path sanity validation for PR review
+
+---
+
+## 2026-03-25
+Executed Slice S-003 — Port interface declarations.
+
+Files covered:
+- components/charm_contracts/include/charm/contracts/transport_types.hpp
+- components/charm_ports/CMakeLists.txt
+- components/charm_ports/include/charm/ports/usb_host_port.hpp
+- components/charm_ports/include/charm/ports/ble_transport_port.hpp
+- components/charm_ports/include/charm/ports/config_store_port.hpp
+- components/charm_ports/include/charm/ports/time_port.hpp
+- main/CMakeLists.txt
+- main/main.cpp
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Added the header-only `charm_ports` component
+- Declared the four external port interfaces
+- Added the minimal shared support contracts needed to declare the ports cleanly
+- Added compile/include sanity wiring in `main`
+- Updated project-control files for the active S-003 slice
+
+What did not change:
+- No adapter implementations
+- No supervisor, registry, parser, decoder, mapping, profile, compiler, or app logic
+- No tests
+- No runtime behavior
+- No refactors outside the minimal include/dependency wiring for validation
+
+Why:
+- To establish the external seams required before later core-module and adapter slices can be declared or implemented safely
+
+Validation:
+- Checked the port declarations against `INTERFACES.md`
+- Checked that no platform SDK types leaked through the port headers
+- Prepared compile-only and include-path sanity validation for PR review

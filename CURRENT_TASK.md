@@ -1,8 +1,8 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: None
-- Title: None
+- ID: S-022
+- Title: Config activation and persistence flow integration
 - Status: done
 
 ## Goal

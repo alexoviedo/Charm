@@ -189,3 +189,14 @@ Current acceptance checks:
 - **Result:** Pass
 - **Known gaps:** Only tests basic instantiation and Start() method calls; actual application runtime behaviour must be manually evaluated in a later V4 slice.
 - **Next safe step:** Open PR and proceed to next task.
+
+## Validation Evidence for S-022
+- **Slice:** S-022 — Config activation and persistence flow integration
+- **Scope:** Integrate loading, validating, and activating approved persisted config at application startup and during config-triggered transitions.
+- **Touched files:** `components/charm_app/include/charm/app/config_activation.hpp`, `components/charm_app/src/config_activation.cpp`, `components/charm_app/src/app_bootstrap.cpp`, `components/charm_app/CMakeLists.txt`, `tests/unit/test_config_activation.cpp`, `tests/unit/CMakeLists.txt`
+- **Contracts affected:** Config store port, mapping-bundle activation contracts, profile-selection contracts.
+- **Validation level:** V2 Unit, V3 Integration
+- **Checks performed:** Evaluated successful load, and ignored activations on failed loads by utilizing CTest and fake mocks for the storage port. Run mode bootstrapping was checked to instantiate the config store and pass it into the activator correctly.
+- **Result:** Pass
+- **Known gaps:** None outside the standard absence of hardware validation checks.
+- **Next safe step:** Open PR and proceed to next task.

@@ -1,4 +1,5 @@
 #include "charm/app/app_bootstrap.hpp"
+#include "charm/app/config_activation.hpp"
 
 #include "charm/core/logical_state.hpp"
 #include "charm/core/mapping_engine.hpp"
@@ -7,6 +8,7 @@
 #include "charm/platform/ble_transport_adapter.hpp"
 #include "charm/platform/time_port_esp_idf.hpp"
 #include "charm/platform/usb_host_adapter.hpp"
+#include "charm/platform/config_store_nvs.hpp"
 
 namespace charm::app {
 
@@ -18,6 +20,7 @@ static charm::core::DefaultMappingEngine mapping_engine(state_store);
 static charm::core::CanonicalProfileManager profile_manager;
 static charm::platform::UsbHostAdapter usb_host;
 static charm::platform::BleTransportAdapter ble_transport;
+static charm::platform::ConfigStoreNvs config_store;
 static charm::core::DefaultSupervisor supervisor;
 
 void InitializeAndRun() {
@@ -25,6 +28,9 @@ void InitializeAndRun() {
   usb_host.Start({});
   ble_transport.Start({});
   supervisor.Start({});
+
+  // Activate configured mappings and profile
+  ActivatePersistedConfig(config_store, supervisor);
 }
 
 }  // namespace charm::app

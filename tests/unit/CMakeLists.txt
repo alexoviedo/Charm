@@ -125,3 +125,10 @@ target_include_directories(test_ble_transport_adapter PRIVATE ${CONTRACTS_INC} $
 target_sources(test_ble_transport_adapter PRIVATE "../../components/charm_platform_ble/src/ble_transport_adapter.cpp")
 target_link_libraries(test_ble_transport_adapter PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 add_test(NAME BleTransportAdapterTest COMMAND test_ble_transport_adapter)
+
+# S-022 Config Activation
+add_executable(test_config_activation test_config_activation.cpp)
+target_include_directories(test_config_activation PRIVATE ${CONTRACTS_INC} ${PORTS_INC} ${TEST_SUPPORT_INC} "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_app/include")
+target_sources(test_config_activation PRIVATE "../../components/charm_app/src/config_activation.cpp")
+target_link_libraries(test_config_activation PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME ConfigActivationTest COMMAND test_config_activation)

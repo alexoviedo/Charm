@@ -23,6 +23,7 @@ class Supervisor {
   virtual charm::contracts::ActivateMappingBundleResult ActivateMappingBundle(const charm::contracts::ActivateMappingBundleRequest& request) = 0;
   virtual charm::contracts::SelectProfileResult SelectProfile(const charm::contracts::SelectProfileRequest& request) = 0;
   virtual charm::contracts::RecoveryResult RequestRecovery(const charm::contracts::RecoveryRequest& request) = 0;
+  virtual void SetLastFault(const charm::contracts::FaultRecordRef& fault) = 0;
   virtual SupervisorState GetState() const = 0;
 };
 
@@ -37,6 +38,7 @@ class DefaultSupervisor : public Supervisor {
   charm::contracts::ActivateMappingBundleResult ActivateMappingBundle(const charm::contracts::ActivateMappingBundleRequest& request) override;
   charm::contracts::SelectProfileResult SelectProfile(const charm::contracts::SelectProfileRequest& request) override;
   charm::contracts::RecoveryResult RequestRecovery(const charm::contracts::RecoveryRequest& request) override;
+  void SetLastFault(const charm::contracts::FaultRecordRef& fault) override;
   SupervisorState GetState() const override;
 
  private:

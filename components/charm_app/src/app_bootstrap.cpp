@@ -5,6 +5,7 @@
 #include "charm/core/mapping_engine.hpp"
 #include "charm/core/profile_manager.hpp"
 #include "charm/core/supervisor.hpp"
+#include "charm/core/recovery_policy.hpp"
 #include "charm/platform/ble_transport_adapter.hpp"
 #include "charm/platform/time_port_esp_idf.hpp"
 #include "charm/platform/usb_host_adapter.hpp"
@@ -22,6 +23,7 @@ static charm::platform::UsbHostAdapter usb_host;
 static charm::platform::BleTransportAdapter ble_transport;
 static charm::platform::ConfigStoreNvs config_store;
 static charm::core::DefaultSupervisor supervisor;
+static charm::core::DefaultRecoveryPolicy recovery_policy(supervisor);
 
 void InitializeAndRun() {
   // At this thin integration level, we just start the adapters and the supervisor

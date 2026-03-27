@@ -35,6 +35,7 @@ add_library(charm_core_obj OBJECT
     "../../components/charm_core/src/profile_manager.cpp"
     "../../components/charm_core/src/profile_generic_gamepad_encoder.cpp"
     "../../components/charm_core/src/supervisor.cpp"
+    "../../components/charm_core/src/recovery_policy.cpp"
     "../../components/charm_platform_time/src/time_port_esp_idf.cpp"
     "../../components/charm_test_support/src/esp_timer_mock.cpp"
     "../../components/charm_platform_storage/src/config_store_nvs.cpp"
@@ -98,6 +99,11 @@ add_executable(test_supervisor test_supervisor.cpp)
 target_include_directories(test_supervisor PRIVATE ${CONTRACTS_INC} ${CORE_INC})
 target_link_libraries(test_supervisor PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 
+# S-023 Recovery Policy
+add_executable(test_recovery_policy test_recovery_policy.cpp)
+target_include_directories(test_recovery_policy PRIVATE ${CONTRACTS_INC} ${CORE_INC})
+target_link_libraries(test_recovery_policy PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+
 # Register tests
 include(CTest)
 add_test(NAME DeviceRegistryTest COMMAND test_device_registry)
@@ -110,6 +116,7 @@ add_test(NAME MappingEngineTest COMMAND test_mapping_engine)
 add_test(NAME ProfileManagerTest COMMAND test_profile_manager)
 add_test(NAME ProfileGenericGamepadEncoderTest COMMAND test_profile_generic_gamepad_encoder)
 add_test(NAME SupervisorTest COMMAND test_supervisor)
+add_test(NAME RecoveryPolicyTest COMMAND test_recovery_policy)
 
 # S-019 USB Host Adapter
 add_executable(test_usb_host_adapter test_usb_host_adapter.cpp)

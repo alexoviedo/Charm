@@ -1,8 +1,8 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: S-022
-- Title: Config activation and persistence flow integration
+- ID: S-023
+- Title: Recovery and fault integration
 - Status: done
 
 ## Goal

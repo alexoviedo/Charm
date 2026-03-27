@@ -733,3 +733,40 @@ Why:
 
 Validation:
 - Ran the existing unit test suite to ensure the new structural additions did not break compilation or linking of core functionality.
+
+---
+
+## 2026-03-27
+Executed Slice S-023 — Recovery and fault integration.
+
+Files covered:
+- components/charm_core/include/charm/core/recovery_policy.hpp
+- components/charm_core/src/recovery_policy.cpp
+- components/charm_core/include/charm/core/supervisor.hpp
+- components/charm_core/src/supervisor.cpp
+- components/charm_app/src/app_bootstrap.cpp
+- components/charm_core/CMakeLists.txt
+- tests/unit/test_recovery_policy.cpp
+- tests/unit/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- IMPLEMENTATION_SLICES.md
+- VALIDATION.md
+- CHANGELOG_AI.md
+
+What changed:
+- Implemented `DefaultRecoveryPolicy` to handle `FaultEvent`s and trigger `RequestRecovery` on the supervisor for severe faults (`kError` or `kFatal`).
+- Updated `Supervisor` interface to support setting the last fault (`SetLastFault`).
+- Updated `DefaultSupervisor` to persist the received `FaultRecordRef`.
+- Added `test_recovery_policy.cpp` to verify policy behavior for all fault severities.
+- Wired `DefaultRecoveryPolicy` into `charm::app::InitializeAndRun` in `app_bootstrap.cpp`.
+
+What did not change:
+- No changes to underlying fault generation from other adapters.
+- No complex event queueing introduced.
+
+Why:
+- To integrate approved fault categories and recovery transitions without expanding module responsibilities.
+
+Validation:
+- Executed unit tests ensuring `kError` and `kFatal` severity faults trigger recovery mode and save fault context in `SupervisorState`, while lesser severity faults are ignored. App bootstrapping successfully sets up and links `DefaultRecoveryPolicy` to `Supervisor`.

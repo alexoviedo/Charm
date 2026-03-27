@@ -25,7 +25,7 @@ Required checks:
 - no implementation logic
 - no hidden requirement invention
 - correct separation of stable truth vs unresolved decisions
-- exactly one active task in CURRENT_TASK.md
+- exactly one active current task entry in `CURRENT_TASK.md`
 
 ### V1 — Contract / Interface Slice
 Use for:
@@ -44,199 +44,70 @@ Required checks:
 - allowed and forbidden dependency rules are explicit
 - persistence boundaries are stated without inventing backend details
 
-### V2 — Unit Validation Slice
+### WR0 — Web Restart Control Validation
 Use for:
-- pure core logic
-- mapping behavior
-- schema/validation logic
+- WR-series planning/control updates
+- replacement-web boundary resets
 
 Required checks:
-- deterministic inputs/outputs
-- no hardware dependency
-- regression cases identified
-- changed contracts reflected in INTERFACES.md and DECISIONS.md if needed
+- legacy web slices are explicitly marked superseded
+- restart slices are explicit about implementable vs blocked scope
+- firmware-protected paths are explicitly out-of-bounds
+- Web Serial is recorded as primary browser/device path
+- Gamepad API is recorded as primary tester path
+- config write/persist is either explicitly blocked OR explicitly mapped to a repo-proven firmware transport contract with cited evidence
+- no `web/`, firmware, or workflow implementation files are modified in control-only slices
 
-### V3 — Integration Validation Slice
+### WR2 — Config Transport Contract Validation
 Use for:
-- adapter wiring
-- queue boundaries
-- persistence wiring
-- supervisor interactions
+- transport-assessment and config transport contract readiness checks
+- config import/export transport contract updates (only after proof)
 
 Required checks:
-- module boundary adherence
-- lifecycle correctness
-- error/fault path coverage
-- no forbidden cross-layer coupling
+- contract maps to existing repo interfaces (`PersistConfigRequest`, `LoadConfigResult`, `ClearConfigResult`, `ConfigStorePort`)
+- status/fault mapping is explicit and lossless
+- no invented payload fields beyond repo contracts
+- explicit evidence review for host/device runtime transport path (serial and BLE considered separately)
+- if runtime path is unproven, UI/docs remain explicitly blocked (`blocked_unproven_transport`)
+- next implementation slice reflects blocked or ready truth after assessment
 
-### V4 — Hardware / Manual Validation Slice
+### WR3 — Runtime Cutover Validation
 Use for:
-- USB device behavior
-- BLE behavior
-- end-to-end firmware behavior
+- replacement-web cutover from staging path to active runtime path
 
 Required checks:
-- exact hardware/setup listed
-- expected outcome listed
-- actual outcome recorded
-- regressions and anomalies captured
+- active runtime `web/` renders replacement shell correctly
+- capability gating behavior remains intact after cutover
+- artifact ingestion behavior remains intact after cutover
+- flash/console/config-local/tester flows are unchanged in behavior
+- blocked transport messaging remains explicit and truthful
 
-## CONTRACT APPROVAL GATE
+### WR1 — Artifact Contract Validation
+Use for:
+- artifact source/ingestion decisions
+- artifact bundle contract changes
+
+Required checks:
+- accepted source modes are explicit (same-site static manifest and/or manual local import)
+- runtime GitHub Actions API dependence is explicitly allowed or disallowed
+- minimum artifact set is explicit and repo-proven
+- flash offsets are either accepted as temporary legacy contract or explicitly blocked with rationale
+- no workflow/firmware/runtime-file changes in control-only artifact slices
+
+## Contract Approval Gate
 Implementation must not begin until all items below are explicitly approved or explicitly deferred.
 
 ### Architecture Alignment
-- ARCHITECTURE.md and INTERFACES.md do not conflict
-- No stable architecture truth has been replaced with implementation detail
-- Unresolved architecture choices remain unresolved in DECISIONS.md unless explicitly decided
-
-### Contract Inventory Approval
-- Each major module has an approved public interface boundary
-- Shared data contracts are approved
-- Request/response shapes are approved at boundary level
-- Event/message shapes are approved at boundary level
-- Persistence boundaries are approved
-- External adapter boundaries are approved
-- Boundary-level error categories are approved
-- Cross-cutting invariants are approved
-
-### Dependency Approval
-- Allowed module dependencies are approved
-- Forbidden module dependencies are approved
-- Required isolation boundaries are approved
-
-### Decision / Ambiguity Approval
-- Required pre-implementation decisions are either:
-  - explicitly decided, or
-  - explicitly deferred with no blocking impact on the first slice
-- The first slice does not silently assume unresolved decisions
+- ARCHITECTURE.md and INTERFACES.md do not conflict.
+- No stable architecture truth has been replaced with implementation detail.
+- Unresolved architecture choices remain unresolved in DECISIONS.md unless explicitly decided.
 
 ### Slice Readiness Approval
-- CURRENT_TASK.md reflects exactly one active slice
-- TODO.md identifies the next implementation slice as a narrow task
-- Touched files for the first implementation slice are listed before coding
-- Validation evidence required for the first implementation slice is defined before coding
+- `CURRENT_TASK.md` reflects exactly one active task entry.
+- `TODO.md` identifies the next implementation slice as a narrow task.
+- Touched files for the slice are listed before coding.
+- Validation evidence required for the slice is defined before coding.
 
 ### Scope-Control Approval
-- No unrelated concerns have been merged into the first implementation slice
-- No broad refactor is implied by the first implementation slice
-- No product documentation work is mixed into the first implementation slice
-
-## Required Evidence Per Slice
-Every completed slice must record:
-- slice id/title
-- scope
-- touched files
-- contracts affected
-- validation level(s) used
-- checks performed
-- result
-- known gaps
-- next safe step
-
-## Approval Gates
-A slice is not complete unless:
-- scope stayed narrow
-- validation evidence exists
-- unresolved issues are explicit
-- no unrelated concerns were merged
-- handoff state is recorded
-
-## Red Flags
-Stop and split the task if any of these occur:
-- more files need to change than originally scoped
-- contract changes spread into multiple unrelated modules
-- validation surface expands unexpectedly
-- unresolved architecture decisions block safe progress
-
-## Current Default For This Slice
-Current slice type: V2 — Unit Validation Slice
-
-Current acceptance checks:
-- supervisor state transitions are tested and enforced
-- invalid states and modes are correctly rejected
-- tests pass without any hardware dependency
-- no decoding, mapping, or parsing logic is implemented
-
-## Validation Evidence for S-019
-- **Slice:** S-019 — USB host adapter implementation
-- **Scope:** Implementation of normalized enumeration, descriptor delivery, report delivery, and serialized teardown behavior behind the USB host port.
-- **Touched files:** `components/charm_platform_usb/CMakeLists.txt`, `components/charm_platform_usb/include/charm/platform/usb_host_adapter.hpp`, `components/charm_platform_usb/src/usb_host_adapter.cpp`, `tests/unit/test_usb_host_adapter.cpp`
-- **Contracts affected:** `charm::ports::UsbHostPort`
-- **Validation level:** V2/V3 Unit & Integration
-- **Checks performed:** Successfully executed start/stop behaviour and listener hook unit tests verifying pure core mocks.
-- **Result:** Pass
-- **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
-- **Next safe step:** Open PR and proceed to S-020.
-
-## Validation Evidence for S-020
-- **Slice:** S-020 — BLE transport adapter implementation
-- **Scope:** Implementation of BLE transport adapter component and its mock implementation for unit testing.
-- **Touched files:** `components/charm_platform_ble/CMakeLists.txt`, `components/charm_platform_ble/include/charm/platform/ble_transport_adapter.hpp`, `components/charm_platform_ble/src/ble_transport_adapter.cpp`, `tests/unit/test_ble_transport_adapter.cpp`
-- **Contracts affected:** `charm::ports::BleTransportPort`
-- **Validation level:** V2/V3 Unit & Integration
-- **Checks performed:** Successfully executed start/stop/notify behaviour and listener hook unit tests verifying pure core mocks.
-- **Result:** Pass
-- **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
-- **Next safe step:** Open PR and proceed to next task.
-
-## Validation Evidence for S-021
-- **Slice:** S-021 — Thin app bootstrap and run-mode wiring
-- **Scope:** Implementation of thin app bootstrap that wires approved modules together for run-mode startup without broad behavior changes.
-- **Touched files:** `components/charm_app/CMakeLists.txt`, `components/charm_app/include/charm/app/app_bootstrap.hpp`, `components/charm_app/src/app_bootstrap.cpp`, `main/main.cpp`, `main/CMakeLists.txt`
-- **Contracts affected:** Supervisor, mapping engine, profile manager, time adapter, USB host port, BLE transport port.
-- **Validation level:** V3 Integration
-- **Checks performed:** Successfully compiled and executed CTest unit tests suite verifying that the new wiring component doesn't break any core abstractions or fail to compile due to missing links.
-- **Result:** Pass
-- **Known gaps:** Only tests basic instantiation and Start() method calls; actual application runtime behaviour must be manually evaluated in a later V4 slice.
-- **Next safe step:** Open PR and proceed to next task.
-
-## Validation Evidence for S-022
-- **Slice:** S-022 — Config activation and persistence flow integration
-- **Scope:** Integrate loading, validating, and activating approved persisted config at application startup and during config-triggered transitions.
-- **Touched files:** `components/charm_app/include/charm/app/config_activation.hpp`, `components/charm_app/src/config_activation.cpp`, `components/charm_app/src/app_bootstrap.cpp`, `components/charm_app/CMakeLists.txt`, `tests/unit/test_config_activation.cpp`, `tests/unit/CMakeLists.txt`
-- **Contracts affected:** Config store port, mapping-bundle activation contracts, profile-selection contracts.
-- **Validation level:** V2 Unit, V3 Integration
-- **Checks performed:** Evaluated successful load, and ignored activations on failed loads by utilizing CTest and fake mocks for the storage port. Run mode bootstrapping was checked to instantiate the config store and pass it into the activator correctly.
-- **Result:** Pass
-- **Known gaps:** None outside the standard absence of hardware validation checks.
-- **Next safe step:** Open PR and proceed to next task.
-
-## Validation Evidence for S-023
-- **Slice:** S-023 — Recovery and fault integration
-- **Scope:** Integrate approved fault categories and recovery transitions without expanding module responsibilities.
-- **Touched files:** `components/charm_core/include/charm/core/recovery_policy.hpp`, `components/charm_core/src/recovery_policy.cpp`, `components/charm_core/include/charm/core/supervisor.hpp`, `components/charm_core/src/supervisor.cpp`, `components/charm_app/src/app_bootstrap.cpp`, `components/charm_core/CMakeLists.txt`, `tests/unit/test_recovery_policy.cpp`, `tests/unit/CMakeLists.txt`
-- **Contracts affected:** `FaultEvent`, `FaultCode`, `RecoveryState`, recovery request/result shapes
-- **Validation level:** V2 Unit, V3 Integration
-- **Checks performed:** Executed unit tests ensuring `kError` and `kFatal` severity faults trigger recovery mode and save fault context in `SupervisorState`, while lesser severity faults are ignored. App bootstrapping successfully sets up and links `DefaultRecoveryPolicy` to `Supervisor`.
-- **Result:** Pass
-- **Known gaps:** Requires actual fault triggering and full state recovery testing in `V4` manual validations.
-- **Next safe step:** Open PR and proceed to next task.
-
-## Validation Evidence for P-002
-- **Slice:** P-002 — Minimal compile-only GitHub CI
-- **Scope:** Add the smallest safe GitHub Actions workflow that proves the firmware builds for the intended target (`esp32s3`) and gives useful failure feedback.
-- **Touched files:** `.github/workflows/firmware_build.yml`, `CURRENT_TASK.md`, `TODO.md`, `CHANGELOG_AI.md`, `IMPLEMENTATION_SLICES.md`, `VALIDATION.md`
-- **Contracts affected:** None (CI workflow slice)
-- **Validation level:** V0 Documentation / Control Slice
-- **Checks performed:**
-  - Written the `.github/workflows/firmware_build.yml` using `espressif/esp-idf-ci-action@v1`.
-  - Configured target `esp32s3` with `idf.py build`.
-  - Configured artifact upload for output `.bin` files.
-- **Result:** Pass
-- **Known gaps:** Workflow triggers and cloud environment not tested until actually merged.
-- **Next safe step:** Open PR and proceed to P-003.
-
-## Validation Evidence for P-001
-- **Slice:** P-001 — CI/CD repo audit and enforcement plan
-- **Scope:** Establish a trustworthy baseline for GitHub-based CI/CD for this ESP32-S3 / ESP-IDF firmware repo.
-- **Touched files:** `IMPLEMENTATION_SLICES.md`, `VALIDATION.md`, `CURRENT_TASK.md`, `TODO.md`, `CHANGELOG_AI.md`, `DECISIONS.md`, `MEMORY.md`
-- **Contracts affected:** None (Documentation / Control slice)
-- **Validation level:** V0 Documentation / Control Slice
-- **Checks performed:**
-  - Audited repo structure, build scripts, and ESP-IDF context.
-  - Drafted a minimal safe staged rollout plan for CI.
-  - Specified native unit test workflow vs ESP-IDF firmware workflow.
-  - Verified no implementation logic was changed and exactly one active task is prepared for the next prompt.
-- **Result:** Pass
-- **Known gaps:** Actual GitHub workflows are not yet tested; this is just the plan.
-- **Next safe step:** Open PR and proceed to P-002.
+- No unrelated concerns are merged into one slice.
+- Blocked items are labeled explicitly as blocked.

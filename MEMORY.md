@@ -23,16 +23,22 @@ Store durable facts, constraints, and working rules that should survive session 
 - Broad refactors require explicit Tech Lead approval.
 - Repo Markdown control files are persistent project memory.
 - Implementation slice planning is stored in `IMPLEMENTATION_SLICES.md`.
+- Firmware code/config/interfaces/transport behavior are out of scope for web restart slices.
+- Protected firmware paths remain untouched during web restart work:
+  - `components/**`
+  - `main/**`
+  - `tests/**`
+  - root `CMakeLists.txt`
+  - firmware-related `.github/workflows/**`
 
-## Core Architectural Facts
-- Platform-agnostic core is mandatory.
-- Translation and transport must remain separate.
-- Canonical output of translation is LogicalGamepadState.
-- Persisted mappings use stable semantic HID identity, not parser order.
-- USB teardown is serialized through adapter context.
-- Configuration work is isolated from the run-time data path.
-- Deterministic hot-path behavior is a hard requirement.
-- CI/CD requires separate jobs for native x86 core tests (via CMake/GTest) and ESP32-S3 cross-compiled firmware (via `espressif/esp-idf-ci-action`).
+## Webapp Restart Facts (WR track)
+- Legacy `web/` runtime is disposable and superseded for planning purposes.
+- Replacement webapp must be built in a parallel path first (planned as `web-next/`) and cut over later by explicit slice.
+- The replacement remains zero-backend and client-side only.
+- Web Serial is the primary browser/device integration path.
+- Gamepad API is the primary browser-side tester/validation path.
+- Device config write/persist flows are blocked unless a repo-proven firmware transport contract exists.
+- The currently inspected BLE adapter context does not prove a browser-usable BLE config/test path.
 
 ## Working Rules for This Chat
 - Do not invent requirements beyond approved architecture and Tech Lead direction.

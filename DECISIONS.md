@@ -115,10 +115,17 @@ Only approved decisions belong in accepted/rejected sections.
 - Decision: single profile first (Generic Gamepad)
 
 ### U-003
-- Status: unresolved
+- Status: accepted
 - Decision Needed: Config compiler placement
 - Options: on-device / companion web app / both
 - Impact: Config workflow and persistence boundaries
+- Decision: Companion web app
+
+### D-011
+- Status: accepted
+- Decision: Implement a standalone Web Serial Flasher & Config Compiler in `web/`.
+- Rationale: Isolates JS/HTML complexity from the ESP-IDF C++ data plane and provides a zero-install tool for firmware updates.
+- Consequence: Must exist entirely outside the core translation domain and build flow.
 
 ### U-004
 - Status: unresolved

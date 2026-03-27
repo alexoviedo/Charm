@@ -449,11 +449,13 @@ Expected categories:
 
 ---
 
-### Config Compiler
+### Config Compiler / Web Flasher
 
 #### Public Interfaces
-- Validate mapping configuration input
+- Validate mapping configuration input (via companion app)
 - Compile approved mapping configuration into an immutable mapping bundle
+- Fetch ESP-IDF firmware artifacts via GitHub API
+- Flash firmware and mapping bundles to ESP32-S3 via Web Serial API
 - Expose compile result metadata and diagnostics
 
 #### Data Contracts
@@ -461,32 +463,34 @@ Expected categories:
 - `CompileDiagnostics`
 - `CompiledMappingBundle`
 - `MappingBundleRef`
+- Firmware ZIP format and offsets
 
 #### Request / Response Shapes
 - `CompileConfigRequest` / `CompileConfigResult`
 - `ValidateConfigRequest` / `ValidateConfigResult`
 
 #### Event / Message Shapes
-- May emit config-validation/status events to the control plane
+- May emit config-validation/status events to the control plane (once flashed)
 
 #### Persistence Boundaries
 - Produces compiled bundle suitable for config-store persistence
 - Does not own selected adapter persistence details
 
 #### External Adapter Boundaries
-- None in the core contract
-- Placement is unresolved: on-device, companion web app, or both
+- Implemented entirely in a standalone Web/JS environment (`web/`)
+- Relies on browser-provided Web Serial and standard GitHub REST APIs
 
 #### Invariants and Validation Rules
 - Compiler output must be deterministic for the same approved config input
 - Compiler diagnostics must not depend on platform-native types
-- Compiler does not encode transport packets
+- Web app must not require ESP-IDF or C++ compilation at runtime
 
 #### Error Categories
 - `config_invalid`
 - `config_incomplete`
 - `compile_failure`
-- `integrity_failure`
+- `flash_failure`
+- `network_failure`
 
 ---
 

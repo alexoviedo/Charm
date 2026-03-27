@@ -32,6 +32,7 @@ Store durable facts, constraints, and working rules that should survive session 
 - USB teardown is serialized through adapter context.
 - Configuration work is isolated from the run-time data path.
 - Deterministic hot-path behavior is a hard requirement.
+- CI/CD requires separate jobs for native x86 core tests (via CMake/GTest) and ESP32-S3 cross-compiled firmware (via `espressif/esp-idf-ci-action`).
 
 ## Working Rules for This Chat
 - Do not invent requirements beyond approved architecture and Tech Lead direction.

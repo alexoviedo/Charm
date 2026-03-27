@@ -844,7 +844,7 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 24 | S-024 | blocked | no | depends on runnable integrated path |
 | 25 | P-001 | done | no | CI/CD audit and plan |
 | 26 | P-002 | done | no | Minimal compile-only GitHub CI |
-| 27 | P-003 | queued | no | depends on P-002 |
+| 27 | P-003 | done | no | implemented in P-003 PR |
 
 ## Best First Slice
 - Selected first slice: `S-001 — Shared core contract code foundation`

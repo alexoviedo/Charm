@@ -1,9 +1,9 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: P-003
-- Title: Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3
-- Status: queued
+- ID: none
+- Title: none
+- Status: clear
 
 ## Goal
-Awaiting next execution prompt to implement the next execution target.
+Awaiting next execution prompt to select and implement the next execution target.

@@ -13,6 +13,45 @@ Keep entries concise, factual, and reviewable.
 ---
 
 ## 2026-03-27
+Executed Slice P-003 — Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3.
+
+Files covered:
+- .github/workflows/firmware_build.yml
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- IMPLEMENTATION_SLICES.md
+
+What changed:
+- Updated `.github/workflows/firmware_build.yml` to always run the artifact upload step, even on build failures.
+- Expanded artifact collection to include `.elf`, `.map`, and partition/bootloader `.bin` files for debugging context.
+- Renamed the artifact to `firmware-esp32s3-build-artifacts` for clarity.
+- Added a step to generate a detailed `$GITHUB_STEP_SUMMARY` highlighting build status, target, and IDF version.
+- Cleared `CURRENT_TASK.md` and marked `P-003` as done in tracking files.
+
+What did not change:
+- The job name `ci / build-firmware (esp32s3)` was not changed to preserve required-check stability.
+- No changes to product features or unit test workflows.
+
+Why:
+- To increase the amount and usefulness of feedback the CI gives to both humans and AI agents when the firmware build fails.
+
+Validation:
+- Validated workflow syntax and semantics locally.
+
+**AI Debugging Guide for Firmware Build Failures:**
+When an AI agent needs to investigate a failing `ci / build-firmware (esp32s3)` workflow run:
+1.  **Check the Summary:** Look at the Workflow run summary first. The job summary now explicitly calls out the build status, target, and IDF version.
+2.  **Examine Build Logs:** Look at the direct logs from the `Build with ESP-IDF` step. Look for specific compiler errors (e.g., `#error`, `error:`, linker errors).
+3.  **Inspect Artifacts:** If the failure is related to linking, memory limits, or missing dependencies:
+    *   Download the `firmware-esp32s3-build-artifacts.zip`.
+    *   Check `.map` files to analyze memory section overflows or missing symbol locations.
+    *   Check `.elf` files for detailed symbol debugging (e.g., using `xtensa-esp32s3-elf-objdump`).
+    *   If partial build output exists, the artifact upload will now capture whatever `.bin`, `.map`, or `.elf` files were successfully generated up to the point of failure.
+
+---
+
+## 2026-03-27
 Executed Slice P-002 — Minimal compile-only GitHub CI.
 
 Files covered:

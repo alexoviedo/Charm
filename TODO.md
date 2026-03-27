@@ -58,7 +58,7 @@ Each item must be small, reviewable, and separable.
 | 24 | S-024 | P2 | ready | S-021,S-023 | Manual hardware validation pass |
 | 25 | P-001 | P0 | done | none | CI/CD repo audit and enforcement plan |
 | 26 | P-002 | P0 | done | P-001 | Minimal compile-only GitHub CI |
-| 27 | P-003 | P0 | ready | P-002 | Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3 |
+| 27 | P-003 | P0 | done | P-002 | Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3 |
 
 ## Backlog Rules
 - No backlog item may combine unrelated concerns unless the Tech Lead explicitly asks for a combined documentation pass.

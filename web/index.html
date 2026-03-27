@@ -11,26 +11,61 @@
 <body>
   <div class="container">
     <h1>Charm Web Flasher</h1>
-    <div class="panel">
-      <h2>1. Fetch Firmware</h2>
-      <p>Fetch the latest `esp32s3` firmware artifacts from GitHub Actions.</p>
-      <input type="text" id="github-repo" value="alexoviedo/Charm" placeholder="owner/repo" />
-      <input type="password" id="github-pat" placeholder="GitHub PAT (optional for rate limits)" />
-      <button id="fetch-btn">Fetch Latest Artifacts</button>
-      <div id="fetch-status" class="status">Waiting to fetch...</div>
+
+    <div id="browser-support-warning" class="panel error" style="display: none;">
+      <h2>Browser Not Supported</h2>
+      <p>Your browser does not support the Web Serial API required to communicate with the device. Please use Google Chrome, Microsoft Edge, or another Chromium-based browser on a desktop operating system.</p>
+    </div>
+
+    <div id="app-content">
+      <div class="panel">
+        <h2>1. Fetch Firmware</h2>
+        <p>Fetch the latest ESP32-S3 firmware artifacts from the server.</p>
+        <div id="firmware-info" style="display: none; margin-bottom: 10px; font-family: monospace;">
+          <strong>Target:</strong> <span id="info-target"></span><br/>
+          <strong>Version:</strong> <span id="info-version"></span><br/>
+          <strong>Build Date:</strong> <span id="info-date"></span><br/>
+        </div>
+        <button id="fetch-btn">Download Latest Firmware</button>
+        <div id="fetch-status" class="status">Ready to download firmware...</div>
+      </div>
+
+      <div class="panel">
+        <h2>2. Connect & Flash Device</h2>
+        <p>Connect to the ESP32-S3 via Web Serial to identify the chip and flash the firmware.</p>
+
+        <div id="device-info" style="display: none; margin-bottom: 10px; font-family: monospace; background: #eef; padding: 10px; border-radius: 4px;">
+          <strong>Detected Chip:</strong> <span id="info-chip"></span><br/>
+          <strong>MAC Address:</strong> <span id="info-mac"></span><br/>
+        </div>
+
+        <div id="recovery-guidance" style="display: none; margin-bottom: 10px; padding: 10px; background: #fee; border-left: 4px solid #f00;">
+          <strong>Flashing Failed or Interrupted?</strong>
+          <ul style="margin: 5px 0 0 20px; padding: 0;">
+            <li>Ensure the USB cable supports data transfer, not just charging.</li>
+            <li>Close any other serial monitors or tabs holding the port.</li>
+            <li><strong>Manual Bootloader Entry:</strong> Hold the <strong>BOOT</strong> button, press and release the <strong>EN</strong> (or RST) button, then release the <strong>BOOT</strong> button. Then try flashing again.</li>
+          </ul>
+        </div>
+
+        <button id="connect-btn" disabled>Connect Device</button>
+        <button id="flash-btn" disabled>Flash Firmware</button>
+        <div id="flash-status" class="status">Waiting for firmware to be downloaded...</div>
+      </div>
     </div>
 
     <div class="panel">
-      <h2>2. Flash Device</h2>
-      <p>Connect to the ESP32-S3 via Web Serial to flash the firmware.</p>
-      <button id="connect-btn" disabled>Connect to Serial</button>
-      <button id="flash-btn" disabled>Flash Firmware</button>
-      <div id="flash-status" class="status">Waiting for firmware...</div>
-    </div>
-
-    <div class="panel">
-      <h2>Serial Monitor</h2>
-      <button id="clear-monitor-btn">Clear Monitor</button>
+      <h2>Serial / Debug Monitor</h2>
+      <p>Connect to the device's serial stream to view real-time logs and debug output.</p>
+      <div style="margin-bottom: 10px;">
+        <button id="monitor-connect-btn">Connect Monitor</button>
+        <button id="monitor-disconnect-btn" disabled>Disconnect</button>
+        <button id="clear-monitor-btn">Clear Output</button>
+        <label style="margin-left: 10px;">
+          <input type="checkbox" id="auto-scroll-cb" checked> Auto-scroll
+        </label>
+      </div>
+      <div id="monitor-status" class="status" style="margin-bottom: 10px;">Disconnected</div>
       <div id="terminal-container"></div>
     </div>
   </div>

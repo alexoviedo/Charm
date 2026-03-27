@@ -178,3 +178,14 @@ Current acceptance checks:
 - **Result:** Pass
 - **Known gaps:** Hardware testing omitted; relying on C++ mock structure for V2 level verification.
 - **Next safe step:** Open PR and proceed to next task.
+
+## Validation Evidence for S-021
+- **Slice:** S-021 — Thin app bootstrap and run-mode wiring
+- **Scope:** Implementation of thin app bootstrap that wires approved modules together for run-mode startup without broad behavior changes.
+- **Touched files:** `components/charm_app/CMakeLists.txt`, `components/charm_app/include/charm/app/app_bootstrap.hpp`, `components/charm_app/src/app_bootstrap.cpp`, `main/main.cpp`, `main/CMakeLists.txt`
+- **Contracts affected:** Supervisor, mapping engine, profile manager, time adapter, USB host port, BLE transport port.
+- **Validation level:** V3 Integration
+- **Checks performed:** Successfully compiled and executed CTest unit tests suite verifying that the new wiring component doesn't break any core abstractions or fail to compile due to missing links.
+- **Result:** Pass
+- **Known gaps:** Only tests basic instantiation and Start() method calls; actual application runtime behaviour must be manually evaluated in a later V4 slice.
+- **Next safe step:** Open PR and proceed to next task.

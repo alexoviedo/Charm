@@ -703,3 +703,36 @@ Why:
 
 Validation:
 - CTest successfully validated `BleTransportAdapterTest` with a 100% pass rate.
+
+---
+
+## 2026-03-27
+Executed Slice S-021 — Thin app bootstrap and run-mode wiring.
+
+Files covered:
+- components/charm_app/CMakeLists.txt
+- components/charm_app/include/charm/app/app_bootstrap.hpp
+- components/charm_app/src/app_bootstrap.cpp
+- main/main.cpp
+- main/CMakeLists.txt
+- CURRENT_TASK.md
+- TODO.md
+- IMPLEMENTATION_SLICES.md
+- VALIDATION.md
+- CHANGELOG_AI.md
+
+What changed:
+- Created the `charm_app` component to act as the thin wiring layer.
+- Implemented `charm::app::InitializeAndRun()` to instantiate and wire core modules (`CanonicalLogicalStateStore`, `DefaultMappingEngine`, `CanonicalProfileManager`, `DefaultSupervisor`) and platform adapters (`TimePortEspIdf`, `UsbHostAdapter`, `BleTransportAdapter`).
+- Modified `main.cpp` to call the new bootstrap initialization.
+- Marked S-021 done in project tracking files and added validation evidence.
+
+What did not change:
+- No behavior changes in core or platform components.
+- No complex dependency injection framework was introduced.
+
+Why:
+- To integrate the isolated core components and port implementations into a runnable application entry point.
+
+Validation:
+- Ran the existing unit test suite to ensure the new structural additions did not break compilation or linking of core functionality.

@@ -17,5 +17,8 @@
 #include "charm/core/hid_semantic_model.hpp"
 #include "charm/core/device_registry.hpp"
 #include "charm/core/supervisor.hpp"
+#include "charm/app/app_bootstrap.hpp"
 
-extern "C" void app_main(void) {}
+extern "C" void app_main(void) {
+  charm::app::InitializeAndRun();
+}

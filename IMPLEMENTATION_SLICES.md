@@ -872,7 +872,13 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 25 | P-001 | done | no | CI/CD audit and plan |
 | 26 | P-002 | done | no | Minimal compile-only GitHub CI |
 | 27 | P-003 | done | no | implemented in P-003 PR |
-| 28 | W-001 | queued | no | depends on P-003 |
+| 28 | W-001 | done | no | Webapp audit and delivery strategy |
+| 29 | W-002 | done | no | Webapp product contract and no-auth UX model |
+| 30 | W-003 | done | no | Firmware web distribution pipeline for browser flashing |
+| 31 | W-004 | done | no | Flashing UX MVP |
+| 32 | W-005 | done | no | Serial/debug monitor MVP |
+| 33 | W-006 | done | no | Device identity, firmware version, and recovery UX |
+| 34 | W-010 | done | no | Webapp hardening, operator docs, and handoff |
 
 ## Best First Slice
 - Selected first slice: `S-001 — Shared core contract code foundation`
@@ -889,34 +895,34 @@ Break the approved architecture into the smallest safe implementation slices bef
 Use this exact prompt for the next turn:
 
 ```text
-Create a PR against main for Slice P-002 — Implement native unit-test GitHub Action workflow.
+Execute exactly one implementation slice: W-007 — Mapping-profile transport contract
 
-Read:
-- IMPLEMENTATION_SLICES.md
-- CURRENT_TASK.md
-- VALIDATION.md
-- MEMORY.md
+Goal:
+Define how the webapp will eventually send mapping profiles/configuration to the ESP32-S3.
 
-Execute only P-002.
+Your task:
+Design and document the transport contract for profile/config management.
 
-Scope:
-- Create a GitHub Actions workflow file in `.github/workflows/` to run native x86 unit tests.
-- Ensure the workflow runs on push and pull request to `main`.
-- Install necessary dependencies (`cmake`, `libgtest-dev`) on the Ubuntu runner.
-- Execute the tests via `cmake` and `ctest`.
+Evaluate and document:
+1. BLE config-mode path
+2. serial-based config path
+3. whether both paths are needed
+4. capability detection and fallback behavior
+5. profile validation and versioning assumptions
+6. what data must be local-only vs eventually syncable
+7. how this transport remains separate from firmware flashing
 
-Do not:
-- Create the ESP-IDF build workflow yet.
-- Implement branch protection.
-- Modify application or test code.
+Produce:
+A. DEVICE_CONFIG_TRANSPORT.md initial truth
+B. updates to INTERFACES.md and DECISIONS.md
+C. recommended implementation order for config/profile support
+D. exact next slice recommendation
 
-Before changing files:
-- list the exact files you will touch
-- explain why each file must change
-- restate the acceptance criteria and validation steps for P-002
+Rules:
+- No implementation of profile upload yet
+- No feature creep into full profile editor UX
+- Keep contracts explicit and narrow
+- If firmware-side protocol gaps exist, surface them instead of guessing
 
-At the end:
-- open a PR against main
-- update CURRENT_TASK.md, TODO.md, and CHANGELOG_AI.md to reflect only P-002
-- report the PR number and any assumptions made
+Stop after the transport contract is defined.
 ```

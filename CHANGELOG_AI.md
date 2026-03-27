@@ -13,6 +13,80 @@ Keep entries concise, factual, and reviewable.
 ---
 
 ## 2026-03-27
+Executed Slices W-005, W-006, and W-010 — Serial monitor MVP, Device visibility, and Webapp handoff docs.
+
+Files covered:
+- web/index.html
+- web/src/main.js
+- web/src/monitor.js
+- web/src/flasher.js
+- TROUBLESHOOTING.md
+- WEBAPP_PLAN.md
+- WEBAPP_VALIDATION.md
+- IMPLEMENTATION_SLICES.md
+- TODO.md
+- CHANGELOG_AI.md
+
+What changed:
+- Updated the serial monitor to handle independent connect/disconnect lifecycles without interfering with the flashing tool.
+- Surfaced detected chip type, MAC address, target firmware version, and build date in the UI.
+- Provided conditional recovery guidance based on flashing failure states.
+- Created `TROUBLESHOOTING.md` to establish debugging playbooks for humans and AI.
+- Appended a validation checklist for future PRs to `WEBAPP_VALIDATION.md`.
+- Prepared the handoff state for the next session focused on the `Mapping-profile transport contract`.
+
+What did not change:
+- Profile configuration compilation and uploading via Web Serial remains deferred.
+- No core C++ logic changes.
+- CI/CD pipelines remained unchanged from W-004.
+
+Why:
+- To harden the MVP webapp, ensure clear operator and user documentation, and create a reliable boundary before introducing complex configuration workflows.
+
+Validation:
+- Validated UI updates syntactically and visually confirmed independent serial monitor connections do not block flasher capabilities when managed sequentially.
+
+---
+
+## 2026-03-27
+Executed Slices W-001 through W-004 — Webapp audit, product contract, distribution pipeline, and Flashing UX MVP.
+
+Files covered:
+- .github/workflows/firmware_build.yml
+- web/index.html
+- web/src/github.js (removed)
+- web/src/firmware.js (added)
+- web/src/main.js
+- WEBAPP_PLAN.md
+- FLASHING_UX.md
+- WEB_RELEASES.md
+- WEBAPP_VALIDATION.md
+- DECISIONS.md
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- IMPLEMENTATION_SLICES.md
+
+What changed:
+- Removed `github.js` and dynamic REST API dependencies from the web app.
+- Created `firmware.js` to fetch static artifacts from relative URLs based on `manifest.json`.
+- Updated `index.html` to remove credential inputs and add browser support messaging.
+- Updated `.github/workflows/firmware_build.yml` to generate `manifest.json` and prepare web artifacts.
+- Generated `WEBAPP_PLAN.md`, `FLASHING_UX.md`, `WEB_RELEASES.md`, and `WEBAPP_VALIDATION.md` control files to define the web app product boundary.
+
+What did not change:
+- No changes to `flasher.js` or `monitor.js`.
+- No C++ core logic changes.
+
+Why:
+- To align the web flasher with a static delivery model, removing the need for user credentials, addressing MVP constraints, and establishing clear product requirements.
+
+Validation:
+- Validated manually that the UI and static file path assumptions correctly adhere to Web Serial and Web API boundaries.
+
+---
+
+## 2026-03-27
 Executed Slice P-003 — Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3.
 
 Files covered:

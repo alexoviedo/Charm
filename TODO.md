@@ -59,7 +59,14 @@ Each item must be small, reviewable, and separable.
 | 25 | P-001 | P0 | done | none | CI/CD repo audit and enforcement plan |
 | 26 | P-002 | P0 | done | P-001 | Minimal compile-only GitHub CI |
 | 27 | P-003 | P0 | done | P-002 | Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3 |
-| 28 | W-001 | P1 | ready | P-003 | Standalone web flasher and serial monitor |
+| 28 | W-001 | P1 | done | P-003 | Webapp audit and delivery strategy |
+| 29 | W-002 | P1 | done | W-001 | Webapp product contract and no-auth UX model |
+| 30 | W-003 | P1 | done | W-002 | Firmware web distribution pipeline for browser flashing |
+| 31 | W-004 | P1 | done | W-003 | Flashing UX MVP |
+| 32 | W-005 | P1 | done | W-004 | Serial/debug monitor MVP |
+| 33 | W-006 | P1 | done | W-005 | Device identity, firmware version, and recovery UX |
+| 34 | W-007 | P2 | ready | W-010 | Mapping-profile transport contract |
+| 35 | W-010 | P1 | done | W-006 | Webapp hardening, operator docs, and handoff |
 
 ## Backlog Rules
 - No backlog item may combine unrelated concerns unless the Tech Lead explicitly asks for a combined documentation pass.

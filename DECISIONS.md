@@ -127,6 +127,12 @@ Only approved decisions belong in accepted/rejected sections.
 - Rationale: Isolates JS/HTML complexity from the ESP-IDF C++ data plane and provides a zero-install tool for firmware updates.
 - Consequence: Must exist entirely outside the core translation domain and build flow.
 
+### D-012
+- Status: accepted
+- Decision: The web app will be a static site, downloading firmware artifacts via static relative HTTP paths (e.g., from `gh-pages`), and requires no user accounts or cloud backend.
+- Rationale: Avoids credential leakage (GitHub PATs), removes dynamic CI-fetching rate limits, and satisfies the "no backend dependencies for MVP" rule.
+- Consequence: CI/CD must be responsible for organizing and publishing `.bin` artifacts alongside the static site HTML/JS.
+
 ### U-004
 - Status: unresolved
 - Decision Needed: Need and timing for OutputStateQueue

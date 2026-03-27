@@ -784,6 +784,37 @@ Break the approved architecture into the smallest safe implementation slices bef
 - Test-first:
   - no
 
+### P-001 — CI/CD repo audit and enforcement plan
+- Objective:
+  - Establish a trustworthy baseline for GitHub-based CI/CD for this ESP32-S3 / ESP-IDF firmware repo.
+- CI/CD Audit:
+  - 1. Existing workflows: None (no `.github/` folder).
+  - 2. Existing build entrypoints: `CMakeLists.txt` (ESP-IDF format), `main/CMakeLists.txt`, `tests/unit/CMakeLists.txt` (pure-core GTest build).
+  - 3. ESP-IDF version assumptions: Requires an IDF version capable of compiling C++20 (`set(CMAKE_CXX_STANDARD 20)`). ESP-IDF v5.x or newer is typically required for good C++20 support. The project relies on `idf_component_register` and `$ENV{IDF_PATH}/tools/cmake/project.cmake`.
+  - 4. Target chip assumptions: ESP32-S3 (as per the task description).
+  - 5. Required submodules/external dependencies: GTest is required for unit tests (`find_package(GTest REQUIRED)`). No Git submodules are configured.
+  - 6. Build outputs: The repo can emit binaries via standard ESP-IDF build flow (`idf.py build`) producing a `charm` binary. Unit tests emit host binaries.
+  - 7. Current gaps preventing reliable CI: No automated GitHub Actions, test dependencies (GTest) are not installed in the standard ESP-IDF docker container, no explicit linting or format enforcement yet.
+  - 8. Flaky CI causes: Mismatching ESP-IDF versions, missing GTest headers on the runner, host build toolchain mismatches (CMake/GCC versions for the host pure-core unit tests versus the xtensa toolchain).
+  - 9. Readiness:
+    - compile-only CI: Ready (pure-core host unit tests compile and run; ESP-IDF cross-compile is ready to test).
+    - artifact packaging: Ready (ESP-IDF build outputs can be packaged).
+    - release automation: Not ready (needs versioning strategy and release workflow).
+    - hardware-in-the-loop: Not ready (requires dedicated runners attached to physical hardware).
+- Minimal Safe Staged Rollout Plan:
+  - Stage 1: Native x86 Unit Test Enforcement (fast feedback on core logic).
+  - Stage 2: ESP-IDF Firmware Build Enforcement (verify compilation against target chip).
+  - Stage 3: Artifact Retention (save the firmware binaries for review).
+- Recommended GitHub Action Tool:
+  - Recommend `espressif/esp-idf-ci-action` for the firmware build step because it simplifies execution within the official Espressif Docker environment.
+  - For unit tests, a standard Ubuntu runner with `cmake` and `libgtest-dev` is preferred since pure-core tests have zero ESP-IDF dependencies and must remain platform-agnostic. Using a separate job for unit tests ensures host-level separation.
+- Recommended Required Status Checks:
+  - `ci / unit-tests`
+  - `ci / build-firmware (esp32s3)`
+- Exact slices to execute next in order:
+  - P-002: Implement native unit-test GitHub Action workflow.
+  - P-003: Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3.
+
 ## Ranked Execution Order
 | Order | Slice | Status | Test-first | Notes |
 |---|---|---|---|---|
@@ -811,6 +842,9 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 22 | S-022 | done | yes | implemented in S-022 PR |
 | 23 | S-023 | done | yes | implemented in S-023 PR |
 | 24 | S-024 | blocked | no | depends on runnable integrated path |
+| 25 | P-001 | done | no | CI/CD audit and plan |
+| 26 | P-002 | queued | no | depends on P-001 |
+| 27 | P-003 | queued | no | depends on P-002 |
 
 ## Best First Slice
 - Selected first slice: `S-001 — Shared core contract code foundation`
@@ -821,43 +855,40 @@ Break the approved architecture into the smallest safe implementation slices bef
   - failure is cheap to roll back
 
 ## Conceptual CURRENT_TASK Update
-`CURRENT_TASK.md` should point to `S-001 — Shared core contract code foundation` as the single active next execution target.
+`CURRENT_TASK.md` should point to `P-002 — Implement native unit-test GitHub Action workflow` as the single active next execution target.
 
 ## Exact Next Prompt
 Use this exact prompt for the next turn:
 
 ```text
-Create a PR against main for Slice S-001 — Shared core contract code foundation.
+Create a PR against main for Slice P-002 — Implement native unit-test GitHub Action workflow.
 
 Read:
 - IMPLEMENTATION_SLICES.md
 - CURRENT_TASK.md
-- INTERFACES.md
 - VALIDATION.md
 - MEMORY.md
 
-Execute only S-001.
+Execute only P-002.
 
 Scope:
-- create the minimal build/module scaffold required to host shared contract code
-- implement only the shared scalar, identity, status, and error contract definitions listed for S-001
+- Create a GitHub Actions workflow file in `.github/workflows/` to run native x86 unit tests.
+- Ensure the workflow runs on push and pull request to `main`.
+- Install necessary dependencies (`cmake`, `libgtest-dev`) on the Ubuntu runner.
+- Execute the tests via `cmake` and `ctest`.
 
 Do not:
-- implement request/response shapes
-- implement event/message contracts
-- implement ports
-- implement supervisor, registry, parser, decoder, mapping, profile, compiler, adapters, or app wiring
-- add runtime behavior
-- add tests unless they are absolutely required for the scaffold to compile
-- broaden the slice
+- Create the ESP-IDF build workflow yet.
+- Implement branch protection.
+- Modify application or test code.
 
 Before changing files:
 - list the exact files you will touch
 - explain why each file must change
-- restate the acceptance criteria and validation steps for S-001
+- restate the acceptance criteria and validation steps for P-002
 
 At the end:
 - open a PR against main
-- update CURRENT_TASK.md, TODO.md, and CHANGELOG_AI.md to reflect only S-001
+- update CURRENT_TASK.md, TODO.md, and CHANGELOG_AI.md to reflect only P-002
 - report the PR number and any assumptions made
 ```

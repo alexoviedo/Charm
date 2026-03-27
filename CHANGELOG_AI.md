@@ -12,6 +12,37 @@ Keep entries concise, factual, and reviewable.
 
 ---
 
+## 2026-03-27
+Executed Slice P-001 — CI/CD repo audit and enforcement plan.
+
+Files covered:
+- IMPLEMENTATION_SLICES.md
+- VALIDATION.md
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- DECISIONS.md
+- MEMORY.md
+
+What changed:
+- Audited the repository for CI/CD readiness.
+- Drafted a minimal safe staged rollout plan for CI enforcement.
+- Updated project control tracking files to incorporate the new CI/CD slices (P-001, P-002, P-003).
+- Added `U-009` (Workflow tools) and resolved it to standard Ubuntu runner (unit-tests) and `espressif/esp-idf-ci-action` (firmware build).
+
+What did not change:
+- No GitHub Actions workflows were implemented or committed yet.
+- No branch protection settings were changed.
+- No application or test logic was altered.
+
+Why:
+- To establish a trustworthy baseline and plan for GitHub-based CI/CD without mixing documentation planning with implementation steps.
+
+Validation:
+- Verified no logic was altered. Checked project control updates against requirements.
+
+---
+
 ## 2026-03-25
 Initialized the proposed repo control scaffolding for the project.
 

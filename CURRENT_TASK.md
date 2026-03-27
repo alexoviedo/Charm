@@ -1,9 +1,9 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: S-023
-- Title: Recovery and fault integration
-- Status: done
+- ID: P-002
+- Title: Implement native unit-test GitHub Action workflow
+- Status: queued
 
 ## Goal
-Awaiting next execution prompt.
+Awaiting next execution prompt to implement the GitHub Action workflow for pure-core native unit tests.

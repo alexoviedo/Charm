@@ -211,3 +211,18 @@ Current acceptance checks:
 - **Result:** Pass
 - **Known gaps:** Requires actual fault triggering and full state recovery testing in `V4` manual validations.
 - **Next safe step:** Open PR and proceed to next task.
+
+## Validation Evidence for P-001
+- **Slice:** P-001 — CI/CD repo audit and enforcement plan
+- **Scope:** Establish a trustworthy baseline for GitHub-based CI/CD for this ESP32-S3 / ESP-IDF firmware repo.
+- **Touched files:** `IMPLEMENTATION_SLICES.md`, `VALIDATION.md`, `CURRENT_TASK.md`, `TODO.md`, `CHANGELOG_AI.md`, `DECISIONS.md`, `MEMORY.md`
+- **Contracts affected:** None (Documentation / Control slice)
+- **Validation level:** V0 Documentation / Control Slice
+- **Checks performed:**
+  - Audited repo structure, build scripts, and ESP-IDF context.
+  - Drafted a minimal safe staged rollout plan for CI.
+  - Specified native unit test workflow vs ESP-IDF firmware workflow.
+  - Verified no implementation logic was changed and exactly one active task is prepared for the next prompt.
+- **Result:** Pass
+- **Known gaps:** Actual GitHub workflows are not yet tested; this is just the plan.
+- **Next safe step:** Open PR and proceed to P-002.

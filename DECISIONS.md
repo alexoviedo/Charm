@@ -56,6 +56,18 @@ Only approved decisions belong in accepted/rejected sections.
 - Rationale: Future sessions need stable repo-local context.
 - Consequence: Control files must be kept current and disciplined.
 
+### D-009
+- Status: accepted
+- Decision: Native x86 unit tests and ESP-IDF cross-compiled firmware builds will be separated into distinct CI jobs/stages.
+- Rationale: Core tests remain platform-agnostic and do not need the overhead or environment constraints of the ESP-IDF toolchain.
+- Consequence: Unit tests will run on a standard Ubuntu runner with `cmake` and `libgtest-dev`.
+
+### D-010
+- Status: accepted
+- Decision: Use `espressif/esp-idf-ci-action` for the firmware build step.
+- Rationale: Simplifies execution within the official Espressif Docker environment.
+- Consequence: The CI workflow will not manually maintain an ESP-IDF environment using the installer action.
+
 ---
 
 ## Rejected Options

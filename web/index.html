@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Charm Web Flasher & Serial Monitor</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Import xterm.css for the serial monitor -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Charm Web Flasher</h1>
+    <div class="panel">
+      <h2>1. Fetch Firmware</h2>
+      <p>Fetch the latest `esp32s3` firmware artifacts from GitHub Actions.</p>
+      <input type="text" id="github-repo" value="alexoviedo/Charm" placeholder="owner/repo" />
+      <input type="password" id="github-pat" placeholder="GitHub PAT (optional for rate limits)" />
+      <button id="fetch-btn">Fetch Latest Artifacts</button>
+      <div id="fetch-status" class="status">Waiting to fetch...</div>
+    </div>
+
+    <div class="panel">
+      <h2>2. Flash Device</h2>
+      <p>Connect to the ESP32-S3 via Web Serial to flash the firmware.</p>
+      <button id="connect-btn" disabled>Connect to Serial</button>
+      <button id="flash-btn" disabled>Flash Firmware</button>
+      <div id="flash-status" class="status">Waiting for firmware...</div>
+    </div>
+
+    <div class="panel">
+      <h2>Serial Monitor</h2>
+      <button id="clear-monitor-btn">Clear Monitor</button>
+      <div id="terminal-container"></div>
+    </div>
+  </div>
+
+  <!-- Dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://unpkg.com/esptool-js@0.4.3/bundle.js"></script>
+
+  <!-- Application Logic -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -784,6 +784,33 @@ Break the approved architecture into the smallest safe implementation slices bef
 - Test-first:
   - no
 
+### W-001 — Standalone web flasher and serial monitor
+- Objective:
+  - Create a standalone frontend application in `web/` capable of fetching ESP-IDF firmware artifacts from GitHub and flashing them via Web Serial API, including a serial monitor.
+- Exact files likely to be created or modified:
+  - `web/index.html`
+  - `web/style.css`
+  - `web/src/main.js`
+  - `web/src/github.js`
+  - `web/src/flasher.js`
+  - `web/src/monitor.js`
+- Contracts involved:
+  - GitHub REST API (`firmware-esp32s3-build-artifacts.zip`)
+  - Web Serial API (`esptool-js`, `xterm.js`)
+- Dependencies:
+  - P-003 (GitHub action uploading the artifact)
+- Acceptance criteria:
+  - Web application is completely isolated from ESP-IDF build flow
+  - UI allows fetching latest CI artifact zip and extracting partition, bootloader, and main binaries
+  - UI provides an xterm-based serial monitor interface
+- Validation steps:
+  - V0 structural review for boundaries
+  - manual verification of module load and UI rendering
+- Rollback impact if it fails:
+  - low; delete `web/` directory
+- Why this slice is safely isolated:
+  - it is a pure client-side addition with no C++ coupling
+
 ### P-001 — CI/CD repo audit and enforcement plan
 - Objective:
   - Establish a trustworthy baseline for GitHub-based CI/CD for this ESP32-S3 / ESP-IDF firmware repo.
@@ -845,6 +872,7 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 25 | P-001 | done | no | CI/CD audit and plan |
 | 26 | P-002 | done | no | Minimal compile-only GitHub CI |
 | 27 | P-003 | done | no | implemented in P-003 PR |
+| 28 | W-001 | queued | no | depends on P-003 |
 
 ## Best First Slice
 - Selected first slice: `S-001 — Shared core contract code foundation`

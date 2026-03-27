@@ -113,6 +113,10 @@ charm::contracts::RecoveryResult DefaultSupervisor::RequestRecovery(const charm:
   return result;
 }
 
+void DefaultSupervisor::SetLastFault(const charm::contracts::FaultRecordRef& fault) {
+  state_.last_fault = fault;
+}
+
 SupervisorState DefaultSupervisor::GetState() const {
   return state_;
 }

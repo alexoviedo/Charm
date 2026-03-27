@@ -200,3 +200,14 @@ Current acceptance checks:
 - **Result:** Pass
 - **Known gaps:** None outside the standard absence of hardware validation checks.
 - **Next safe step:** Open PR and proceed to next task.
+
+## Validation Evidence for S-023
+- **Slice:** S-023 — Recovery and fault integration
+- **Scope:** Integrate approved fault categories and recovery transitions without expanding module responsibilities.
+- **Touched files:** `components/charm_core/include/charm/core/recovery_policy.hpp`, `components/charm_core/src/recovery_policy.cpp`, `components/charm_core/include/charm/core/supervisor.hpp`, `components/charm_core/src/supervisor.cpp`, `components/charm_app/src/app_bootstrap.cpp`, `components/charm_core/CMakeLists.txt`, `tests/unit/test_recovery_policy.cpp`, `tests/unit/CMakeLists.txt`
+- **Contracts affected:** `FaultEvent`, `FaultCode`, `RecoveryState`, recovery request/result shapes
+- **Validation level:** V2 Unit, V3 Integration
+- **Checks performed:** Executed unit tests ensuring `kError` and `kFatal` severity faults trigger recovery mode and save fault context in `SupervisorState`, while lesser severity faults are ignored. App bootstrapping successfully sets up and links `DefaultRecoveryPolicy` to `Supervisor`.
+- **Result:** Pass
+- **Known gaps:** Requires actual fault triggering and full state recovery testing in `V4` manual validations.
+- **Next safe step:** Open PR and proceed to next task.

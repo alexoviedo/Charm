@@ -60,14 +60,14 @@ ApplyInputEventResult DefaultMappingEngine::ApplyInputEvent(
           break;
         case LogicalElementType::kTrigger:
           if (entry.target.index == 0) {
-            mutable_state.left_trigger.value = static_cast<std::uint16_t>(std::clamp(mapped_value, 0, 65535));
+            mutable_state.left_trigger.value = static_cast<std::uint16_t>(std::clamp<std::int32_t>(mapped_value, 0, 65535));
           } else if (entry.target.index == 1) {
-            mutable_state.right_trigger.value = static_cast<std::uint16_t>(std::clamp(mapped_value, 0, 65535));
+            mutable_state.right_trigger.value = static_cast<std::uint16_t>(std::clamp<std::int32_t>(mapped_value, 0, 65535));
           }
           break;
         case LogicalElementType::kHat:
           if (entry.target.index == 0) {
-            mutable_state.hat.value = static_cast<std::uint8_t>(std::clamp(mapped_value, 0, 255));
+            mutable_state.hat.value = static_cast<std::uint8_t>(std::clamp<std::int32_t>(mapped_value, 0, 255));
           }
           break;
         default:

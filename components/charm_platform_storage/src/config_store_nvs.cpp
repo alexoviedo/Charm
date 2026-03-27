@@ -20,7 +20,7 @@ charm::contracts::LoadConfigResult ConfigStoreNvs::LoadConfig(const charm::contr
   charm::contracts::LoadConfigResult result{};
   nvs_handle_t handle;
 
-  if (nvs_open(kNvsNamespace, 0, &handle) != 0) {
+  if (nvs_open(kNvsNamespace, NVS_READONLY, &handle) != 0) {
     result.status = charm::contracts::ContractStatus::kFailed;
     return result;
   }
@@ -81,7 +81,7 @@ charm::contracts::PersistConfigResult ConfigStoreNvs::PersistConfig(const charm:
   charm::contracts::PersistConfigResult result{};
   nvs_handle_t handle;
 
-  if (nvs_open(kNvsNamespace, 1, &handle) != 0) {
+  if (nvs_open(kNvsNamespace, NVS_READWRITE, &handle) != 0) {
     result.status = charm::contracts::ContractStatus::kFailed;
     return result;
   }
@@ -132,7 +132,7 @@ charm::ports::ClearConfigResult ConfigStoreNvs::ClearConfig(const charm::ports::
 
   result.status = charm::contracts::ContractStatus::kFailed;
 
-  if (nvs_open(kNvsNamespace, 1, &handle) == 0) {
+  if (nvs_open(kNvsNamespace, NVS_READWRITE, &handle) == 0) {
     if (nvs_erase_all(handle) == 0 && nvs_commit(handle) == 0) {
       result.status = charm::contracts::ContractStatus::kOk;
       if (cached_config_.bonding_material != nullptr) {

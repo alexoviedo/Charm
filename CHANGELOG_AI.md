@@ -13,6 +13,37 @@ Keep entries concise, factual, and reviewable.
 ---
 
 ## 2026-03-27
+Executed Slice P-002 — Minimal compile-only GitHub CI.
+
+Files covered:
+- .github/workflows/firmware_build.yml
+- CURRENT_TASK.md
+- TODO.md
+- CHANGELOG_AI.md
+- IMPLEMENTATION_SLICES.md
+- VALIDATION.md
+
+What changed:
+- Created the `.github/workflows/firmware_build.yml` GitHub Actions workflow file.
+- The workflow runs on `ubuntu-latest` for `push` and `pull_request` to `main`, and `workflow_dispatch`.
+- Steps use `espressif/esp-idf-ci-action` to build the ESP-IDF firmware for target `esp32s3`.
+- Added step to save build output binaries as artifacts.
+- Updated project control tracking files to incorporate the completion of P-002.
+
+What did not change:
+- No unit tests workflow was created.
+- No branch protection settings were changed.
+- No application or test logic was altered.
+
+Why:
+- To verify the codebase continuously compiles successfully automatically upon push and pull requests, according to the user request.
+
+Validation:
+- Verified workflow file contents and syntax locally.
+
+---
+
+## 2026-03-27
 Executed Slice P-001 — CI/CD repo audit and enforcement plan.
 
 Files covered:

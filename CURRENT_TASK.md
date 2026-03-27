@@ -1,9 +1,9 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: P-002
-- Title: Implement native unit-test GitHub Action workflow
+- ID: P-003
+- Title: Implement ESP-IDF firmware build GitHub Action workflow for ESP32-S3
 - Status: queued
 
 ## Goal
-Awaiting next execution prompt to implement the GitHub Action workflow for pure-core native unit tests.
+Awaiting next execution prompt to implement the next execution target.

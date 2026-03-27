@@ -212,6 +212,20 @@ Current acceptance checks:
 - **Known gaps:** Requires actual fault triggering and full state recovery testing in `V4` manual validations.
 - **Next safe step:** Open PR and proceed to next task.
 
+## Validation Evidence for P-002
+- **Slice:** P-002 — Minimal compile-only GitHub CI
+- **Scope:** Add the smallest safe GitHub Actions workflow that proves the firmware builds for the intended target (`esp32s3`) and gives useful failure feedback.
+- **Touched files:** `.github/workflows/firmware_build.yml`, `CURRENT_TASK.md`, `TODO.md`, `CHANGELOG_AI.md`, `IMPLEMENTATION_SLICES.md`, `VALIDATION.md`
+- **Contracts affected:** None (CI workflow slice)
+- **Validation level:** V0 Documentation / Control Slice
+- **Checks performed:**
+  - Written the `.github/workflows/firmware_build.yml` using `espressif/esp-idf-ci-action@v1`.
+  - Configured target `esp32s3` with `idf.py build`.
+  - Configured artifact upload for output `.bin` files.
+- **Result:** Pass
+- **Known gaps:** Workflow triggers and cloud environment not tested until actually merged.
+- **Next safe step:** Open PR and proceed to P-003.
+
 ## Validation Evidence for P-001
 - **Slice:** P-001 — CI/CD repo audit and enforcement plan
 - **Scope:** Establish a trustworthy baseline for GitHub-based CI/CD for this ESP32-S3 / ESP-IDF firmware repo.

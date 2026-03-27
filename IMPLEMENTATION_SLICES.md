@@ -843,7 +843,7 @@ Break the approved architecture into the smallest safe implementation slices bef
 | 23 | S-023 | done | yes | implemented in S-023 PR |
 | 24 | S-024 | blocked | no | depends on runnable integrated path |
 | 25 | P-001 | done | no | CI/CD audit and plan |
-| 26 | P-002 | queued | no | depends on P-001 |
+| 26 | P-002 | done | no | Minimal compile-only GitHub CI |
 | 27 | P-003 | queued | no | depends on P-002 |
 
 ## Best First Slice

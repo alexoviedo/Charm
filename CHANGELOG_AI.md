@@ -2,12 +2,9 @@
 
 ## [Unreleased]
 ### Added
-- Implemented `charm::platform::UsbHostAdapter` implementing the `charm::ports::UsbHostPort` to satisfy slice S-019.
-- Added test coverage in `tests/unit/test_usb_host_adapter.cpp`.
-- Exposed simulated enumeration and callback dispatcher capabilities behind a C++20 pure mock layout as per S-019 objective ("no parser or mapping logic is introduced").
-- Implemented `charm::platform::BleTransportAdapter` implementing `charm::ports::BleTransportPort` to satisfy slice S-020.
-- Added test coverage in `tests/unit/test_ble_transport_adapter.cpp`.
-- Mocked out start, stop, notify and listener interactions.
+- Implemented `charm::app::ActivatePersistedConfig` in `components/charm_app` to load and activate stored mapping bundles and profiles during application initialization (S-022).
+- Added test coverage in `tests/unit/test_config_activation.cpp`.
+- Integrated config activation flow inside `charm::app::InitializeAndRun()`.
 
 ## Purpose
 Plain-English log of AI-made repo changes.

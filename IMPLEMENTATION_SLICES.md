@@ -3,211 +3,299 @@
 ## Purpose
 Break approved architecture and product constraints into the smallest safe slices.
 
-## Restart Policy
-- Legacy web runtime under `web/` is disposable and superseded for planning.
-- Replacement implementation was built in parallel path `web-next/`, then cut over in WR-014 to active runtime `web/`.
-- Firmware paths are out-of-bounds for WR slices.
+## Program Transition
+- Webapp restart program (`WR-*`) is complete and retained as historical truth.
+- Production readiness program is active.
+- Runtime replacement webapp remains active at `web/`.
 
-## WR Slice Catalog (Restart-Oriented)
+## Production Definition Program (control)
 
-### WR-001 — Webapp restart control reset
+### PROD-001 — Production program control reset
 - Objective:
-  - Reset repo control truth for clean replacement webapp restart.
+  - Transition control planning from restart-track execution to production-readiness execution.
 - Status:
   - done
 - Validation level:
-  - V0 + WR0
+  - V0 + PROD0
 
-### WR-002 — Artifact contract and source decision
+### PROD-002 — Production definition and release gates
 - Objective:
-  - Lock replacement-web firmware artifact ingestion contract before flasher rebuild.
-- Status:
-  - done
-- Decisions locked in this slice:
-  - accepted source modes: `same_site_manifest`, `manual_local_import`
-  - live GitHub Actions API runtime dependency: disallowed
-  - minimum artifact set: `manifest.json`, `bootloader.bin`, `partition-table.bin`, `charm.bin`
-  - flash offsets accepted as legacy contract for now: `0x0000`, `0x8000`, `0x10000`
-- Validation level:
-  - V0 + V1 + WR0 + WR1
-
-### WR-003 — Parallel replacement shell foundation
-- Objective:
-  - Create a production-oriented static shell in `web-next/` with required information architecture sections.
-- Status:
-  - done
-- Delivered in this slice:
-  - New dark-theme shell in parallel path (`web-next/`) (historical pre-cutover staging path).
-  - Required shell sections established: Flash, Console, Config, Validate, Help/Troubleshooting.
-  - No real device flows implemented (serial/flashing/config transport/gamepad polling deferred).
-- Validation level:
-  - V0 + V1 + WR0
-
-### WR-004 — Capability detection and support gating
-- Objective:
-  - Add capability detection and environment support gating before device-flow implementation.
-- Status:
-  - done
-- Delivered in this slice:
-  - secure-context detection
-  - Web Serial support detection
-  - Gamepad API support detection
-  - unsupported-browser UX and insecure-context UX distinction
-  - denied/unsupported messaging architecture
-  - capability-based action disabling without breaking shell navigation
-- Validation level:
-  - V1 + WR0
-
-### WR-005 — Artifact ingestion baseline
-- Objective:
-  - Implement artifact ingestion layer without adding flashing/serial flows.
-- Status:
-  - done
-- Delivered in this slice:
-  - same-site published manifest mode
-  - manual local artifact import mode
-  - artifact set validation for `manifest.json`, `bootloader.bin`, `partition-table.bin`, `charm.bin`
-  - clear error surfacing for missing/incomplete artifacts
-  - artifact-source state isolated from serial/flashing state
-  - no live GitHub Actions API dependency
-- Validation level:
-  - V1 + WR0 + WR1
-
-### WR-006 — Serial ownership and permission model
-- Objective:
-  - Establish one-owner serial resource arbitration and permission state model before flash/console implementations.
-- Status:
-  - done
-- Delivered in this slice:
-  - exactly-one-owner serial model (`none`, `flash`, `console`)
-  - explicit permission states: request, granted, denied, cancelled, busy, unsupported
-  - feature-agnostic owner claim/release foundation
-  - UI messaging for flash/console non-sharing constraint
-- Validation level:
-  - V1 + WR0
-
-### WR-007 — Web flasher baseline
-- Objective:
-  - Rebuild flasher path on top of approved artifact ingestion and serial ownership models.
-- Status:
-  - done
-- Delivered in this slice:
-  - explicit user-action port request path
-  - identify target chip via flashing path
-  - flash approved artifact set with deterministic progress/failure states
-  - clean serial ownership release after flash/reset flow
-  - flash mode remains separate from console mode
-- Validation level:
-  - V1 + WR0 + WR1
-
-
-### WR-008 — Serial monitor baseline (serial-owner aware)
-- Objective:
-  - Implement serial monitor baseline using shared serial ownership without coupling to flash flow.
-- Status:
-  - done
-- Delivered in this slice:
-  - independent monitor connect flow
-  - independent monitor disconnect flow
-  - clear output and auto-scroll controls
-  - explicit unplug/disconnect/read-failure handling
-  - ownership coordination that prevents monitor/flasher contention
-- Validation level:
-  - V1 + WR0
-
-### WR-009 — Flash/console session lifecycle hardening
-- Objective:
-  - Refine session-level transitions and conflict/recovery paths between flash and console ownership handoff.
-- Status:
-  - done
-- Validation level:
-  - V1 + WR0
-
-### WR-010 — Configuration information architecture and local draft model
-- Objective:
-  - Create a production-oriented local-only config authoring surface and draft data model, without device transport/write/persist behavior.
-- Status:
-  - done
-- Guardrail:
-  - Device write/persist must use the approved repo-proven config transport contract.
-- Validation level:
-  - V1 + WR0
-
-### WR-011 — Config validation plus import/export
-- Objective:
-  - Implement config transport integration for validate/import/export flows using the approved repo-proven contract, with deterministic error handling.
-- Status:
-  - done
-- Validation level:
-  - V1 + WR2
-
-### WR-012 — Device config transport assessment
-- Objective:
-  - Determine whether browser-to-device config write/persist is implementable under current repo constraints.
-- Status:
-  - done
-- Determination:
-  - No proven serial-based config protocol path in repo.
-  - No proven non-HID BLE config path in repo.
-  - Device config upload/persist remains blocked (`blocked_unproven_transport`).
-- Validation level:
-  - V1 + WR2
-
-### WR-013 — Validation dashboard and Gamepad API tester
-- Objective:
-  - Implement a browser-side validation dashboard using Gamepad API as the primary tester path with useful no-controller troubleshooting guidance.
+  - Define repo-grounded minimum conditions for internal beta, external beta (if used), and production.
+  - Define mandatory production capabilities, evidence gates, and blocker-clear criteria.
 - Status:
   - done
 - Delivered:
-  - validation dashboard structure
-  - reconnect/reboot guidance
-  - real-time button visualization
-  - real-time axis visualization
-  - neutral/calibration-oriented readouts
-  - troubleshooting flow when no controller is visible
+  - production gate definitions and release-stage minimums
+  - mandatory capability list and evidence requirements
+  - explicit blocker-clear requirements before production declaration
+  - named production gates: `PG-INT`, `PG-EXT` (optional), `PG-PROD`
 - Validation level:
-  - V1 + WR0
+  - V0 + V1 + PROD0 + PROD4
 
-### WR-014 — Cutover and legacy web removal
+## Execution Program (next)
+
+### FW-001 — Firmware BLE productionization baseline
 - Objective:
-  - Replace legacy runtime `web/` with validated replacement implementation and retire legacy web runtime state.
+  - Define the first narrow firmware execution scope to replace non-production BLE path assumptions.
 - Status:
   - done
 - Delivered:
-  - legacy runtime `web/` implementation removed
-  - validated replacement web implementation installed at final runtime `web/`
-  - control files updated to reflect cutover completion and active runtime truth
+  - BLE lifecycle behavior model defined for productionization planning
+  - BLE failure taxonomy and recovery expectations defined
+  - BLE acceptance evidence matrix defined for FW-002 implementation validation
+- Depends on:
+  - PROD-002
 - Validation level:
-  - V1 + WR0
+  - V1 + PROD2
 
-### WR-015 — Config transport proof plan
+### FW-002 — Firmware BLE production implementation
 - Objective:
-  - Define the minimum repo evidence and acceptance tests required to prove a host/device config transport path before any runtime write/persist implementation.
+  - Implement production-safe BLE output behavior per FW-001 boundaries.
+- Status:
+  - done
+- Delivered:
+  - stack-backed adapter start/stop lifecycle path
+  - advertising readiness surfacing
+  - peer connect/disconnect status surfacing
+  - lifecycle error/status surfacing through existing listener boundaries
+  - explicit defer of full report-notify path to FW-003
+- Depends on:
+  - FW-001
+- Validation level:
+  - V1 + PROD2
+
+### FW-003 — BLE report-notify data path implementation
+- Objective:
+  - Implement report-notify data path on top of FW-002 lifecycle behavior.
+- Status:
+  - done
+- Delivered:
+  - encoded input reports are accepted from existing adapter boundary
+  - report delivery is delegated through BLE backend transport path
+  - transport failure/status is surfaced via existing status boundary
+- Depends on:
+  - FW-002
+- Validation level:
+  - V1 + PROD2
+
+### FW-004 — BLE report-path hardening and callback integration
+- Objective:
+  - Integrate real stack callback wiring for report-channel readiness/closure and harden report-path recovery behavior.
+- Status:
+  - done
+- Delivered:
+  - report-channel readiness/closure callbacks are wired to backend channel configuration/clear behavior
+  - bounded adapter recovery attempts added for lifecycle/notify-path failures with fail-closed fallback
+  - session-scoped bonding material set/get/clear support added at BLE adapter boundary
+  - unit tests expanded for recovery success/fail-closed cases and bonding material round-trip behavior
+- Depends on:
+  - FW-003
+- Validation level:
+  - V1 + PROD2
+
+### CFG-001 — Host/device config transport contract freeze
+- Objective:
+  - Freeze first production host/device config transport path and contract from completed proof-plan truth.
+- Status:
+  - done
+- Delivered:
+  - first transport path selected as serial-primary
+  - BLE config transport explicitly deferred for first slice
+  - request/response/error/persistence/versioning/failure/rollback expectations frozen
+  - dedicated transport contract artifact added for implementation handoff
+- Depends on:
+  - PROD-002
+- Validation level:
+  - V1 + PROD1
+
+### CFG-002 — Host/device config protocol specification and harness alignment
+- Objective:
+  - Implement first narrow firmware-side config transport path using frozen serial-primary contract.
+- Status:
+  - done
+- Delivered:
+  - firmware-side config transport service for `config.persist/load/clear/get_capabilities`
+  - transport-envelope validation for protocol version, request id, and integrity metadata
+  - status/fault mapping through existing config store contracts
+  - unit tests for validation, command handling, persistence/load/clear propagation, and capability surfacing
+- Depends on:
+  - CFG-001, FW-004
+- Validation level:
+  - V1 + PROD1
+
+### WEB-001 — Runtime web integration for proven config transport
+- Objective:
+  - Enable runtime config transport only after proven transport gates pass.
+- Status:
+  - done
+- Delivered:
+  - runtime web config panel now issues serial-first config transport commands (`get_capabilities`, `persist`, `load`, `clear`)
+  - ownership gating enforces serial permission + flash-owner requirements and blocks operations during flash/console sessions
+  - previously blocked config-write UI state moved to truthful supported state with explicit failure/status reporting
+- Depends on:
+  - CFG-002
+- Validation level:
+  - V1 + PROD1
+
+### WEB-002 — Web config transport protocol hardening and E2E evidence
+- Objective:
+  - Harden runtime web operator UX for config/flash/monitor/tester with clearer states and recovery guidance.
+- Status:
+  - done
+- Delivered:
+  - clearer disabled/ready/error state messaging and button guidance across flash/monitor/config controls
+  - improved config transport operator guidance and truthful state text in runtime web panel
+  - stronger recovery messaging for transport command outcomes
+- Depends on:
+  - WEB-001
+- Validation level:
+  - V1 + PROD1
+
+### CI-001 — CI/CD release and deployment hardening
+- Objective:
+  - Harden release pipeline, artifact promotion controls, and rollback readiness.
+- Status:
+  - done
+- Delivered:
+  - dedicated runtime web deployment workflow (`web_runtime_deploy.yml`) added
+  - explicit packaging step for runtime web assets with `current/` + `releases/<release_id>/` deploy layout
+  - environment/branch promotion logic for staging/production dispatch and mainline deployment
+  - deployment workflow separated from existing firmware build pipeline
+- Depends on:
+  - PROD-002
+- Validation level:
+  - V0 + V1 + PROD3
+
+### CI-002 — Deployment promotion controls and rollback rehearsal evidence
+- Objective:
+  - Harden release packaging integrity/provenance outputs and operator verification guidance for firmware/web artifacts.
+- Status:
+  - done
+- Delivered:
+  - shared integrity/provenance generator script added for release artifacts
+  - firmware and runtime-web workflows now emit `SHA256SUMS` + `provenance.json`
+  - operator-facing verification guidance documented in release docs
+- Depends on:
+  - CI-001
+- Validation level:
+  - V0 + PROD3
+
+### QA-001 — Release verification evidence pack and gate rehearsal
+- Objective:
+  - Create repeatable automated browser smoke/regression framework for runtime web shell.
+- Status:
+  - done
+- Delivered:
+  - Playwright-based smoke/regression harness added for runtime web shell
+  - capability/truth-state rendering and key panel regression checks automated
+  - QA automation scope/limits documented to prevent over-claiming hardware coverage
+- Depends on:
+  - CI-002
+- Validation level:
+  - V0 + V1 + PROD4
+
+### QA-002 — Hardware-attached regression matrix and operator runbook rehearsal
+- Objective:
+  - Execute hardware-backed regression and runbook rehearsal evidence that browser automation cannot prove.
+- Status:
+  - done
+- Delivered:
+  - repository-grounded manual acceptance matrix for hardware/browser/environment coverage
+  - exact scenario IDs with expected outcomes and mandatory evidence capture requirements
+  - pass/fail sheet format, regression logging format, and gate-level go/no-go criteria
+  - responsibility map by surface area (flash/monitor/config/BLE/validate/release)
+- Depends on:
+  - QA-001
+- Validation level:
+  - V0 + PROD4
+
+### VAL-001 — Automated validation expansion
+- Objective:
+  - Expand automated coverage for firmware, transport, and integration gates.
+- Status:
+  - queued
+- Depends on:
+  - FW-002, CFG-002, CI-002
+- Validation level:
+  - V1 + PROD3
+
+### OPS-001 — Production runbooks, rollback, and support docs
+- Objective:
+  - Deliver repository-grounded production operations runbooks for release, rollback, recovery, triage, and support escalation.
+- Status:
+  - done
+- Delivered:
+  - production runbooks for release/deploy verification/rollback/integrity workflows
+  - recovery runbooks for firmware flashing and config transport failure states
+  - BLE and browser support triage paths with severity/escalation guidance
+  - known-limitation communication template for operator/support handoff
+- Depends on:
+  - QA-002, CI-002
+- Validation level:
+  - V0 + PROD4
+
+### REL-001 — Pre-production system audit and gap closeout
+- Objective:
+  - Perform cross-domain pre-production audit and close any narrow, high-confidence blockers safely.
+- Status:
+  - done
+- Delivered:
+  - audit artifact with production-ready/beta-grade assessment and explicit blocker list
+  - CI guardrail hardening: runtime deploy workflow now enforces web smoke checks before packaging/deploy
+  - follow-on closure plan for remaining evidence/governance blockers
+- Depends on:
+  - OPS-001, QA-002, CI-002
+- Validation level:
+  - V0 + V1 + PROD4
+
+### REL-002 — Final production-readiness audit and handoff
+- Objective:
+  - Produce final candid audit/handoff report and determine ship/no-ship posture against production gates.
+- Status:
+  - done
+- Delivered:
+  - final production-readiness report with gate-by-gate status and explicit recommendation
+  - implemented/deferred capability inventory, remaining-risk register, and operational-readiness disposition
+  - clean handoff artifact for future lead/agent continuation
+- Depends on:
+  - REL-001
+- Validation level:
+  - V0 + V1 + PROD4
+
+### PROD-AUDIT-001 — Final production go/no-go authorization
+- Objective:
+  - Authorize or deny production declaration based on completed closeout packet and named approver sign-off.
 - Status:
   - blocked
-- Block reason:
-  - Missing proven serial protocol and missing proven non-HID BLE transport path.
+- Depends on:
+  - launch-closeout evidence packet (post-program execution)
 - Validation level:
-  - V0 + V1 + WR2
+  - V0 + PROD4
 
-## Ranked Execution Order
+## Ranked Execution Order (active program)
 | Order | Slice | Status | Notes |
 |---|---|---|---|
-| 1 | WR-001 | done | Control truth reset |
-| 2 | WR-002 | done | Artifact contract locked |
-| 3 | WR-003 | done | Parallel replacement shell foundation complete |
-| 4 | WR-004 | done | Capability detection and support gating complete |
-| 5 | WR-005 | done | Artifact ingestion baseline complete |
-| 6 | WR-006 | done | Serial ownership and permission model complete |
-| 7 | WR-007 | done | Web flasher baseline complete |
-| 8 | WR-008 | done | Serial monitor baseline complete |
-| 9 | WR-009 | done | Hardening slice completed |
-| 10 | WR-010 | done | Local config IA + draft model complete; transport contract now approved |
-| 11 | WR-011 | done | Local validation + JSON import/export complete (local/browser only) |
-| 12 | WR-012 | done | Assessment complete: runtime config transport unproven; remains blocked |
-| 13 | WR-013 | done | Validation dashboard + Gamepad API tester complete |
-| 14 | WR-014 | done | Runtime cutover complete (`web-next` replacement is now active `web/`) |
-| 15 | WR-015 | blocked | Define proof plan for host/device config transport evidence |
+| 1 | PROD-001 | done | Program reset complete |
+| 2 | PROD-002 | done | Production/release gates defined (`PG-INT`/`PG-EXT`/`PG-PROD`) |
+| 3 | FW-001 | done | Contract/validation baseline complete |
+| 4 | FW-002 | done | BLE lifecycle implementation complete |
+| 5 | FW-003 | done | Report-path implementation complete |
+| 6 | FW-004 | done | Report-path hardening + recovery complete |
+| 7 | CFG-001 | done | Config transport contract freeze complete |
+| 8 | CFG-002 | done | Firmware-side config transport implementation complete |
+| 9 | WEB-001 | done | Runtime config transport integration complete |
+| 10 | WEB-002 | done | Runtime UX hardening complete |
+| 11 | CI-001 | done | Runtime web deployment pipeline added |
+| 12 | CI-002 | done | Release packaging integrity/provenance hardening complete |
+| 13 | QA-001 | done | Automated browser smoke/regression framework complete |
+| 14 | QA-002 | done | Manual acceptance matrix + evidence process complete |
+| 15 | OPS-001 | done | Production runbooks/rollback/support documentation complete |
+| 16 | REL-001 | done | Pre-production audit complete; CI smoke gate added |
+| 17 | REL-002 | done | Final audit/handoff complete: recommendation is do-not-ship |
+| 18 | VAL-001 | queued | Automated validation expansion |
+| 19 | PROD-AUDIT-001 | blocked | Await launch-closeout packet + approvals |
 
-## Legacy Web Plan Status
-All legacy web slices `W-*` are superseded by the WR restart catalog.
+## Historical WR Program (preserved)
+- WR-001 .. WR-014: completed.
+- WR-015: superseded by production-track transport/integration slices (`CFG-001`/`CFG-002`/`WEB-001`/`WEB-002`).
+- Legacy W-series remains superseded.

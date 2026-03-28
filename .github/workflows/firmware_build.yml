@@ -60,6 +60,19 @@ jobs:
           }
           EOF
 
+      - name: Generate firmware artifact integrity and provenance
+        if: success()
+        run: |
+          scripts/generate_release_integrity.sh web_artifacts/firmware firmware-esp32s3-web-artifacts
+
+      - name: Append firmware integrity summary
+        if: success()
+        run: |
+          echo "## Firmware Release Integrity" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA256: \`web_artifacts/firmware/SHA256SUMS\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provenance: \`web_artifacts/firmware/provenance.json\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verify command: \`cd web_artifacts/firmware && sha256sum -c SHA256SUMS\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload firmware artifacts
         if: success()
         uses: actions/upload-artifact@v4

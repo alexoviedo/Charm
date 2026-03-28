@@ -15,42 +15,26 @@ Store durable facts, constraints, and working rules that should survive session 
 8. VALIDATION.md
 9. CHANGELOG_AI.md
 
-## Project Constraints
-- This repo is controlled by architecture-first development.
-- No implementation begins before relevant contracts/interfaces are approved.
-- Work proceeds one narrow slice at a time.
-- Validation criteria are defined before implementation.
-- Broad refactors require explicit Tech Lead approval.
-- Repo Markdown control files are persistent project memory.
-- Implementation slice planning is stored in `IMPLEMENTATION_SLICES.md`.
-- Firmware code/config/interfaces/transport behavior are out of scope for web restart slices.
-- Protected firmware paths remain untouched during web restart work:
-  - `components/**`
-  - `main/**`
-  - `tests/**`
-  - root `CMakeLists.txt`
-  - firmware-related `.github/workflows/**`
+## Program State (current)
+- Webapp-restart program is complete as historical truth.
+- Production-readiness program is active.
+- Runtime replacement webapp is active at `web/`.
 
-## Webapp Restart Facts (WR track)
-- Legacy `web/` runtime is disposable and superseded for planning purposes.
-- Replacement webapp must be built in a parallel path first (planned as `web-next/`) and cut over later by explicit slice.
-- The replacement remains zero-backend and client-side only.
-- Web Serial is the primary browser/device integration path.
-- Gamepad API is the primary browser-side tester/validation path.
-- Device config write/persist flows are blocked unless a repo-proven firmware transport contract exists.
-- The currently inspected BLE adapter context does not prove a browser-usable BLE config/test path.
+## Durable Constraints
+- Architecture-first, contract-first, validation-first, then implementation.
+- Work one narrow slice at a time.
+- Repo Markdown control files are persistent project memory and must remain truthful.
+- Zero-backend static-web model remains in force unless explicitly changed by approved decision.
+- Web Serial remains primary browser/device path unless explicitly changed by approved decision.
+- Gamepad API remains primary browser-side validation path unless explicitly changed by approved decision.
 
-## Working Rules for This Chat
-- Do not invent requirements beyond approved architecture and Tech Lead direction.
-- Do not merge unrelated concerns into one task.
-- For every task: define scope, assumptions, dependencies, risks, touched files, and validation before code.
-- If a task grows too large, split it instead of proceeding.
-- End each work segment with a clean handoff and next safe step.
+## Current Production Drivers
+- Firmware BLE transport path is not yet production-proven.
+- Host/device config transport proof is required before runtime write/persist enablement.
+- CI builds firmware artifacts, but release/deployment hardening is incomplete.
+- Production validation and operations runbook readiness are not yet complete.
 
-## What Not To Store Here
-- Temporary brainstorms
-- Raw debugging notes
-- Unapproved ideas
-- Implementation details
-- Duplicate architecture text
-- Session-private reasoning
+## Scope Discipline
+- Avoid broad refactors without explicit approval.
+- Keep firmware work architecture-safe and narrowly scoped.
+- Do not destabilize current build path without documented rationale.

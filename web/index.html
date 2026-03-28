@@ -118,7 +118,17 @@
 
         <section id="config" class="panel" aria-labelledby="config-title" hidden>
           <h2 id="config-title">Config</h2>
-          <p class="lead">Local config authoring with JSON round-trip. Device write/persist remains blocked (unproven transport).</p>
+          <p class="lead">Local config authoring with JSON round-trip plus serial-first device config transport.</p>
+
+          <article class="card warning">
+            <h3>Operator Guidance (Config Transport)</h3>
+            <ul class="message-list">
+              <li>Grant serial permission, then set <strong>Owner = Flash</strong> before issuing config commands.</li>
+              <li>Disconnect monitor and ensure flash is idle before load/persist/clear operations.</li>
+              <li>Use <strong>Get Capabilities</strong> after reconnect/reboot to confirm protocol readiness.</li>
+              <li>Treat persist/load/clear failures as actionable transport/device faults and retry only after state is stable.</li>
+            </ul>
+          </article>
 
           <article class="card">
             <h3>Draft Metadata</h3>
@@ -221,10 +231,16 @@
               <button id="cfg-load-browser-btn" class="action-btn" type="button">Load Draft from Browser (Local Only)</button>
               <button id="cfg-clear-browser-btn" class="action-btn" type="button">Clear Browser Draft</button>
             </div>
+            <div class="action-row">
+              <button id="cfg-device-capabilities-btn" class="action-btn" type="button">Device: Get Capabilities</button>
+              <button id="cfg-device-load-btn" class="action-btn" type="button">Device: Load Config</button>
+              <button id="cfg-device-persist-btn" class="action-btn" type="button">Device: Persist Local Draft</button>
+              <button id="cfg-device-clear-btn" class="action-btn" type="button">Device: Clear Config</button>
+            </div>
             <div id="cfg-status" class="artifact-status info">CONFIG_LOCAL: Editing local draft model only.</div>
             <div id="cfg-local-file-status" class="artifact-status info">CONFIG_LOCAL_FILE: Import/export uses local JSON files only.</div>
             <div id="cfg-local-storage-status" class="artifact-status info">CONFIG_LOCAL_STORAGE: Optional browser-only draft save/load.</div>
-            <div id="cfg-write-status" class="artifact-status error">CONFIG_DEVICE_WRITE_BLOCKED: blocked_unproven_transport (no repo-proven serial protocol or non-HID BLE config path).</div>
+            <div id="cfg-write-status" class="artifact-status info">CONFIG_DEVICE_READY: Serial-first config transport available when serial permission is granted and Flash owner is active.</div>
             <ul id="cfg-errors" class="message-list"></ul>
             <pre id="cfg-summary" class="console-frame" aria-label="config draft summary"></pre>
           </article>

@@ -1,7 +1,61 @@
 #include <gtest/gtest.h>
+#include <memory>
 #include "charm/platform/ble_transport_adapter.hpp"
 
 namespace charm::platform::test {
+
+class FakeBleLifecycleBackend final : public charm::platform::BleLifecycleBackend {
+ public:
+  bool Start() override {
+    start_calls++;
+    return start_result;
+  }
+
+  bool Stop() override {
+    stop_calls++;
+    return stop_result;
+  }
+
+  bool ConfigureReportChannel(std::uint32_t transport_if, std::uint16_t connection_id,
+                              std::uint16_t value_handle, bool require_confirmation) override {
+    configure_calls++;
+    last_transport_if = transport_if;
+    last_connection_id = connection_id;
+    last_value_handle = value_handle;
+    last_require_confirmation = require_confirmation;
+    report_channel_ready = true;
+    return configure_result;
+  }
+
+  void ClearReportChannel() override {
+    clear_calls++;
+    report_channel_ready = false;
+  }
+
+  bool SendReport(const charm::contracts::EncodedInputReport& report) override {
+    send_calls++;
+    last_report_id = report.report_id;
+    last_report_size = report.size;
+    return send_result && report_channel_ready;
+  }
+
+  bool start_result{true};
+  bool stop_result{true};
+  bool configure_result{true};
+  bool send_result{true};
+  bool report_channel_ready{false};
+  int start_calls{0};
+  int stop_calls{0};
+  int configure_calls{0};
+  int clear_calls{0};
+  int send_calls{0};
+  charm::contracts::ReportId last_report_id{0};
+  std::size_t last_report_size{0};
+  std::uint32_t last_transport_if{0};
+  std::uint16_t last_connection_id{0};
+  std::uint16_t last_value_handle{0};
+  bool last_require_confirmation{false};
+};
 
 class MockBleTransportPortListener : public charm::ports::BleTransportPortListener {
  public:
@@ -29,7 +83,9 @@ class MockBleTransportPortListener : public charm::ports::BleTransportPortListen
 
 class BleTransportAdapterTest : public ::testing::Test {
  protected:
-  BleTransportAdapter adapter;
+  std::unique_ptr<FakeBleLifecycleBackend> backend{std::make_unique<FakeBleLifecycleBackend>()};
+  FakeBleLifecycleBackend* backend_raw{backend.get()};
+  BleTransportAdapter adapter{std::move(backend)};
   MockBleTransportPortListener listener;
 
   void SetUp() override {
@@ -41,6 +97,7 @@ TEST_F(BleTransportAdapterTest, StartSucceedsAndNotifiesListener) {
   charm::contracts::StartRequest req;
   auto result = adapter.Start(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(backend_raw->start_calls, 1);
 
   EXPECT_EQ(listener.status_changed_count, 1);
   EXPECT_EQ(listener.last_status.state, charm::contracts::AdapterState::kRunning);
@@ -54,12 +111,13 @@ TEST_F(BleTransportAdapterTest, StopSucceedsAndNotifiesListener) {
   charm::contracts::StopRequest req;
   auto result = adapter.Stop(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(backend_raw->stop_calls, 1);
 
   EXPECT_EQ(listener.status_changed_count, 1);
   EXPECT_EQ(listener.last_status.state, charm::contracts::AdapterState::kStopped);
 }
 
-TEST_F(BleTransportAdapterTest, NotifyInputReportSucceeds) {
+TEST_F(BleTransportAdapterTest, NotifyInputReportIsUnavailableWithoutPeerAndReportChannel) {
   charm::contracts::StartRequest start_req;
   adapter.Start(start_req);
 
@@ -68,7 +126,8 @@ TEST_F(BleTransportAdapterTest, NotifyInputReportSucceeds) {
   req.report.size = 10;
 
   auto result = adapter.NotifyInputReport(req);
-  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kUnavailable);
+  EXPECT_EQ(result.fault_code.category, charm::contracts::ErrorCategory::kInvalidState);
 }
 
 TEST_F(BleTransportAdapterTest, StartWhenAlreadyRunningIsRejected) {
@@ -92,6 +151,124 @@ TEST_F(BleTransportAdapterTest, NotifyWhenStoppedIsRejected) {
 
   auto result = adapter.NotifyInputReport(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kRejected);
+}
+
+TEST_F(BleTransportAdapterTest, StartFailureSurfacesAdapterFailureStatus) {
+  backend_raw->start_result = false;
+  charm::contracts::StartRequest req;
+  auto result = adapter.Start(req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(result.fault_code.category, charm::contracts::ErrorCategory::kAdapterFailure);
+  EXPECT_EQ(listener.last_status.status, charm::contracts::ContractStatus::kFailed);
+}
+
+TEST_F(BleTransportAdapterTest, PeerLifecycleEventsAreSurfacedToListener) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  charm::ports::BlePeerInfo peer{};
+  peer.address = {1, 2, 3, 4, 5, 6};
+  adapter.OnPeerConnected(peer);
+  adapter.OnPeerDisconnected(peer);
+
+  EXPECT_EQ(listener.connected_count, 1);
+  EXPECT_EQ(listener.disconnected_count, 1);
+}
+
+TEST_F(BleTransportAdapterTest, NotifyInputReportUsesBackendWhenPeerAndReportChannelAreReady) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  charm::ports::BlePeerInfo peer{};
+  adapter.OnPeerConnected(peer);
+  adapter.OnReportChannelReady(7, 11, 13, false);
+
+  std::uint8_t bytes[4] = {1, 2, 3, 4};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 2;
+  req.report.bytes = bytes;
+  req.report.size = 4;
+
+  auto result = adapter.NotifyInputReport(req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(backend_raw->configure_calls, 1);
+  EXPECT_EQ(backend_raw->send_calls, 1);
+  EXPECT_EQ(backend_raw->last_report_size, 4u);
+}
+
+TEST_F(BleTransportAdapterTest, NotifyInputReportSurfacesTransportFailure) {
+  backend_raw->send_result = false;
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  charm::ports::BlePeerInfo peer{};
+  adapter.OnPeerConnected(peer);
+  adapter.OnReportChannelReady(7, 11, 13, true);
+
+  std::uint8_t bytes[2] = {9, 9};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 3;
+  req.report.bytes = bytes;
+  req.report.size = 2;
+
+  auto result = adapter.NotifyInputReport(req);
+  EXPECT_EQ(result.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(result.fault_code.category, charm::contracts::ErrorCategory::kTransportFailure);
+  EXPECT_EQ(listener.last_status.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(backend_raw->stop_calls, 1);
+  EXPECT_EQ(backend_raw->start_calls, 2);
+}
+
+TEST_F(BleTransportAdapterTest, NotifyTransportFailureFailClosesWhenRecoveryFails) {
+  backend_raw->send_result = false;
+  backend_raw->stop_result = false;
+
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+  charm::ports::BlePeerInfo peer{};
+  adapter.OnPeerConnected(peer);
+  adapter.OnReportChannelReady(9, 12, 18, true);
+
+  std::uint8_t bytes[1] = {7};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 4;
+  req.report.bytes = bytes;
+  req.report.size = 1;
+
+  auto first = adapter.NotifyInputReport(req);
+  EXPECT_EQ(first.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(backend_raw->stop_calls, 1);
+
+  auto second = adapter.NotifyInputReport(req);
+  EXPECT_EQ(second.status, charm::contracts::ContractStatus::kRejected);
+}
+
+TEST_F(BleTransportAdapterTest, LifecycleErrorAttemptsRecovery) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  adapter.OnLifecycleError(77);
+
+  EXPECT_EQ(backend_raw->stop_calls, 1);
+  EXPECT_EQ(backend_raw->start_calls, 2);
+  EXPECT_EQ(listener.last_status.status, charm::contracts::ContractStatus::kFailed);
+}
+
+TEST_F(BleTransportAdapterTest, BondingMaterialRoundTripAndClear) {
+  std::uint8_t material[3] = {1, 4, 9};
+  adapter.SetBondingMaterial(material, 3);
+
+  const auto ref = adapter.GetBondingMaterial();
+  ASSERT_NE(ref.bytes, nullptr);
+  ASSERT_EQ(ref.size, 3u);
+  EXPECT_EQ(ref.bytes[0], 1);
+  EXPECT_EQ(ref.bytes[1], 4);
+  EXPECT_EQ(ref.bytes[2], 9);
+
+  adapter.ClearBondingMaterial();
+  const auto cleared = adapter.GetBondingMaterial();
+  EXPECT_EQ(cleared.bytes, nullptr);
+  EXPECT_EQ(cleared.size, 0u);
 }
 
 }  // namespace charm::platform::test

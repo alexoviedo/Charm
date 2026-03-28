@@ -1,0 +1,12 @@
+{
+  "name": "charm-web-runtime-qa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Automated smoke/regression checks for Charm runtime web shell",
+  "scripts": {
+    "qa:smoke": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

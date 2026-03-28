@@ -1,18 +1,23 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: WR-015
-- Title: Config transport proof plan
+- ID: PROD-AUDIT-001
+- Title: Final production go/no-go audit (blocked pending closeout packet)
 - Status: blocked
 
 ## Goal
-Define the evidence and acceptance criteria required to prove host/device config transport before runtime config write/persist implementation.
+Maintain production audit hold-state until launch-closeout packet (hardware evidence + approvals) is complete.
 
-## Context from Prior Slice
-- WR-009 hardened flash/console separation with explicit handoff states, failure recovery UX, reconnect/retry guidance, and stale-state cleanup on permission/transport errors.
-- WR-010 delivered local draft config IA coverage for mappings/axes/buttons/scaling/clamping/deadzones/inversion, metadata, and validation/error slots in `web-next/`.
-- WR-011 delivered deterministic local validation, JSON import/export round-trip, and optional browser-local draft save/load with explicit non-device labeling.
-- WR-012 assessment found no repo-proven serial config protocol and no repo-proven non-HID BLE config path.
-- WR-013 delivered browser-side validation dashboard and Gamepad API tester with no-controller troubleshooting and live button/axis readouts.
-- WR-014 completed runtime cutover: validated replacement implementation is now active under `web/` and legacy runtime implementation is retired.
-- Device write/persist remains blocked in runtime UI as `blocked_unproven_transport`.
+## Why this is active now
+- `REL-002` completed final audit and handoff documentation with explicit do-not-ship recommendation.
+- Remaining open items are evidence/governance closeout tasks outside this completed program slice.
+
+## Entry Facts (must remain true)
+- Runtime replacement webapp remains active at `web/`.
+- Firmware-side config transport handler is serial-primary contract aligned; BLE config transport remains deferred.
+- Automated browser smoke checks exist but cannot prove hardware serial/firmware outcomes.
+
+## Exit Criteria for PROD-AUDIT-001
+- Final launch-closeout packet exists: matrix evidence, rollback rehearsal, integrity/provenance verification, and named approvals.
+- Explicit ship/no-ship decision recorded with residual-risk acceptance details.
+- If approved, production declaration is recorded by authorized sign-off owners.

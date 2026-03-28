@@ -1,8 +1,7 @@
 # TODO.md
 
 ## Purpose
-Prioritized backlog of micro-tasks.
-Each item must be small, reviewable, and separable.
+Prioritized backlog of narrow, reviewable slices for production readiness.
 
 ## Status Legend
 - queued
@@ -16,49 +15,41 @@ Each item must be small, reviewable, and separable.
 
 | ID | Priority | Status | Task | Depends On | Notes |
 |---|---|---:|---|---|---|
-| T-005 | P0 | queued | Finalize unresolved BLE adapter scope decision | T-004 | NimBLE vs Bluedroid vs both |
-| T-006 | P0 | done | Finalize initial output profile scope decision | T-004 | Accepted as single profile first |
-| T-007 | P0 | done | Decide config compiler placement | T-004 | Accepted as companion web app |
-| T-008 | P0 | done | Define complete contract inventory grouped by module | T-004 | Captured in INTERFACES.md |
-| T-009 | P0 | done | Define dependency map and forbidden dependency rules | T-008 | Captured in INTERFACES.md |
-| T-010 | P0 | done | Define boundary-level error categories | T-008 | Captured in INTERFACES.md |
-| T-011 | P0 | done | Define contract approval gate before implementation | T-008,T-009,T-010 | Captured in VALIDATION.md |
+| T-005 | P0 | queued | Finalize unresolved BLE adapter scope decision | FW-004 | NimBLE vs Bluedroid vs both |
+| T-012 | P0 | done | Approve production blocker severity rubric | PROD-002 | Captured by production gate definitions |
+| T-013 | P0 | queued | Approve release artifact promotion policy | CI-001 | Staging -> candidate -> production |
+| T-014 | P0 | queued | Approve production sign-off authority matrix | PROD-AUDIT-001 | Final audit/go-live governance |
 
-## Implementation Slice Queue
+## Program Slice Queue
 
 | Order | Slice | Priority | Status | Depends On | Notes |
 |---|---|---:|---:|---|---|
-| 1 | WR-001 | P0 | done | none | Webapp restart control reset |
-| 2 | WR-002 | P0 | done | WR-001 | Artifact contract and source decision |
-| 3 | WR-003 | P0 | done | WR-002 | Parallel replacement shell foundation (`web-next/`) |
-| 4 | WR-004 | P1 | done | WR-003 | Capability detection and support gating |
-| 5 | WR-005 | P1 | done | WR-004 | Artifact ingestion baseline (same-site + manual local import) |
-| 6 | WR-006 | P1 | done | WR-005 | Serial ownership and permission model |
-| 7 | WR-007 | P1 | done | WR-006 | Web flasher baseline |
-| 8 | WR-008 | P1 | done | WR-007 | Serial monitor baseline (serial-owner aware) |
-| 9 | WR-009 | P1 | done | WR-008 | Flash/console session lifecycle hardening |
-| 10 | WR-010 | P1 | done | WR-009 | Configuration IA + local draft model (transport contract approved) |
-| 11 | WR-011 | P1 | done | WR-010 | Config validation plus import/export on approved config transport contract |
-| 12 | WR-012 | P1 | done | WR-011 | Device config transport assessment (serial + BLE paths unproven) |
-| 13 | WR-013 | P1 | done | WR-012 | Validation dashboard and Gamepad API tester |
-| 14 | WR-014 | P1 | done | WR-013 | Cutover and legacy web removal |
-| 15 | WR-015 | P1 | blocked | WR-014 | Config transport proof plan (define evidence needed to unblock runtime write/persist) |
+| 1 | PROD-001 | P0 | done | none | Production program control reset |
+| 2 | PROD-002 | P0 | done | PROD-001 | Production definition and release gates (`PG-INT`/`PG-EXT`/`PG-PROD`) |
+| 3 | FW-001 | P0 | done | PROD-002 | Firmware BLE productionization baseline (lifecycle/failure model + acceptance matrix) |
+| 4 | FW-002 | P0 | done | FW-001 | Real BLE lifecycle implementation (start/stop, advertising readiness, peer status, error surfacing) |
+| 5 | FW-003 | P0 | done | FW-002 | Real BLE report-notify data path implementation |
+| 6 | FW-004 | P0 | done | FW-003 | BLE report-path hardening/callback integration with bounded recovery |
+| 7 | CFG-001 | P0 | done | PROD-002 | Host/device config transport contract freeze |
+| 8 | CFG-002 | P0 | done | CFG-001,FW-004 | Firmware-side config transport implementation (serial-primary v1 commands) |
+| 9 | WEB-001 | P1 | done | CFG-002 | Web integration for proven config transport (serial-first commands wired) |
+| 10 | WEB-002 | P1 | done | WEB-001 | Production UX hardening for config/flash/monitor/tester |
+| 11 | CI-001 | P0 | done | PROD-002 | Production web deployment pipeline |
+| 12 | CI-002 | P0 | done | CI-001 | Release packaging, provenance, and integrity hardening |
+| 13 | QA-001 | P0 | done | CI-002 | Automated browser smoke/regression framework |
+| 14 | QA-002 | P0 | done | QA-001 | Manual hardware acceptance matrix + evidence capture framework |
+| 15 | OPS-001 | P1 | done | QA-002,CI-002 | Production runbooks, rollback, and support docs |
+| 16 | REL-001 | P0 | done | OPS-001,QA-002,CI-002 | Pre-production system audit + narrow blocker closeout |
+| 17 | REL-002 | P0 | done | REL-001 | Final production-readiness audit + handoff |
+| 18 | VAL-001 | P1 | queued | FW-004,CFG-002,CI-002 | Automated validation expansion |
+| 19 | PROD-AUDIT-001 | P0 | blocked | closeout-packet,approvals | Final production go/no-go authorization |
 
-## Superseded Legacy Web Slices
-
-| Legacy Slice | Prior Status | New Status | Reason |
-|---|---:|---:|---|
-| W-001 | done | superseded | Restart from clean baseline; no incremental repair of legacy runtime |
-| W-002 | done | superseded | Product contract replaced by restart-track controls |
-| W-003 | done | superseded | Delivery assumptions redefined by WR-002 artifact contract |
-| W-004 | done | superseded | Legacy runtime behavior is disposable |
-| W-005 | done | superseded | Legacy runtime behavior is disposable |
-| W-006 | done | superseded | Legacy runtime behavior is disposable |
-| W-007 | ready | superseded | Replaced by WR-series contract-first restart slices |
-| W-010 | done | superseded | Handoff replaced by restart-track planning |
+## Historical Program Status
+- Legacy web slices `W-*`: superseded.
+- Restart slices `WR-*`: completed history retained in `IMPLEMENTATION_SLICES.md`.
 
 ## Backlog Rules
-- No backlog item may combine unrelated concerns unless the Tech Lead explicitly asks for a combined documentation pass.
-- If an item cannot be completed safely in one slice, split it.
-- No implementation item moves to ready until contracts and validation are approved.
-- The detailed per-slice plan lives in `IMPLEMENTATION_SLICES.md`.
+- One narrow slice at a time.
+- Do not merge unrelated major concerns into one slice.
+- Contract-first, validation-first, then implementation.
+- Blocked items must remain explicitly labeled as blocked.

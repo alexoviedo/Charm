@@ -67,9 +67,6 @@ jobs:
       - name: Install web QA dependencies
         run: npm --prefix web ci
 
-      - name: Install Playwright Chromium browser
-        run: npx --prefix web playwright install --with-deps chromium
-
       - name: Run runtime web smoke checks
         run: npm --prefix web run qa:smoke
 

@@ -1,120 +1,98 @@
 # ARCHITECTURE.md
 
 ## Status
+
 - State: active
-- Scope: stable architectural truth only
-- Excludes: backlog, implementation details, temporary notes, unresolved choices
+- Scope: code-verified architecture and enforced boundaries
+- Source of truth: implementation under `components/`, `main/`, and test coverage under `tests/unit/`
 
-## System Goal
-Bridge one or more USB HID input devices to a BLE HID gamepad output on ESP32-S3 while preserving:
-- platform-agnostic core logic
-- strict separation of translation and transport
-- deterministic real-time behavior in the data path
-- testability without physical hardware
-- contributor-friendly modularity
+## System Objective
 
-## Top-Level Layers
-1. Core domain
-   - Pure logic
-   - No ESP-IDF, USB stack, or BLE stack types
-2. Port interfaces
-   - USB host port
-   - BLE transport port
-   - Config store port
-   - Time port
-3. Platform adapters
-   - ESP32-S3-specific implementations behind the ports
+Charm is structured to translate USB HID input semantics into BLE HID gamepad output on ESP32-S3 while preserving strict boundary separation:
 
-## Major Architectural Components
-- Supervisor / mode state machine
-- Control-plane event model
-- Raw report pipeline
-- Device registry
-- HID descriptor parser
-- HID report decoder
-- Stable HID element identity model
-- Mapping engine
-- Logical gamepad state
-- Profile manager / report encoder
-- Config compiler
-- Config store
-- USB host adapter
-- BLE transport adapter
-- Time adapter
+- contracts and ports define stable integration points
+- core logic is mostly platform-agnostic
+- platform adapters isolate ESP-IDF/runtime dependencies
+- config persistence and control-plane concerns are separated from translation logic
 
-## Module Boundaries
-- Supervisor coordinates lifecycle and mode transitions only
-- Parser/decoder convert descriptors and reports into canonical events
-- Mapping engine transforms canonical input events into canonical logical gamepad state
-- Profile encoder converts logical gamepad state into profile-specific report bytes
-- USB and BLE adapters are replaceable behind port contracts
-- Config work is isolated from the run-time data path
+## Layer Model
 
-## Primary Data Flow
-1. USB HID device(s) connect
-2. USB host enumerates devices/interfaces
-3. Raw HID reports are received
-4. HID descriptors are parsed into deterministic decode structures
-5. Reports are decoded into canonical input element events
-6. Mapping engine updates canonical logical gamepad state
-7. Profile encoder packs logical state into output-profile report bytes
-8. BLE transport publishes HID-over-GATT reports
-9. Supervisor manages mode, recovery, and config activation around the pipeline
+1. **Contracts (`components/charm_contracts`)**
+   - Shared request/result/status/fault types
+   - Transport and identity models
+2. **Ports (`components/charm_ports`)**
+   - Abstract runtime dependencies: USB host, BLE transport, config store, time
+3. **Core (`components/charm_core`)**
+   - Registry, decode/model, mapping, logical state, profile, supervisor/recovery
+4. **App (`components/charm_app`)**
+   - Process bootstrap and config orchestration
+5. **Platform (`components/charm_platform_*`)**
+   - ESP/runtime-specific adapter implementations
 
-## Operational Modes
-- Configuration mode
-- Run mode
-- Recovery state around run mode
+## Implemented Components
 
-## External Integrations
-- USB HID devices, including hub-attached devices
-- ESP-IDF USB host
-- External hub support
-- BLE HID-over-GATT host devices
-- NimBLE and/or Bluedroid behind the BLE transport port
-- NVS behind the config store port
-- Optional companion web application for config compilation
+### Core
 
-## Hard Constraints
-- Core translation logic must remain platform-agnostic
-- Data plane must use bounded, deterministic processing
-- Hot paths must use fixed-size/preallocated structures
-- Mapping engine must be unit-testable without USB, BLE, or ESP32 hardware
-- Mapping engine outputs only canonical logical gamepad state
-- Persisted mappings must use stable semantic HID identity
-- USB teardown must be serialized through the adapter context
-- Configuration activity must not interfere with the run-time data path
+- `InMemoryDeviceRegistry`
+- `DefaultHidSemanticModel`
+- `DefaultDecodePlanBuilder`
+- `DefaultHidDecoder`
+- `CanonicalLogicalStateStore`
+- `DefaultMappingEngine`
+- `CanonicalProfileManager`
+- `DefaultSupervisor`
+- `DefaultRecoveryPolicy`
 
-## Stable Identity Rule
-Persisted mappings must reference stable semantic HID identity:
-- ElementKey
-- or stable ElementKeyHash
+### App
 
-Persisted mappings must never depend on parser-local numbering or transient field order.
+- `InitializeAndRun()` startup wiring
+- `ActivatePersistedConfig()` boot-time config activation
+- `ConfigTransportService` command handler (`persist/load/clear/get_capabilities`)
 
-## Non-Coupling Rules
-- No ESP-IDF types in the core domain
-- No BLE report packing in the mapping engine
-- No parser-index-based persisted mappings
-- No direct USB teardown from callbacks
-- No configuration logic embedded in the hot data path
+### Platform
 
-## Extensibility Rules
-- New USB stack: implement the USB host port
-- New BLE stack: implement the BLE transport port
-- New mapping transform: add in mapping/compiler path
-- New output profile: add in profile manager/report encoder path
+- `UsbHostAdapter`
+- `BleTransportAdapter` + backend abstraction
+- `ConfigStoreNvs`
+- `TimePortEspIdf`
 
-## Reference Task Model
-Reference only; not mandatory:
-- usb_adapter_task
-- hid_decode_task
-- mapping_task
-- ble_task
-- config_task
+## Data-Path Reality (Current)
 
-Any implementation may vary in tasking as long as architectural boundaries and ownership rules remain intact.
+Current runtime wiring confirms startup lifecycle and config activation. The full production data pipeline exists in building blocks but is **not fully connected in `InitializeAndRun()`**.
+
+Implemented building blocks:
+
+- HID decode + mapping + logical state + profile encode modules
+- BLE notify path boundary
+
+Not yet fully wired in app runtime:
+
+- USB listener-driven decode/mapping/encode/notify loop
+- end-to-end runtime dispatch from USB reports to BLE output
+
+## Operational States
+
+- Supervisor mode state: `kUnknown`, `kConfiguration`, `kRun`
+- Recovery state: `kNone`, `kRequested`, `kRecovering`
+- BLE adapter state machine includes running/stopped status and bounded recovery attempts
+
+## Boundary Rules
+
+- Core modules do not own ESP stack lifecycle details.
+- Transport-specific behavior remains in adapters behind port interfaces.
+- Config transport command semantics are in app service layer; framing/parsing transport IO is out of scope of current service implementation.
+- Persisted config operations are isolated behind `ConfigStorePort`.
+
+## Testability Posture
+
+- Extensive host-side unit coverage exists for core components and several adapters.
+- Test harness includes ESP/NVS/time mocks in `components/charm_test_support`.
+- Unit test execution currently depends on environment-installed GTest.
+
+## Architectural Gaps / Deferred Integration
+
+See `IMPLEMENTATION_GAPS.md` for tracked discrepancies and priority.
 
 ## Change Policy
-Update this file only when stable architecture changes.
-Do not place unresolved decisions here; record them in DECISIONS.md.
+
+Update this file when implementation-level architecture changes (component boundaries, runtime orchestration paths, or ownership contracts).

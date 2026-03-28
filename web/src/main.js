@@ -80,6 +80,11 @@ const cfgExportBtn = document.getElementById('cfg-export-btn');
 const cfgSaveBrowserBtn = document.getElementById('cfg-save-browser-btn');
 const cfgLoadBrowserBtn = document.getElementById('cfg-load-browser-btn');
 const cfgClearBrowserBtn = document.getElementById('cfg-clear-browser-btn');
+const cfgDeviceCapabilitiesBtn = document.getElementById('cfg-device-capabilities-btn');
+const cfgDeviceLoadBtn = document.getElementById('cfg-device-load-btn');
+const cfgDevicePersistBtn = document.getElementById('cfg-device-persist-btn');
+const cfgDeviceClearBtn = document.getElementById('cfg-device-clear-btn');
+const cfgWriteStatusEl = document.getElementById('cfg-write-status');
 const cfgStatusEl = document.getElementById('cfg-status');
 const cfgLocalFileStatusEl = document.getElementById('cfg-local-file-status');
 const cfgLocalStorageStatusEl = document.getElementById('cfg-local-storage-status');
@@ -130,6 +135,151 @@ function setConfigLocalFileStatus(text, type = 'info') {
 function setConfigLocalStorageStatus(text, type = 'info') {
   cfgLocalStorageStatusEl.textContent = text;
   cfgLocalStorageStatusEl.className = `artifact-status ${type}`;
+}
+
+function setConfigWriteStatus(text, type = 'info') {
+  cfgWriteStatusEl.textContent = text;
+  cfgWriteStatusEl.className = `artifact-status ${type}`;
+}
+
+function setButtonState(button, enabled, enabledTitle, disabledTitle) {
+  button.disabled = !enabled;
+  button.title = enabled ? enabledTitle : disabledTitle;
+}
+
+function stableHash32(input) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function buildPersistPayloadFromDraft() {
+  const json = summarizeDraft(configState.draft);
+  const hash = stableHash32(json);
+  return {
+    mapping_bundle: {
+      bundle_id: hash,
+      version: Number(configState.draft.metadata.revision) || 1,
+      integrity: hash,
+    },
+    profile_id: 1,
+    bonding_material: [],
+  };
+}
+
+async function openPortIfNeeded(port) {
+  if (!port.readable || !port.writable) {
+    await port.open({ baudRate: 115200 });
+  }
+}
+
+async function sendConfigTransportCommand(command, payload = {}) {
+  const snap = serialModel.snapshot();
+  if (snap.permission !== SerialPermissionState.GRANTED) {
+    throw new Error('Serial permission is not granted.');
+  }
+  if (snap.owner !== SerialOwner.FLASH) {
+    throw new Error('Config transport requires Flash owner to preserve serial ownership separation.');
+  }
+  if (!snap.port) {
+    throw new Error('No serial port available. Request permission first.');
+  }
+  if (monitorState.connected || monitorState.connecting || flashState.inProgress) {
+    throw new Error('Config transport blocked while monitor/flash activity is active.');
+  }
+
+  await openPortIfNeeded(snap.port);
+  const writer = snap.port.writable.getWriter();
+  const reader = snap.port.readable.getReader();
+  const request = {
+    protocol_version: 1,
+    request_id: Date.now() & 0x7fffffff,
+    command,
+    payload,
+    integrity: 'CFG1',
+  };
+
+  try {
+    const encoded = new TextEncoder().encode(`${JSON.stringify(request)}\n`);
+    await writer.write(encoded);
+
+    let raw = '';
+    const timeout = 3000;
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) {
+        raw += new TextDecoder().decode(value);
+        const idx = raw.indexOf('\n');
+        if (idx >= 0) {
+          const line = raw.slice(0, idx).trim();
+          if (!line) break;
+          return JSON.parse(line);
+        }
+      }
+    }
+    throw new Error('Timed out waiting for device config transport response.');
+  } finally {
+    reader.releaseLock();
+    writer.releaseLock();
+  }
+}
+
+function renderConfigTransportState() {
+  const serial = serialModel.snapshot();
+  const hasPermission = serial.permission === SerialPermissionState.GRANTED;
+  const ownsFlash = serial.owner === SerialOwner.FLASH;
+  const blockedBySession = monitorState.connected || monitorState.connecting || flashState.inProgress;
+  const ready = hasPermission && ownsFlash && !blockedBySession;
+
+  setButtonState(
+    cfgDeviceCapabilitiesBtn,
+    ready,
+    'Query firmware config transport capabilities.',
+    'Requires serial permission, Flash owner, and idle flash/monitor sessions.',
+  );
+  setButtonState(
+    cfgDeviceLoadBtn,
+    ready,
+    'Load currently persisted config metadata from device.',
+    'Requires serial permission, Flash owner, and idle flash/monitor sessions.',
+  );
+  setButtonState(
+    cfgDeviceClearBtn,
+    ready,
+    'Clear persisted config on device.',
+    'Requires serial permission, Flash owner, and idle flash/monitor sessions.',
+  );
+  setButtonState(
+    cfgDevicePersistBtn,
+    ready && configState.validation.ok,
+    'Persist current validated local draft metadata to device.',
+    ready
+      ? 'Local draft must pass validation before persist.'
+      : 'Requires serial permission, Flash owner, and idle flash/monitor sessions.',
+  );
+
+  if (!hasPermission) {
+    setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Request serial permission to use config transport.', 'error');
+    return;
+  }
+  if (!ownsFlash) {
+    setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Claim Serial Owner = Flash before config transport commands.', 'error');
+    return;
+  }
+  if (blockedBySession) {
+    setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Disconnect monitor and wait for flash idle before config commands.', 'error');
+    return;
+  }
+  if (!configState.validation.ok) {
+    setConfigWriteStatus('CONFIG_DEVICE_READY_WITH_WARNINGS: Device commands available; persist disabled until local draft validation passes.', 'info');
+    return;
+  }
+  setConfigWriteStatus('CONFIG_DEVICE_READY: Firmware config transport available (serial-first path).', 'success');
 }
 
 function readConfigInputsIntoDraft() {
@@ -511,12 +661,32 @@ function renderSerialModel() {
   const canClaim = s.permission === SerialPermissionState.GRANTED;
   const blockClaimFlash = monitorState.connected || monitorState.connecting;
   const blockClaimConsole = flashState.inProgress;
-  serialClaimFlashBtn.disabled = !canClaim || blockClaimFlash;
-  serialClaimConsoleBtn.disabled = !canClaim || blockClaimConsole;
-  serialReleaseBtn.disabled = s.owner === SerialOwner.NONE;
+  setButtonState(
+    serialClaimFlashBtn,
+    canClaim && !blockClaimFlash,
+    'Assign serial owner to Flash flow.',
+    blockClaimFlash
+      ? 'Monitor session is active/connecting; disconnect monitor first.'
+      : 'Serial permission must be granted before claiming owner.',
+  );
+  setButtonState(
+    serialClaimConsoleBtn,
+    canClaim && !blockClaimConsole,
+    'Assign serial owner to Console flow.',
+    blockClaimConsole
+      ? 'Flash session is active; wait for completion first.'
+      : 'Serial permission must be granted before claiming owner.',
+  );
+  setButtonState(
+    serialReleaseBtn,
+    s.owner !== SerialOwner.NONE,
+    'Release active serial owner.',
+    'No serial owner is currently active.',
+  );
 
   renderFlashState();
   renderMonitorState();
+  renderConfigTransportState();
 }
 
 async function handleRequestPermission() {
@@ -577,14 +747,25 @@ function renderFlashState() {
   const readyIdentify = hasPermission && ownsFlash && !monitorState.connected && !monitorState.connecting && !flashState.inProgress;
   const readyFlash = readyIdentify && hasBundle && flashState.identified && !flashState.inProgress;
 
-  flashIdentifyBtn.disabled = !readyIdentify;
-  flashExecuteBtn.disabled = !readyFlash;
+  setButtonState(
+    flashIdentifyBtn,
+    readyIdentify,
+    'Identify connected device over Flash-owned serial path.',
+    'Requires serial permission, Flash owner, and idle monitor/flash state.',
+  );
+  setButtonState(
+    flashExecuteBtn,
+    readyFlash,
+    'Execute flash using loaded artifact bundle.',
+    'Requires successful identify, loaded artifacts, and Flash ownership.',
+  );
 
   if (flashState.inProgress) setFlashStatus('FLASH_ACTIVE', 'Flashing in progress. Console remains blocked until completion.');
   else if (!hasBundle) setFlashStatus('FLASH_BLOCKED', 'Load a valid artifact bundle first.');
   else if (!hasPermission) setFlashStatus('FLASH_BLOCKED', 'Serial permission must be granted first.');
   else if (monitorState.connected || monitorState.connecting) setFlashStatus('FLASH_BLOCKED', 'Monitor must fully disconnect before flash flow.');
   else if (!ownsFlash) setFlashStatus('FLASH_BLOCKED', 'Serial owner must be set to Flash before identify/flash.');
+  renderConfigTransportState();
 }
 
 async function handleIdentify() {
@@ -678,8 +859,19 @@ function renderMonitorState() {
     && !flashState.inProgress
     && (serial.owner === SerialOwner.NONE || ownsConsole);
 
-  monitorConnectBtn.disabled = !canConnect;
-  monitorDisconnectBtn.disabled = !(monitorState.connected || monitorState.connecting);
+  setButtonState(
+    monitorConnectBtn,
+    canConnect,
+    'Connect serial monitor stream.',
+    'Requires serial permission, available owner state, and idle flash session.',
+  );
+  setButtonState(
+    monitorDisconnectBtn,
+    monitorState.connected || monitorState.connecting,
+    'Disconnect active monitor stream.',
+    'Monitor is not currently connected.',
+  );
+  renderConfigTransportState();
 }
 
 async function handleMonitorConnect() {
@@ -882,13 +1074,86 @@ function initConfigControls() {
   cfgSaveBrowserBtn.addEventListener('click', saveDraftToBrowserStorage);
   cfgLoadBrowserBtn.addEventListener('click', loadDraftFromBrowserStorage);
   cfgClearBrowserBtn.addEventListener('click', clearDraftFromBrowserStorage);
+  cfgDeviceCapabilitiesBtn.addEventListener('click', async () => {
+    try {
+      setConfigWriteStatus('CONFIG_DEVICE_CAPABILITIES: Querying device capabilities…', 'info');
+      const response = await sendConfigTransportCommand('config.get_capabilities', {});
+      if (response.status !== 'kOk') {
+        throw new Error(`Capability query failed: ${JSON.stringify(response.fault || {})}`);
+      }
+      setConfigWriteStatus(
+        `CONFIG_DEVICE_CAPABILITIES_OK: protocol v${response.capabilities?.protocol_version ?? 'unknown'}; BLE transport supported=${Boolean(response.capabilities?.supports_ble_transport)}.`,
+        'success',
+      );
+    } catch (err) {
+      setConfigWriteStatus(`CONFIG_DEVICE_CAPABILITIES_ERROR: ${err.message || String(err)}`, 'error');
+    } finally {
+      renderConfigTransportState();
+    }
+  });
+  cfgDevicePersistBtn.addEventListener('click', async () => {
+    readConfigInputsIntoDraft();
+    configState.validation = validateDraft(configState.draft);
+    renderConfigValidation();
+    renderConfigSummary();
+    if (!configState.validation.ok) {
+      setConfigWriteStatus('CONFIG_DEVICE_PERSIST_BLOCKED: Resolve local validation errors before persist.', 'error');
+      renderConfigTransportState();
+      return;
+    }
+    try {
+      setConfigWriteStatus('CONFIG_DEVICE_PERSIST: Sending config.persist…', 'info');
+      const payload = buildPersistPayloadFromDraft();
+      const response = await sendConfigTransportCommand('config.persist', payload);
+      if (response.status !== 'kOk') {
+        throw new Error(`Persist failed: ${JSON.stringify(response.fault || {})}`);
+      }
+      setConfigWriteStatus('CONFIG_DEVICE_PERSIST_OK: Device acknowledged persist.', 'success');
+    } catch (err) {
+      setConfigWriteStatus(`CONFIG_DEVICE_PERSIST_ERROR: ${err.message || String(err)}`, 'error');
+    } finally {
+      renderConfigTransportState();
+    }
+  });
+  cfgDeviceLoadBtn.addEventListener('click', async () => {
+    try {
+      setConfigWriteStatus('CONFIG_DEVICE_LOAD: Sending config.load…', 'info');
+      const response = await sendConfigTransportCommand('config.load', {});
+      if (response.status !== 'kOk') {
+        throw new Error(`Load failed: ${JSON.stringify(response.fault || {})}`);
+      }
+      setConfigWriteStatus(
+        `CONFIG_DEVICE_LOAD_OK: profile_id=${response.payload?.profile_id ?? 'unknown'}, bundle_id=${response.payload?.mapping_bundle?.bundle_id ?? 'unknown'}. Verify expected profile before proceeding.`,
+        'success',
+      );
+    } catch (err) {
+      setConfigWriteStatus(`CONFIG_DEVICE_LOAD_ERROR: ${err.message || String(err)}`, 'error');
+    } finally {
+      renderConfigTransportState();
+    }
+  });
+  cfgDeviceClearBtn.addEventListener('click', async () => {
+    try {
+      setConfigWriteStatus('CONFIG_DEVICE_CLEAR: Sending config.clear…', 'info');
+      const response = await sendConfigTransportCommand('config.clear', {});
+      if (response.status !== 'kOk') {
+        throw new Error(`Clear failed: ${JSON.stringify(response.fault || {})}`);
+      }
+      setConfigWriteStatus('CONFIG_DEVICE_CLEAR_OK: Device config clear acknowledged.', 'success');
+    } catch (err) {
+      setConfigWriteStatus(`CONFIG_DEVICE_CLEAR_ERROR: ${err.message || String(err)}`, 'error');
+    } finally {
+      renderConfigTransportState();
+    }
+  });
 
   configState.validation = validateDraft(configState.draft);
   renderConfigInputsFromDraft();
   renderConfigValidation();
   renderConfigSummary();
-  setConfigLocalFileStatus('CONFIG_LOCAL_FILE: Import/export uses local JSON files only.', 'info');
-  setConfigLocalStorageStatus('CONFIG_LOCAL_STORAGE: Save/load is browser-local only (not device storage).', 'info');
+  setConfigLocalFileStatus('CONFIG_LOCAL_FILE: Import/export is local-only and does not write device state.', 'info');
+  setConfigLocalStorageStatus('CONFIG_LOCAL_STORAGE: Save/load is browser-local only and isolated from persisted device config.', 'info');
+  renderConfigTransportState();
 }
 
 navButtons.forEach((btn) => btn.addEventListener('click', () => activate(btn.dataset.target)));

@@ -22,6 +22,7 @@ set(CONTRACTS_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_contracts/
 set(PORTS_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_ports/include")
 set(TEST_SUPPORT_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_test_support/include")
 set(CORE_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_core/include")
+set(APP_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_app/include")
 
 # Build pure core test support as an OBJECT library since it has no main
 add_library(charm_core_obj OBJECT
@@ -139,3 +140,10 @@ target_include_directories(test_config_activation PRIVATE ${CONTRACTS_INC} ${POR
 target_sources(test_config_activation PRIVATE "../../components/charm_app/src/config_activation.cpp")
 target_link_libraries(test_config_activation PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 add_test(NAME ConfigActivationTest COMMAND test_config_activation)
+
+# CFG-002 Config Transport Service
+add_executable(test_config_transport_service test_config_transport_service.cpp)
+target_include_directories(test_config_transport_service PRIVATE ${CONTRACTS_INC} ${PORTS_INC} ${TEST_SUPPORT_INC} ${APP_INC})
+target_sources(test_config_transport_service PRIVATE "../../components/charm_app/src/config_transport_service.cpp")
+target_link_libraries(test_config_transport_service PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME ConfigTransportServiceTest COMMAND test_config_transport_service)

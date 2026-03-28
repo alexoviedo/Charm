@@ -13,7 +13,7 @@ export function evaluateCapabilities(env = {}) {
     secure: secureContext,
     serial: webSerialSupported && secureContext,
     gamepad: gamepadSupported,
-    config_transport: false,
+    config_transport: webSerialSupported && secureContext,
     none: true,
   };
 
@@ -61,14 +61,14 @@ export function buildMessages({ secureContext, webSerialSupported, gamepadSuppor
     messages.push({
       level: 'success',
       code: 'serial_ready',
-      text: 'Web Serial is available. Device-flow actions stay preview-only until later slices.',
+      text: 'Web Serial is available. Config transport can use the serial-first path once permission/ownership gates are satisfied.',
     });
   }
 
   messages.push({
     level: 'info',
-    code: 'blocked_unproven_transport',
-    text: 'Device config write/persist is blocked: no repo-proven serial protocol or non-HID BLE config path.',
+    code: 'serial_config_transport_ready',
+    text: 'Device config write/persist uses serial-first transport. BLE config transport remains deferred.',
   });
 
   return messages;

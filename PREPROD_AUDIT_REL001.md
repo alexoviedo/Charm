@@ -6,7 +6,7 @@ Scope: firmware, webapp, CI/release, QA evidence, operations docs, control truth
 ## 1) Readiness Assessment (Current)
 
 ### 1.1 Production-ready now (engineering foundation)
-- Runtime web deployment pipeline is separated and produces versioned runtime outputs (`current/`, `releases/<release_id>/`) plus deploy metadata.
+- Runtime web deployment pipeline is separated and produces versioned runtime outputs (`web/`, `releases/<release_id>/`) plus deploy metadata.
 - Release integrity/provenance tooling exists and works for runtime artifacts (`SHA256SUMS`, `provenance.json`).
 - Firmware build workflow emits firmware web-flash artifact bundle and integrity/provenance outputs.
 - Browser smoke suite exists and passes locally for top-level runtime shell/capability/config-panel flows.

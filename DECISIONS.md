@@ -293,7 +293,7 @@ Only approved decisions belong in accepted/rejected sections.
 - Rationale: Web runtime deployment needs production-grade controls without destabilizing firmware build behavior.
 - Consequence:
   - Runtime web deployment pipeline is isolated from `firmware_build.yml`.
-  - Deploy package includes versioned release snapshots for rollback-aware redeploy (`releases/<release_id>/`) and stable `current/` path.
+  - Deploy package includes versioned release snapshots for rollback-aware redeploy (`releases/<release_id>/`) and stable `web/` path.
   - `CI-002` is the next slice for promotion controls and rollback rehearsal evidence.
 
 ### D-039

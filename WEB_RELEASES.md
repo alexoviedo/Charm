@@ -46,7 +46,7 @@ To avoid hardcoding versions in the frontend, the CI pipeline must generate a `m
 2. **Package Step:** A script creates the `firmware/` directory, copies `build/bootloader/bootloader.bin`, `build/partition_table/partition-table.bin`, and `build/charm.bin` into it.
 3. **Manifest Step:** The script generates `manifest.json` with the current commit SHA and timestamp.
 4. **Deploy Step:** Runtime web deployment is handled by `.github/workflows/web_runtime_deploy.yml`, which packages `web/` into:
-   - `current/` (active runtime path)
+   - `web/` (active runtime path)
    - `releases/<release_id>/` (rollback-aware release snapshot)
    - `deploy-metadata.json` (release/run traceability)
 
@@ -58,7 +58,7 @@ To avoid hardcoding versions in the frontend, the CI pipeline must generate a `m
 
 ## 3.2 Rollback Model
 - Each deployment includes a versioned release snapshot under `releases/<release_id>/`.
-- Rollback can be performed by rerunning deployment from a prior commit/release id to restore a known-good `current/` path.
+- Rollback can be performed by rerunning deployment from a prior commit/release id to restore a known-good `web/` path.
 
 ## 3.3 Integrity + Provenance Outputs
 - Firmware and runtime-web packaging flows both generate:

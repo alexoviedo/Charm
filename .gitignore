@@ -1,1 +1,4 @@
 tests/unit/build/
+web/node_modules/
+test_out/
+test_env/

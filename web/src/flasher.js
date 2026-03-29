@@ -15,6 +15,7 @@ export class WebFlasherService {
   constructor() {
     this.transport = null;
     this.loader = null;
+    this.esptool = null;
   }
 
   async connectAndIdentify(port, hooks = {}) {
@@ -26,8 +27,9 @@ export class WebFlasherService {
 
     onStatus('FLASH_CONNECTING', 'Connecting to bootloader...');
 
-    this.transport = new esptooljs.Transport(port);
-    this.loader = new esptooljs.ESPLoader({
+    this.esptool = this.esptool || (await importEsptoolJs());
+    this.transport = new this.esptool.Transport(port);
+    this.loader = new this.esptool.ESPLoader({
       transport: this.transport,
       baudrate: 115200,
       terminal: {
@@ -39,7 +41,7 @@ export class WebFlasherService {
 
     const chip = await this.loader.main();
     const mac = await this.loader.read_mac();
-    const macString = mac.map((b) => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+    const macString = normalizeMac(mac);
 
     onStatus('FLASH_IDENTIFIED', `Connected to ${chip} (${macString}).`);
     return { chip, mac: macString };
@@ -81,7 +83,7 @@ export class WebFlasherService {
       flashSize: 'keep',
       eraseAll: false,
       compress: true,
-      calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
+      calculateMD5Hash: (image) => calculateMd5Hash(image),
       reportProgress: (fileIndex, written, total) => {
         const pct = total > 0 ? Math.round((written / total) * 100) : 0;
         onProgress({ fileIndex, written, total, pct });
@@ -103,4 +105,39 @@ export class WebFlasherService {
       this.transport = null;
     }
   }
+}
+
+let esptoolModulePromise = null;
+const ESPTOOL_MODULE_URL = 'https://unpkg.com/esptool-js@0.4.3/bundle.js';
+
+async function importEsptoolJs() {
+  if (!esptoolModulePromise) {
+    esptoolModulePromise = import(ESPTOOL_MODULE_URL).then((mod) => {
+      if (!mod?.Transport || !mod?.ESPLoader) {
+        throw new Error('esptool-js module missing required exports.');
+      }
+      return mod;
+    });
+  }
+  return esptoolModulePromise;
+}
+
+function normalizeMac(mac) {
+  if (typeof mac === 'string') {
+    return mac.toUpperCase();
+  }
+  if (Array.isArray(mac) || mac instanceof Uint8Array) {
+    return Array.from(mac)
+      .map((b) => Number(b).toString(16).padStart(2, '0'))
+      .join(':')
+      .toUpperCase();
+  }
+  return String(mac ?? 'unknown');
+}
+
+function calculateMd5Hash(image) {
+  if (!globalThis.CryptoJS?.MD5 || !globalThis.CryptoJS?.enc?.Latin1?.parse) {
+    throw new Error('CryptoJS is unavailable; cannot compute image MD5.');
+  }
+  return globalThis.CryptoJS.MD5(globalThis.CryptoJS.enc.Latin1.parse(image)).toString();
 }

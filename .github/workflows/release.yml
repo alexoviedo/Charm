@@ -1,0 +1,216 @@
+name: Release and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - "main/**"
+      - "components/**"
+      - ".github/workflows/release.yml"
+      - "scripts/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - staging
+          - production
+      release_id:
+        description: "Optional release id override (defaults to commit SHA)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-firmware:
+    name: ci / build-firmware (esp32s3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build with ESP-IDF
+        id: build
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: latest
+          target: esp32s3
+          command: idf.py build
+
+      - name: Generate Workflow Summary
+        if: always()
+        run: |
+          echo "## ESP-IDF Firmware Build Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Build completed successfully.**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Build failed.**" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Target:** esp32s3" >> $GITHUB_STEP_SUMMARY
+          echo "- **IDF Version:** latest" >> $GITHUB_STEP_SUMMARY
+          echo "- **Job Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Prepare Web Flash Artifacts
+        if: success()
+        run: |
+          mkdir -p web_artifacts/firmware
+          cp build/bootloader/bootloader.bin web_artifacts/firmware/
+          cp build/partition_table/partition-table.bin web_artifacts/firmware/
+          cp build/charm.bin web_artifacts/firmware/
+
+          cat <<EOF > web_artifacts/firmware/manifest.json
+          {
+            "version": "latest",
+            "build_time": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "commit_sha": "${GITHUB_SHA}",
+            "target": "esp32s3",
+            "files": {
+              "bootloader": "bootloader.bin",
+              "partition_table": "partition-table.bin",
+              "app": "charm.bin"
+            }
+          }
+          EOF
+
+      - name: Generate firmware artifact integrity and provenance
+        if: success()
+        run: |
+          scripts/generate_release_integrity.sh web_artifacts/firmware firmware-esp32s3-web-artifacts
+
+      - name: Append firmware integrity summary
+        if: success()
+        run: |
+          echo "## Firmware Release Integrity" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA256: \`web_artifacts/firmware/SHA256SUMS\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provenance: \`web_artifacts/firmware/provenance.json\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verify command: \`cd web_artifacts/firmware && sha256sum -c SHA256SUMS\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-esp32s3-web-artifacts
+          path: web_artifacts/firmware/
+          if-no-files-found: error
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-esp32s3-debug-artifacts
+          path: |
+            build/*.elf
+            build/*.map
+          if-no-files-found: ignore
+
+  package-web-runtime:
+    name: ci / package-web-runtime
+    needs: build-firmware
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.meta.outputs.release_id }}
+      deploy_environment: ${{ steps.meta.outputs.deploy_environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          RELEASE_ID="${{ github.event.inputs.release_id }}"
+          if [ -z "${RELEASE_ID}" ]; then
+            RELEASE_ID="${GITHUB_SHA}"
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DEPLOY_ENV="${{ github.event.inputs.target_environment }}"
+          else
+            DEPLOY_ENV="production"
+          fi
+          echo "release_id=${RELEASE_ID}" >> "$GITHUB_OUTPUT"
+          echo "deploy_environment=${DEPLOY_ENV}" >> "$GITHUB_OUTPUT"
+
+      - name: Download firmware artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-esp32s3-web-artifacts
+          path: web_artifacts/firmware
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install web QA dependencies
+        run: npm --prefix web ci
+
+      - name: Install Playwright Chromium
+        run: npx --prefix web playwright install --with-deps chromium
+
+      - name: Run runtime web smoke checks
+        run: npm --prefix web run qa:smoke
+
+      - name: Package runtime web site
+        run: |
+          scripts/package_web_runtime.sh web_dist "${{ steps.meta.outputs.release_id }}" web_artifacts/firmware
+
+      - name: Generate runtime web integrity and provenance
+        run: |
+          scripts/generate_release_integrity.sh web_dist runtime-web-site
+
+      - name: Upload packaged runtime web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-web-site
+          path: web_dist/
+          if-no-files-found: error
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+  deploy-web-runtime:
+    name: cd / deploy-web-runtime
+    needs: package-web-runtime
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.package-web-runtime.outputs.deploy_environment }}
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download packaged runtime web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: runtime-web-site
+          path: web_dist
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web_dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Deployment summary
+        run: |
+          echo "## Runtime Web Deploy Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Release ID: \`${{ needs.package-web-runtime.outputs.release_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: \`${{ needs.package-web-runtime.outputs.deploy_environment }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Page URL: ${{ steps.deployment.outputs.page_url }}web/index.html" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA256: \`web_dist/SHA256SUMS\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Provenance: \`web_dist/provenance.json\`" >> "$GITHUB_STEP_SUMMARY"

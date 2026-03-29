@@ -31,7 +31,7 @@ Use this alongside `MANUAL_ACCEPTANCE_MATRIX.md` for evidence capture.
    - `target_environment`: `staging` or `production`
    - optional `release_id` (otherwise defaults to commit SHA)
 3. Confirm package job generated:
-   - `current/`
+   - `web/`
    - `releases/<release_id>/`
    - `deploy-metadata.json`
    - `SHA256SUMS`
@@ -64,7 +64,7 @@ After every web deploy:
 ### 4.1 Runtime web rollback
 1. Identify prior known-good release id from deployment history (`releases/<release_id>/`).
 2. Re-run `Runtime Web Deploy` from commit/tag for that release id (or explicitly set `release_id` on manual dispatch if policy allows).
-3. Verify new `current/` corresponds to rollback candidate and page URL is healthy.
+3. Verify new `web/` corresponds to rollback candidate and page URL is healthy.
 4. Re-run deployment verification checks (Section 3) and record evidence as `REL-04`.
 
 ### 4.2 Firmware rollback

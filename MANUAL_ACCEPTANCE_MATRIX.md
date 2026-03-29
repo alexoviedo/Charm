@@ -6,7 +6,7 @@ This document defines the **human-executable** acceptance process for the curren
 - firmware flashing + serial monitor operations
 - serial-first config transport commands (`config.get_capabilities`, `config.load`, `config.persist`, `config.clear`)
 - BLE runtime readiness checks and failure/recovery observation
-- release/deployment integrity verification (`SHA256SUMS`, `provenance.json`, runtime `current/` + `releases/<release_id>/` layout)
+- release/deployment integrity verification (`SHA256SUMS`, `provenance.json`, runtime `web/` + `releases/<release_id>/` layout)
 
 It is deliberately aligned to existing code/docs and is not a generic QA template.
 
@@ -32,7 +32,7 @@ It is deliberately aligned to existing code/docs and is not a generic QA templat
 | Matrix ID | Environment | Runtime Source | Required Artifact Shape |
 |---|---|---|---|
 | ENV-A | Local operator test | `web/` served locally | firmware manifest + binaries, config controls visible |
-| ENV-B | Staging deployment | `current/` package from release pipeline | `deploy-metadata.json`, `SHA256SUMS`, `provenance.json` |
+| ENV-B | Staging deployment | `web/` package from release pipeline | `deploy-metadata.json`, `SHA256SUMS`, `provenance.json` |
 | ENV-C | Production-like rehearsal | `releases/<release_id>/` snapshot + rollback candidate | Same integrity/provenance checks + rollback path evidence |
 
 ---
@@ -88,10 +88,10 @@ Use these IDs in evidence and pass/fail records.
 ### G. Deployment / Release Verification
 | ID | Scenario | Steps (exact) | Expected Outcome | Evidence |
 |---|---|---|---|---|
-| REL-01 | Runtime package shape verification | Inspect deployment artifact | Contains `current/`, `releases/<release_id>/`, `deploy-metadata.json` | Terminal transcript + artifact listing screenshot |
+| REL-01 | Runtime package shape verification | Inspect deployment artifact | Contains `web/`, `releases/<release_id>/`, `deploy-metadata.json` | Terminal transcript + artifact listing screenshot |
 | REL-02 | Integrity verification | In artifact dir: `sha256sum -c SHA256SUMS` | All required files verify OK | Terminal transcript |
 | REL-03 | Provenance verification | Inspect `provenance.json` and check required fields | Fields present: artifact, commit/workflow/run metadata, generated timestamp | Captured JSON snippet or screenshot |
-| REL-04 | Rollback rehearsal | Deploy prior known-good release snapshot | `current/` serves previous version successfully | Before/after evidence + change ticket reference |
+| REL-04 | Rollback rehearsal | Deploy prior known-good release snapshot | `web/` serves previous version successfully | Before/after evidence + change ticket reference |
 
 ---
 

@@ -149,7 +149,7 @@ Required checks:
 
 CI-001 implementation evidence (deployment pipeline scope):
 - runtime web deployment workflow exists and is isolated from firmware build workflow
-- deployment package output is deterministic and version-addressable (`current/` + `releases/<release_id>/`)
+- deployment package output is deterministic and version-addressable (`web/` + `releases/<release_id>/`)
 - environment targeting is explicit (`staging`/`production` dispatch + mainline production)
 
 CI-002 implementation evidence (release integrity/provenance scope):

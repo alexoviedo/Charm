@@ -158,7 +158,7 @@ Break approved architecture and product constraints into the smallest safe slice
   - done
 - Delivered:
   - dedicated runtime web deployment workflow (`web_runtime_deploy.yml`) added
-  - explicit packaging step for runtime web assets with `current/` + `releases/<release_id>/` deploy layout
+  - explicit packaging step for runtime web assets with `web/` + `releases/<release_id>/` deploy layout
   - environment/branch promotion logic for staging/production dispatch and mainline deployment
   - deployment workflow separated from existing firmware build pipeline
 - Depends on:

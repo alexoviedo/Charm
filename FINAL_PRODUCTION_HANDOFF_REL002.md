@@ -42,7 +42,7 @@ Status: **closed / failed for launch**
 
 ## 3) Final List of Implemented Capabilities
 - Dedicated runtime web deploy workflow with release-id/environment metadata and Pages deployment.
-- Runtime web packaging/integrity/provenance outputs (`current/`, `releases/<release_id>/`, `deploy-metadata.json`, `SHA256SUMS`, `provenance.json`).
+- Runtime web packaging/integrity/provenance outputs (`web/`, `releases/<release_id>/`, `deploy-metadata.json`, `SHA256SUMS`, `provenance.json`).
 - Firmware artifact integrity/provenance generation in firmware CI flow.
 - Serial-first config transport contract and firmware-side service implementation.
 - Runtime web config controls for get/load/persist/clear transport commands and ownership guardrails.

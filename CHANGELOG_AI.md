@@ -2,7 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- Executed `VS-01` readiness/planning phase and added `VS_01_RUNTIME_DATA_PLANE_READINESS.md` (no runtime code changes).
 - Executed `VS-PROG-001 — Control reset into the production vertical-slice program`.
 - Set the active execution queue to `VS-01`..`VS-08`, explicitly mapped to verified gaps `G-001`..`G-006`.
 - Executed `WR-014 — Cutover and legacy web removal`.

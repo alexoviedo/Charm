@@ -15,7 +15,7 @@ Prioritized backlog of narrow, reviewable slices for production readiness.
 
 | Order | Slice | Priority | Status | Primary Gap(s) | Notes |
 |---|---|---:|---:|---|---|
-| 1 | VS-01 Runtime Data Plane Integration | P0 | in_progress | G-001 | Readiness planned; implementation pending |
+| 1 | VS-01 Runtime Data Plane Integration | P0 | in_progress | G-001 | Current active slice |
 | 2 | VS-02 Firmware Config Transport Adapter | P0 | queued | G-003 | Serial framing/parsing + dispatch bridge |
 | 3 | VS-03 BLE Stack Callback Wiring Hardening | P0 | queued | G-002 | Real callback registration/dispatch hardening |
 | 4 | VS-04 Startup Storage Lifecycle Hardening | P0 | queued | G-004 | Explicit NVS init and startup failure handling |

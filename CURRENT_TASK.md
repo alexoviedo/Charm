@@ -11,7 +11,6 @@ Execute the first production vertical slice by wiring the firmware runtime USB i
 ## Why this is active now
 - `VS-PROG-001` reset control posture from prior production-tracking program into a gap-driven vertical-slice execution program.
 - Code-first audit still shows open implementation gaps G-001..G-006 and they are now the authoritative execution drivers.
-- VS-01 readiness plan is documented in `VS_01_RUNTIME_DATA_PLANE_READINESS.md` and implementation remains pending.
 
 ## Entry Facts (must remain true)
 - Runtime replacement webapp remains active at `web/`.

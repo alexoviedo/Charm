@@ -6,7 +6,7 @@ Break approved architecture and product constraints into the smallest safe slice
 ## Active Program
 - Active execution model: **Vertical Slices (`VS-*`)**.
 - Driver source: verified gaps in `IMPLEMENTATION_GAPS.md` (G-001..G-006).
-- Current active slice: **VS-01 Runtime Data Plane Integration** (readiness planned; implementation pending).
+- Current active slice: **VS-01 Runtime Data Plane Integration**.
 
 ## VS Program Queue (authoritative)
 

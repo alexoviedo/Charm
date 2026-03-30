@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Added
+- Executed `VS-PROG-001 — Control reset into the production vertical-slice program`.
+- Set the active execution queue to `VS-01`..`VS-08`, explicitly mapped to verified gaps `G-001`..`G-006`.
 - Executed `WR-014 — Cutover and legacy web removal`.
 - Executed a control-only `WR-015` planning update to define the serial control/config proof matrix requirements.
 - Executed `PROD-001 — Production program control reset`.
@@ -23,6 +25,8 @@
 - Executed `REL-002 — Final production-readiness audit and handoff` (audit/handoff scope).
 
 ### Changed
+- Replaced active current-task posture with `VS-01 Runtime Data Plane Integration` as the single in-progress slice.
+- Re-aligned control files for a code-first vertical-slice program while preserving prior WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL history as historical record.
 - Replaced legacy runtime `web/` implementation with the validated replacement implementation formerly staged in `web-next/`.
 - Runtime truth updated: replacement shell is now the active runtime webapp at `web/`.
 - Updated control tracking: WR-014 done and WR-015 in progress (planning), with runtime write/persist still blocked on transport proof evidence.

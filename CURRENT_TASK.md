@@ -1,23 +1,24 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: PROD-AUDIT-001
-- Title: Final production go/no-go audit (blocked pending closeout packet)
-- Status: blocked
+- ID: VS-01
+- Title: Runtime Data Plane Integration
+- Status: in_progress
 
 ## Goal
-Maintain production audit hold-state until launch-closeout packet (hardware evidence + approvals) is complete.
+Execute the first production vertical slice by wiring the firmware runtime USB input path through decode/mapping/profile encode into BLE notify, while preserving ports/adapters boundaries and deterministic core behavior.
 
 ## Why this is active now
-- `REL-002` completed final audit and handoff documentation with explicit do-not-ship recommendation.
-- Remaining open items are evidence/governance closeout tasks outside this completed program slice.
+- `VS-PROG-001` reset control posture from prior production-tracking program into a gap-driven vertical-slice execution program.
+- Code-first audit still shows open implementation gaps G-001..G-006 and they are now the authoritative execution drivers.
 
 ## Entry Facts (must remain true)
 - Runtime replacement webapp remains active at `web/`.
-- Firmware-side config transport handler is serial-primary contract aligned; BLE config transport remains deferred.
-- Automated browser smoke checks exist but cannot prove hardware serial/firmware outcomes.
+- `web-next/` still exists and is treated as drift risk until consolidated (`VS-06`).
+- Config transport command semantics exist in firmware service layer, but runtime transport integration remains a dedicated slice.
+- Previous PROD/FW/CFG/WEB/CI/QA/OPS/REL program history is preserved as historical record.
 
-## Exit Criteria for PROD-AUDIT-001
-- Final launch-closeout packet exists: matrix evidence, rollback rehearsal, integrity/provenance verification, and named approvals.
-- Explicit ship/no-ship decision recorded with residual-risk acceptance details.
-- If approved, production declaration is recorded by authorized sign-off owners.
+## Exit Criteria for VS-01
+- App runtime demonstrates USB report intake -> decode/mapping/logical state -> profile encode -> BLE notify dispatch path.
+- Negative-path behavior for malformed/unsupported input remains deterministic and fail-safe.
+- Evidence is recorded in validation docs and any newly discovered blockers are explicitly documented.

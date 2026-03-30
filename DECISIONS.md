@@ -354,6 +354,16 @@ Only approved decisions belong in accepted/rejected sections.
 
 ---
 
+### D-045
+- Status: accepted
+- Decision: Execute `VS-PROG-001` control reset and make the gap-driven vertical-slice program (`VS-01`..`VS-08`) the active execution track.
+- Rationale: Current control posture and implementation-gap truth diverged; active tracking must align to code-verified gaps and one-slice-at-a-time execution.
+- Consequence:
+  - Historical WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL records are preserved as history, not erased.
+  - Active task becomes `VS-01`.
+  - Vertical slices are explicitly tied to closing G-001..G-006 and final gate closure (`VS-07`/`VS-08`).
+
+---
 ## Rejected Options
 
 ### R-001
@@ -423,3 +433,4 @@ Only approved decisions belong in accepted/rejected sections.
 
 ## Update Rule
 Move an item from unresolved to accepted/rejected only after explicit approval.
+

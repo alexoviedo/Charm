@@ -17,7 +17,8 @@ Store durable facts, constraints, and working rules that should survive session 
 
 ## Program State (current)
 - Webapp-restart program is complete as historical truth.
-- Production-readiness program is active.
+- Prior production-tracking program (`PROD-*` through `REL-*`) is preserved as historical truth.
+- Active execution program is the vertical-slice program (`VS-01`..`VS-08`) tied to verified implementation gaps G-001..G-006.
 - Runtime replacement webapp is active at `web/`.
 
 ## Durable Constraints
@@ -29,10 +30,14 @@ Store durable facts, constraints, and working rules that should survive session 
 - Gamepad API remains primary browser-side validation path unless explicitly changed by approved decision.
 
 ## Current Production Drivers
-- Firmware BLE transport path is not yet production-proven.
-- Host/device config transport proof is required before runtime write/persist enablement.
-- CI builds firmware artifacts, but release/deployment hardening is incomplete.
-- Production validation and operations runbook readiness are not yet complete.
+- Close verified implementation gaps in order via vertical slices:
+  - G-001 runtime data-plane wiring
+  - G-003 config transport adapter wiring
+  - G-002 BLE callback hardening
+  - G-004 NVS startup lifecycle
+  - G-005 host test portability
+  - G-006 web runtime consolidation
+- Preserve historical audit/risk artifacts while keeping active control posture aligned to code truth.
 
 ## Scope Discipline
 - Avoid broad refactors without explicit approval.

@@ -5,6 +5,10 @@ int nvs_flash_init(void) {
     return 0;
 }
 
+int nvs_flash_erase(void) {
+    return 0;
+}
+
 int nvs_open(const char* name, nvs_open_mode_t open_mode, nvs_handle_t *out_handle) {
     if (out_handle) {
         *out_handle = 1;

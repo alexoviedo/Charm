@@ -144,7 +144,7 @@ Only approved decisions belong in accepted/rejected sections.
 - Status: accepted
 - Decision: WR-014 cutover is complete; the validated replacement webapp is now the active runtime at `web/`, and the prior legacy runtime implementation is retired.
 - Rationale: Replacement shell behavior reached planned baseline and validation coverage for flasher/console/config-local/tester surfaces.
-- Consequence: Runtime web changes target `web/`; `web-next/` is historical staging and may be removed in a later cleanup slice.
+- Consequence: Runtime web changes target `web/`; historical staging tree `web-next/` has been removed as part of VS-06 consolidation.
 
 ### D-024
 - Status: accepted

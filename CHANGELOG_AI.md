@@ -27,6 +27,10 @@
 ### Changed
 - Fixed runtime web flasher identify-path dependency loading by switching `esptool-js` import from the Browserify `bundle.js` entry to a browser-safe, version-pinned ESM CDN endpoint, eliminating the `Buffer is not defined` failure during identify.
 - Hardened runtime web flasher `esptool-js` integration against API-surface mismatches by using the actual v0.4.3 camelCase methods (`readMac`, `writeFlash`, `hardReset`) with compatibility fallbacks, and by configuring ROM/flash baudrates through loader options instead of calling nonexistent legacy methods after connect.
+- Updated the serial monitor flow to force a close-and-reopen at 115200 baud before reading, preventing post-flash stale-baud monitor sessions from rendering garbled output.
+- Added smoke coverage for the monitor reopen path so the web runtime now verifies that an already-open port is reset and reopened at 115200 for console use.
+- Added firmware-side diagnostic logging that repeatedly states the current `UsbHostAdapter` is simulation-only and does not initialize a real ESP32-S3 USB host stack, hub traversal, VBUS control, or HID polling path.
+- Added stub-adapter diagnostics for simulated USB device, interface, report, and status events so later host-side testing can distinguish simulation traffic from a future real hardware USB host implementation.
 - Extended smoke coverage so the mocked browser flasher path now exercises current `esptool-js` camelCase identify and flash flows, catching regressions around MAC lookup, flash write, and reset method names.
 - Replaced active current-task posture with `VS-01 Runtime Data Plane Integration` as the single in-progress slice.
 - Re-aligned control files for a code-first vertical-slice program while preserving prior WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL history as historical record.

@@ -505,7 +505,7 @@ void UsbHostAdapter::HandleHidInputReport(
   report_ref.byte_length = length;
   report_ref.report_meta.report_id = length > 0 ? report[0] : 0;
   report_ref.timestamp.ticks =
-      static_cast<std::uint64_t>(esp_timer_get_time()) * 1000ULL;
+      static_cast<std::uint64_t>(esp_timer_get_time());
   report_ref.bytes = report.data();
 
   ESP_LOGD(kTag, "HID input addr=%u iface=%u size=%u report_id=%u",

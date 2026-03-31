@@ -244,6 +244,10 @@ bool UsbHostAdapter::InstallHostStack() {
   const usb_host_config_t host_config{
       .skip_phy_setup = false,
       .intr_flags = ESP_INTR_FLAG_LOWMED,
+      .root_port_unpowered = false,
+      .enum_filter_cb = nullptr,
+      .fifo_settings_custom = nullptr,
+      .peripheral_map = 0,
   };
   if (usb_host_install(&host_config) != ESP_OK) {
     ESP_LOGE(kTag, "usb_host_install failed");

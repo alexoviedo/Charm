@@ -73,13 +73,24 @@ async function mockBrowserSafeEsptoolModule(page) {
       contentType: 'application/javascript',
       body: `
         export class Transport {
-          constructor(port) { this.port = port; }
+          constructor(port) { this.port = port; this.baudrate = 115200; }
           async disconnect() {}
         }
         export class ESPLoader {
-          constructor() {}
+          constructor(options) {
+            this.options = options;
+            this.chip = {
+              CHIP_NAME: 'ESP32-S3',
+              async readMac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; },
+            };
+          }
           async main() { return 'ESP32-S3'; }
-          async read_mac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; }
+          async writeFlash({ reportProgress }) {
+            reportProgress?.(0, 4, 4);
+            reportProgress?.(1, 4, 4);
+            reportProgress?.(2, 4, 4);
+          }
+          async hardReset() {}
         }
       `,
     });
@@ -133,7 +144,7 @@ test('artifact mode toggle preserves flow affordances', async ({ page }) => {
   await expect(page.locator('#artifact-load-site-btn')).toBeHidden();
 });
 
-test('identify path succeeds with browser-safe esptool module import (no bare-specifier or Buffer regression)', async ({ page }) => {
+test('identify path succeeds with current esptool-js camelCase API surface', async ({ page }) => {
   await mockBrowserSafeEsptoolModule(page);
   await mockSameSiteArtifacts(page);
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
@@ -151,4 +162,24 @@ test('identify path succeeds with browser-safe esptool module import (no bare-sp
   await expect(page.locator('#flash-device-info')).toContainText('ESP32-S3');
   await expect(page.locator('#flash-status')).not.toContainText('Failed to resolve module specifier "pako"');
   await expect(page.locator('#flash-status')).not.toContainText('Buffer is not defined');
+  await expect(page.locator('#flash-status')).not.toContainText('read_mac is not a function');
+});
+
+test('flash path succeeds with current esptool-js camelCase API surface', async ({ page }) => {
+  await mockBrowserSafeEsptoolModule(page);
+  await mockSameSiteArtifacts(page);
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+
+  await page.getByRole('button', { name: 'Request Serial Permission' }).click();
+  await page.getByRole('button', { name: 'Claim Owner: Flash' }).click();
+  await page.getByRole('button', { name: 'Load Same-Site Artifacts' }).click();
+  await page.getByRole('button', { name: 'Identify Device (Flashing Path)' }).click();
+  await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
+
+  await page.getByRole('button', { name: 'Flash Firmware Bundle' }).click();
+
+  await expect(page.locator('#flash-status')).toContainText('FLASH_DONE');
+  await expect(page.locator('#flash-progress-label')).toContainText('100%');
+  await expect(page.locator('#flash-status')).not.toContainText('write_flash is not a function');
+  await expect(page.locator('#flash-status')).not.toContainText('hard_reset is not a function');
 });

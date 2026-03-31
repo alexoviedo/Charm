@@ -25,7 +25,9 @@
 - Executed `REL-002 — Final production-readiness audit and handoff` (audit/handoff scope).
 
 ### Changed
-- Fixed runtime web flasher identify-path dependency loading by switching `esptool-js` import from the Browserify `bundle.js` entry to the browser-safe ESM `lib/index.js` entry, eliminating `Buffer is not defined` failures during identify.
+- Fixed runtime web flasher identify-path dependency loading by switching `esptool-js` import from the Browserify `bundle.js` entry to a browser-safe, version-pinned ESM CDN endpoint, eliminating the `Buffer is not defined` failure during identify.
+- Hardened runtime web flasher `esptool-js` integration against API-surface mismatches by using the actual v0.4.3 camelCase methods (`readMac`, `writeFlash`, `hardReset`) with compatibility fallbacks, and by configuring ROM/flash baudrates through loader options instead of calling nonexistent legacy methods after connect.
+- Extended smoke coverage so the mocked browser flasher path now exercises current `esptool-js` camelCase identify and flash flows, catching regressions around MAC lookup, flash write, and reset method names.
 - Replaced active current-task posture with `VS-01 Runtime Data Plane Integration` as the single in-progress slice.
 - Re-aligned control files for a code-first vertical-slice program while preserving prior WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL history as historical record.
 - Replaced legacy runtime `web/` implementation with the validated replacement implementation formerly staged in `web-next/`.

@@ -38,8 +38,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight-tests:
+    name: ci / preflight-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure unit test build
+        run: cmake -S tests/unit -B build/unit
+
+      - name: Build unit tests
+        run: cmake --build build/unit --parallel
+
+      - name: Run unit tests
+        run: ctest --test-dir build/unit --output-on-failure
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install web dependencies
+        run: npm --prefix web ci
+
+      - name: Install Playwright Chromium
+        run: npx --prefix web playwright install --with-deps chromium
+
+      - name: Run runtime web smoke checks
+        run: npm --prefix web run qa:smoke
+
   build-firmware:
     name: ci / build-firmware (esp32s3)
+    needs: preflight-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

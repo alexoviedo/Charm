@@ -37,13 +37,14 @@ TEST(ConfigTransportRuntimeAdapterTest, HandlesValidGetCapabilitiesCommand) {
   charm::app::ConfigTransportRuntimeAdapter adapter(service);
 
   const std::string frame =
-      "{\"protocol_version\":1,\"request_id\":7,\"command\":\"config.get_capabilities\",\"payload\":{},\"integrity\":\"CFG1\"}\n";
+      "@CFG:{\"protocol_version\":1,\"request_id\":7,\"command\":\"config.get_capabilities\",\"payload\":{},\"integrity\":\"CFG1\"}\n";
 
   adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(frame.data()),
                        frame.size());
 
   ASSERT_TRUE(adapter.HasPendingFrame());
   const auto response = ReadSingleFrame(adapter);
+  EXPECT_EQ(response.rfind("@CFG:", 0), 0u);
   EXPECT_NE(response.find("\"status\":\"kOk\""), std::string::npos);
   EXPECT_NE(response.find("\"protocol_version\":1"), std::string::npos);
   EXPECT_NE(response.find("\"supports_persist\":true"), std::string::npos);
@@ -56,7 +57,7 @@ TEST(ConfigTransportRuntimeAdapterTest, RejectsMalformedFrameDeterministically) 
   charm::app::ConfigTransportRuntimeAdapter adapter(service);
 
   const std::string frame =
-      "{\"request_id\":7,\"command\":\"config.get_capabilities\",\"integrity\":\"CFG1\"}\n";
+      "@CFG:{\"request_id\":7,\"command\":\"config.get_capabilities\",\"integrity\":\"CFG1\"}\n";
 
   adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(frame.data()),
                        frame.size());
@@ -79,7 +80,7 @@ TEST(ConfigTransportRuntimeAdapterTest, PropagatesServiceStatusAndFaultLosslessl
   charm::app::ConfigTransportRuntimeAdapter adapter(service);
 
   const std::string frame =
-      "{\"protocol_version\":1,\"request_id\":8,\"command\":\"config.persist\","
+      "@CFG:{\"protocol_version\":1,\"request_id\":8,\"command\":\"config.persist\","
       "\"payload\":{\"mapping_bundle\":{\"bundle_id\":11,\"version\":1,\"integrity\":22},\"profile_id\":1,\"bonding_material\":[1,2,3]},"
       "\"integrity\":\"CFG1\"}\n";
 
@@ -103,7 +104,7 @@ TEST(ConfigTransportRuntimeAdapterTest, SupportsFramingAcrossChunkBoundaries) {
   charm::app::ConfigTransportRuntimeAdapter adapter(service);
 
   const std::string first_half =
-      "{\"protocol_version\":1,\"request_id\":9,\"command\":\"config.clear\"";
+      "@CFG:{\"protocol_version\":1,\"request_id\":9,\"command\":\"config.clear\"";
   const std::string second_half = ",\"payload\":{},\"integrity\":\"CFG1\"}\n";
 
   adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(first_half.data()),
@@ -123,6 +124,7 @@ TEST(ConfigTransportRuntimeAdapterTest, RejectsOversizedFrameDeterministically) 
   charm::app::ConfigTransportRuntimeAdapter adapter(service);
 
   std::string oversized(3000, 'a');
+  oversized.insert(0, "@CFG:");
   oversized.push_back('\n');
 
   adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(oversized.data()),
@@ -133,4 +135,35 @@ TEST(ConfigTransportRuntimeAdapterTest, RejectsOversizedFrameDeterministically) 
   EXPECT_NE(response.find("\"category\":\"kCapacityExceeded\""),
             std::string::npos);
   EXPECT_NE(response.find("\"reason\":100"), std::string::npos);
+}
+
+TEST(ConfigTransportRuntimeAdapterTest, IgnoresNonControlPrefixedLines) {
+  charm::test_support::FakeConfigStorePort config_store;
+  charm::app::ConfigTransportService service(config_store);
+  charm::app::ConfigTransportRuntimeAdapter adapter(service);
+
+  const std::string noise = "I (12) boot: hello world\n";
+  adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(noise.data()),
+                       noise.size());
+  EXPECT_FALSE(adapter.HasPendingFrame());
+}
+
+TEST(ConfigTransportRuntimeAdapterTest, ProcessesOnlyCfgPrefixedFramesInMixedStreams) {
+  charm::test_support::FakeConfigStorePort config_store;
+  charm::app::ConfigTransportService service(config_store);
+  charm::app::ConfigTransportRuntimeAdapter adapter(service);
+
+  const std::string mixed =
+      "I (12) boot: hello\n"
+      "@CFG:{\"protocol_version\":1,\"request_id\":10,\"command\":\"config.get_capabilities\",\"payload\":{},\"integrity\":\"CFG1\"}\n"
+      "W (13) telemetry: still running\n";
+
+  adapter.ConsumeBytes(reinterpret_cast<const std::uint8_t*>(mixed.data()),
+                       mixed.size());
+
+  ASSERT_TRUE(adapter.HasPendingFrame());
+  const auto response = ReadSingleFrame(adapter);
+  EXPECT_EQ(response.rfind("@CFG:", 0), 0u);
+  EXPECT_NE(response.find("\"request_id\":10"), std::string::npos);
+  EXPECT_FALSE(adapter.HasPendingFrame());
 }

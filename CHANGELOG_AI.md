@@ -1,3 +1,32 @@
+## 2026-03-31
+Executed `VS-08 — closeout truthfulness/CI/docs/validation artifacts`.
+
+Files covered:
+- `.github/workflows/ci.yml`
+- `tests/unit/CMakeLists.txt`
+- `tests/unit/test_usb_host_adapter.cpp`
+- `tests/unit/test_runtime_data_plane.cpp`
+- `tests/unit/test_config_transport_runtime_adapter.cpp`
+- `web/tests/smoke.spec.js`
+- `README.md`
+- `ARCHITECTURE.md`
+- `VALIDATION.md`
+- `CURRENT_TASK.md`
+- `TODO.md`
+- `PRODUCTION_VERTICAL_SLICES.md`
+- `IMPLEMENTATION_GAPS.md`
+- `PRODUCTION_CLOSEOUT_STATUS.md`
+- `HARDWARE_VALIDATION_PACK.md`
+- `RELEASE_ROLLBACK.md`
+
+What changed:
+- Added CI workflow to run host unit tests and web Playwright smoke tests on PR/push.
+- Added regression tests for USB adapter simulated interface/report events, runtime-data-plane unknown-interface ignore path, and mixed-stream `@CFG:` frame filtering.
+- Added smoke coverage for config ownership guard (`Flash` owner required).
+- Improved clean-env test bootstrap robustness by setting `DOWNLOAD_EXTRACT_TIMESTAMP TRUE` for GTest FetchContent.
+- Rewrote closeout/control docs to remove stale contradictions and explicitly separate CI-proved behavior from hardware-required validation.
+- Added concrete hardware validation pack and release/rollback procedure documents with commands, expected anchors, pass/fail criteria, and evidence paths.
+
 # Changelog (AI)
 
 ## [Unreleased]

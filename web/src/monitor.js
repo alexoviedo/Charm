@@ -24,9 +24,14 @@ export class SerialMonitorService {
     this.port = port;
     onStatus('MONITOR_CONNECTING', 'Opening serial monitor connection...');
 
-    if (!this.port.readable) {
-      await this.port.open({ baudRate: 115200 });
+    if (this.port.readable || this.port.writable) {
+      try {
+        await this.port.close();
+      } catch {
+        // best-effort reset before monitor attach
+      }
     }
+    await this.port.open({ baudRate: 115200 });
 
     this.isReading = true;
     onStatus('MONITOR_CONNECTED', 'Serial monitor connected.');

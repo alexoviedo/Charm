@@ -74,6 +74,14 @@ TEST_F(UsbHostAdapterTest, DispatchesEventsWhenStarted) {
 
   adapter.SimulateDeviceDisconnected(charm::contracts::DeviceHandle{});
   EXPECT_EQ(listener.disconnected_calls, 1);
+
+  charm::ports::InterfaceDescriptorRef iface_ref;
+  adapter.SimulateInterfaceDescriptorAvailable(iface_ref);
+  EXPECT_EQ(listener.interface_calls, 1);
+
+  charm::contracts::RawHidReportRef report_ref;
+  adapter.SimulateReportReceived(report_ref);
+  EXPECT_EQ(listener.report_calls, 1);
 }
 
 TEST_F(UsbHostAdapterTest, DropsEventsWhenNotStarted) {
@@ -84,6 +92,14 @@ TEST_F(UsbHostAdapterTest, DropsEventsWhenNotStarted) {
 
   adapter.SimulateDeviceDisconnected(charm::contracts::DeviceHandle{});
   EXPECT_EQ(listener.disconnected_calls, 0);
+
+  charm::ports::InterfaceDescriptorRef iface_ref;
+  adapter.SimulateInterfaceDescriptorAvailable(iface_ref);
+  EXPECT_EQ(listener.interface_calls, 0);
+
+  charm::contracts::RawHidReportRef report_ref;
+  adapter.SimulateReportReceived(report_ref);
+  EXPECT_EQ(listener.report_calls, 0);
 }
 
 TEST_F(UsbHostAdapterTest, ClaimInterfaceReturnsUniqueNonZeroHandle) {

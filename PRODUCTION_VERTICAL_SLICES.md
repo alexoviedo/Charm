@@ -1,40 +1,23 @@
-# Production Vertical Slices Program
+# PRODUCTION_VERTICAL_SLICES.md
 
-## Status
-- State: active execution program
-- Activated by: `VS-PROG-001`
-- Current active slice: `VS-01 Runtime Data Plane Integration`
+## Program status
+- Prior slices (runtime, config transport, BLE hardening, startup lifecycle, test portability, web consolidation) are implemented in code.
+- Current active slice: **VS-08 final closeout truth + validation/release evidence completion**.
 
-## Purpose
-Drive production readiness using one narrow, deployable, testable slice at a time, with code as the source of truth.
+## Slice truth table
 
-## Gap Mapping
-- G-001 -> VS-01
-- G-003 -> VS-02
-- G-002 -> VS-03
-- G-004 -> VS-04
-- G-005 -> VS-05
-- G-006 -> VS-06
-- VS-07/VS-08 close cross-gap validation and production-gate evidence.
+| Slice | Status | Evidence source |
+|---|---|---|
+| VS-01 Runtime data plane integration | Implemented + unit-tested | `tests/unit/test_runtime_data_plane.cpp` |
+| VS-02 Config transport adapter | Implemented + unit-tested | `tests/unit/test_config_transport_runtime_adapter.cpp` |
+| VS-03 BLE callback/recovery hardening | Implemented + unit-tested | `tests/unit/test_ble_transport_adapter.cpp` |
+| VS-04 Startup storage lifecycle | Implemented + unit-tested | `tests/unit/test_startup_storage_lifecycle.cpp` |
+| VS-05 Test bootstrap portability | Implemented | `tests/unit/CMakeLists.txt` FetchContent fallback |
+| VS-06 Web runtime consolidation | Implemented | Canonical runtime under `web/` |
+| VS-07 Hardware validation pack definition | Implemented as artifact | `HARDWARE_VALIDATION_PACK.md` |
+| VS-08 Final gate closure | In progress | Requires completed hardware evidence + sign-off |
 
-## Vertical Slice Sequence
-
-| Slice | Name | Primary Focus | Acceptance Focus |
-|---|---|---|---|
-| VS-01 | Runtime Data Plane Integration | Wire USB -> decode/map -> profile encode -> BLE notify | Deterministic end-to-end runtime behavior with negative-path handling |
-| VS-02 | Firmware Config Transport Adapter | Add serial framing/parsing adapter to `ConfigTransportService` | Command/response transport works end-to-end with lossless status/fault mapping |
-| VS-03 | BLE Stack Callback Wiring Hardening | Real callback registration/dispatch into BLE adapter | Bounded recovery + fail-closed behavior under callback/report failures |
-| VS-04 | Startup Storage Lifecycle Hardening | Explicit startup storage init sequence | `nvs_flash_init` lifecycle and startup failure handling are deterministic |
-| VS-05 | Test Bootstrap Portability | Remove manual external GTest dependency burden | Clean-environment host tests configure/build reliably |
-| VS-06 | Web Runtime Consolidation | Eliminate `web/` vs `web-next/` drift risk | One canonical runtime path and aligned docs/QA references |
-| VS-07 | End-to-End Hardware Validation Pack | Hardware-backed matrix evidence across critical flows | Repeatable evidence for flash/monitor/config/BLE/recovery scenarios |
-| VS-08 | Release, Rollback, and Production Gate Closure | Final closeout packet and approvals | Gate checklist, rollback rehearsal, integrity/provenance, go/no-go record |
-
-## Program Constraints
-- Preserve ports/adapters boundaries and deterministic core behavior.
-- Keep serial-first config transport and zero-backend web posture unless explicitly re-decided.
-- Do not merge unrelated concerns into one slice.
-- Record blockers explicitly when capability proof is missing.
-
-## Historical Note
-Previous restart/prod programs remain preserved as historical records in control files. This VS plan is the active program moving forward.
+## Remaining required work to close program
+1. Execute hardware matrix and capture evidence.
+2. Run release + rollback rehearsal with evidence.
+3. Produce signed go/no-go packet.

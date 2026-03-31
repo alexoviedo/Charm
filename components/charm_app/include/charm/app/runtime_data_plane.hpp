@@ -3,8 +3,11 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 #include <memory>
+#include <unordered_set>
 #include <unordered_map>
+#include <vector>
 
 #include "charm/core/decode_plan.hpp"
 #include "charm/core/device_registry.hpp"
@@ -45,12 +48,33 @@ class RuntimeDataPlane final : public charm::ports::UsbHostPortListener {
     charm::contracts::InterfaceNumber interface_number{0};
     std::unique_ptr<charm::core::DecodePlan> decode_plan{};
     charm::core::CompiledMappingBundle compiled_bundle{};
+    std::vector<charm::contracts::ElementKeyHash> decoded_sources{};
+  };
+
+  struct SourceBinding {
+    charm::contracts::ElementKeyHash source{};
+    charm::contracts::InputElementType source_type{
+        charm::contracts::InputElementType::kUnknown};
+    charm::contracts::DeviceHandle device_handle{};
+    charm::contracts::InterfaceHandle interface_handle{};
   };
 
   static std::uint32_t MakeInterfaceKey(charm::contracts::InterfaceHandle interface_handle);
-  static charm::core::CompiledMappingBundle BuildRuntimeBundle(
-      const charm::core::DecodePlan& decode_plan,
-      charm::contracts::InterfaceHandle interface_handle);
+  charm::core::CompiledMappingBundle BuildRuntimeBundle(
+      const InterfaceContext& context,
+      const std::unordered_map<std::uint64_t, charm::core::LogicalElementRef>&
+          assigned_targets,
+      std::uint32_t bundle_seed) const;
+  void RebuildRuntimeBundlesLocked();
+  std::unordered_map<std::uint64_t, charm::core::LogicalElementRef>
+  ComputeTargetAssignmentsLocked(std::uint32_t bundle_seed) const;
+  static std::uint64_t MakeSourceKey(charm::contracts::ElementKeyHash source,
+                                     charm::contracts::InputElementType source_type);
+  static std::uint32_t StableMix(std::uint32_t seed, std::uint32_t value);
+  static std::uint16_t SelectDeterministicIndex(std::size_t capacity,
+                                                std::uint32_t seed,
+                                                std::uint64_t source_key,
+                                                const std::unordered_set<std::uint16_t>& used);
 
   charm::ports::UsbHostPort& usb_host_;
   charm::ports::BleTransportPort& ble_transport_;
@@ -62,6 +86,7 @@ class RuntimeDataPlane final : public charm::ports::UsbHostPortListener {
   charm::core::ProfileManager& profile_manager_;
   charm::core::Supervisor& supervisor_;
 
+  std::mutex mutex_{};
   std::unordered_map<std::uint32_t, InterfaceContext> interface_contexts_{};
 };
 

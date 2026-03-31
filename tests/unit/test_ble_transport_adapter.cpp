@@ -442,4 +442,20 @@ TEST_F(BleTransportAdapterTest, BondingMaterialRoundTripAndClear) {
   EXPECT_EQ(cleared.size, 0u);
 }
 
+TEST_F(BleTransportAdapterTest, StackPeerConnectCachesBondingAddressMaterial) {
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  charm::ports::BlePeerInfo peer{};
+  peer.address = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60};
+  adapter.OnStackPeerConnected(peer);
+
+  const auto bonded = adapter.GetBondingMaterial();
+  ASSERT_NE(bonded.bytes, nullptr);
+  ASSERT_EQ(bonded.size, peer.address.size());
+  for (std::size_t i = 0; i < peer.address.size(); ++i) {
+    EXPECT_EQ(bonded.bytes[i], peer.address[i]);
+  }
+}
+
 }  // namespace charm::platform::test

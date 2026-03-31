@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <nvs_flash.h>
 
 #include "charm/core/supervisor.hpp"
 #include "charm/ports/config_store_port.hpp"

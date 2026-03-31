@@ -108,18 +108,40 @@ export class WebFlasherService {
 }
 
 let esptoolModulePromise = null;
-const ESPTOOL_MODULE_URL = 'https://unpkg.com/esptool-js@0.4.3/lib/index.js';
+/**
+ * Use a browser-safe, version-pinned ESM endpoint rather than the raw package
+ * entry. The raw `lib/index.js` export chain leaves bare npm specifiers like
+ * `pako` unresolved in browsers, while the `+esm` endpoint rewrites/bundles
+ * those dependencies into browser-loadable modules.
+ */
+const ESPTOOL_BROWSER_MODULE_URL = 'https://cdn.jsdelivr.net/npm/esptool-js@0.4.3/+esm';
 
 async function importEsptoolJs() {
   if (!esptoolModulePromise) {
-    esptoolModulePromise = import(ESPTOOL_MODULE_URL).then((mod) => {
-      if (!mod?.Transport || !mod?.ESPLoader) {
-        throw new Error('esptool-js module missing required exports.');
-      }
-      return mod;
-    });
+    esptoolModulePromise = import(ESPTOOL_BROWSER_MODULE_URL)
+      .then((mod) => {
+        const resolved = resolveEsptoolModule(mod);
+        if (!resolved?.Transport || !resolved?.ESPLoader) {
+          throw new Error('esptool-js module missing required exports.');
+        }
+        return resolved;
+      })
+      .catch((err) => {
+        esptoolModulePromise = null;
+        throw new Error(`Failed to load browser-safe esptool-js module: ${err?.message || String(err)}`);
+      });
   }
   return esptoolModulePromise;
+}
+
+function resolveEsptoolModule(mod) {
+  if (mod?.Transport && mod?.ESPLoader) {
+    return mod;
+  }
+  if (mod?.default?.Transport && mod?.default?.ESPLoader) {
+    return mod.default;
+  }
+  return mod;
 }
 
 function normalizeMac(mac) {

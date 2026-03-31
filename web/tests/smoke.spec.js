@@ -67,7 +67,7 @@ async function mockSameSiteArtifacts(page) {
 }
 
 async function mockBrowserSafeEsptoolModule(page) {
-  await page.route('https://unpkg.com/esptool-js@0.4.3/lib/index.js', async (route) => {
+  await page.route('https://cdn.jsdelivr.net/npm/esptool-js@0.4.3/+esm', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/javascript',
@@ -133,7 +133,7 @@ test('artifact mode toggle preserves flow affordances', async ({ page }) => {
   await expect(page.locator('#artifact-load-site-btn')).toBeHidden();
 });
 
-test('identify path succeeds with browser-safe esptool module import (no Buffer global dependency)', async ({ page }) => {
+test('identify path succeeds with browser-safe esptool module import (no bare-specifier or Buffer regression)', async ({ page }) => {
   await mockBrowserSafeEsptoolModule(page);
   await mockSameSiteArtifacts(page);
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
@@ -149,5 +149,6 @@ test('identify path succeeds with browser-safe esptool module import (no Buffer 
 
   await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
   await expect(page.locator('#flash-device-info')).toContainText('ESP32-S3');
+  await expect(page.locator('#flash-status')).not.toContainText('Failed to resolve module specifier "pako"');
   await expect(page.locator('#flash-status')).not.toContainText('Buffer is not defined');
 });

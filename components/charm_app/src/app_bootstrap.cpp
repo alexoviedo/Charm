@@ -32,6 +32,23 @@
 #endif
 
 namespace charm::app {
+namespace {
+
+constexpr char kLogTag[] = "charm.bootstrap";
+
+esp_err_t InitializeNvs() {
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    const esp_err_t erase_err = nvs_flash_erase();
+    if (erase_err != ESP_OK) {
+      return erase_err;
+    }
+    err = nvs_flash_init();
+  }
+  return err;
+}
+
+}  // namespace
 
 // Static instances for simple thin wiring. In a fully mature system
 // these might be managed by a more formal context container.

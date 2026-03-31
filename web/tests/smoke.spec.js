@@ -165,7 +165,7 @@ test('identify path succeeds with current esptool-js camelCase API surface', asy
   await expect(page.locator('#flash-status')).not.toContainText('read_mac is not a function');
 });
 
-test('flash path succeeds with current esptool-js camelCase API surface', async ({ page }) => {
+test('flash path completes and returns to post-flash idle ownership state', async ({ page }) => {
   await mockBrowserSafeEsptoolModule(page);
   await mockSameSiteArtifacts(page);
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
@@ -178,8 +178,11 @@ test('flash path succeeds with current esptool-js camelCase API surface', async 
 
   await page.getByRole('button', { name: 'Flash Firmware Bundle' }).click();
 
-  await expect(page.locator('#flash-status')).toContainText('FLASH_DONE');
   await expect(page.locator('#flash-progress-label')).toContainText('100%');
+  await expect(page.locator('#serial-owner-state')).toHaveText('none');
+  await expect(page.locator('#serial-model-message')).toContainText('handoff=flash_to_console_ready');
+  await expect(page.locator('#flash-status')).toContainText('FLASH_BLOCKED');
+  await expect(page.locator('#flash-status')).not.toContainText('FLASH_FAILED');
   await expect(page.locator('#flash-status')).not.toContainText('write_flash is not a function');
   await expect(page.locator('#flash-status')).not.toContainText('hard_reset is not a function');
 });

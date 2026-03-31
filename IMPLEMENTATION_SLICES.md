@@ -6,21 +6,20 @@ Break approved architecture and product constraints into the smallest safe slice
 ## Active Program
 - Active execution model: **Vertical Slices (`VS-*`)**.
 - Driver source: verified gaps in `IMPLEMENTATION_GAPS.md` (G-001..G-006).
-- Current active slice: **AUTH-HOLD-001 Final Post-Program Audit / Authorization Hold** (post-program, non-implementation hold).
+- Current active slice: **VS-01 Runtime Data Plane Integration**.
 
 ## VS Program Queue (authoritative)
 
 | Order | Slice | Status | Primary Gap(s) | Acceptance Focus |
 |---|---|---|---|---|
-| 1 | VS-01 Runtime Data Plane Integration | done | G-001 | USB -> decode/map/encode -> BLE notify wiring implemented and host evidence executed |
-| 2 | VS-02 Firmware Config Transport Adapter | done | G-003 | Serial framing/parsing adapter and service dispatch implemented with host evidence |
-| 3 | VS-03 BLE Stack Callback Wiring Hardening | done | G-002 | Real stack callback registration/dispatch and bounded recovery |
-| 4 | VS-04 Startup Storage Lifecycle Hardening | done | G-004 | Explicit `nvs_flash_init` lifecycle and startup fault handling |
-| 5 | VS-05 Test Bootstrap Portability | done | G-005 | Clean-environment tests without manual GTest install |
-| 6 | VS-06 Web Runtime Consolidation | done | G-006 | Single canonical runtime path and drift control |
-| 7 | VS-07 End-to-End Hardware Validation Pack | done | G-001..G-006 verification | Hardware-backed evidence matrix closure |
-| 8 | VS-08 Release, Rollback, and Production Gate Closure | done | Program closeout | Go/no-go closure package completed with explicit blocked/do-not-ship posture pending closeout inputs |
-| 9 | AUTH-HOLD-001 Final Post-Program Audit / Authorization Hold | in_progress | VS-08 follow-through | Final audit record published; hold retained pending evidence/approvals resolution |
+| 1 | VS-01 Runtime Data Plane Integration | in_progress | G-001 | USB -> decode/map/encode -> BLE notify wired with deterministic behavior |
+| 2 | VS-02 Firmware Config Transport Adapter | queued | G-003 | Serial framing/parsing and dispatch to `ConfigTransportService` |
+| 3 | VS-03 BLE Stack Callback Wiring Hardening | queued | G-002 | Real stack callback registration/dispatch and bounded recovery |
+| 4 | VS-04 Startup Storage Lifecycle Hardening | queued | G-004 | Explicit `nvs_flash_init` lifecycle and startup fault handling |
+| 5 | VS-05 Test Bootstrap Portability | queued | G-005 | Clean-environment tests without manual GTest install |
+| 6 | VS-06 Web Runtime Consolidation | queued | G-006 | Single canonical runtime path and drift control |
+| 7 | VS-07 End-to-End Hardware Validation Pack | queued | G-001..G-006 verification | Hardware-backed evidence matrix closure |
+| 8 | VS-08 Release, Rollback, and Production Gate Closure | queued | Program closeout | Go/no-go packet, rollback rehearsal, approvals |
 
 ## Historical Programs (preserved)
 

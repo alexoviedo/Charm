@@ -10,7 +10,7 @@ Reviewed areas:
 - Core translation/control modules (`components/charm_core/`)
 - Platform adapters (`components/charm_platform_*`)
 - Host unit tests (`tests/unit/`)
-- Runtime web shell (`web/`)
+- Runtime web shells (`web/`, `web-next/`)
 - Project documentation (`README.md`, `ARCHITECTURE.md`, `INTERFACES.md`, process docs)
 
 ---
@@ -33,100 +33,107 @@ Before this update, architecture/status docs existed, but there was no single st
 
 ## 2) Implementation Gaps (Code vs Expected Product Behavior)
 
-## G-001 — End-to-end firmware data path wiring in app bootstrap (**High**)
+## G-001 — End-to-end firmware data path not wired in app bootstrap (**High**)
 
 Observed:
 
-- VS-01 added app-layer runtime orchestration (`RuntimeDataPlane`) wiring USB callbacks through descriptor/plan handling, decode, mapping application, profile encode, and BLE notify.
-- Host-side unit evidence (`RuntimeDataPlaneTest`) is passing locally.
+- `InitializeAndRun()` starts adapters/supervisor and activates persisted config.
+- No runtime loop wiring from USB report events through decode/mapping/profile encoding and BLE notify.
 
 Impact:
 
-- **Status: closed by VS-01 implementation/evidence closure.**
+- Core translation modules are implemented, but runtime data-plane behavior is only partial.
 
-## G-002 — BLE adapter callback plumbing to real stack events (**Medium**)
+## G-002 — BLE adapter callback plumbing to real stack events remains partial (**Medium**)
 
 Observed:
 
-- VS-03 added stack callback registration in the BLE backend and routes GAP/GATTS callback events into adapter lifecycle and report-channel handlers.
-- Host-side `BleTransportAdapterTest` now includes callback-driven ordering and bounded-recovery coverage.
+- BLE adapter supports lifecycle, channel-ready/closed hooks, and notify path.
+- Repository does not show full event registration/dispatch integration from ESP BLE stack callbacks into those hooks.
 
 Impact:
 
-- **Status: closed by VS-03 implementation/evidence closure.**
+- Adapter behavior is testable in isolation, but production callback integration evidence is incomplete.
 
-## G-003 — Config transport I/O boundary in firmware runtime (**High**)
+## G-003 — Config transport I/O boundary missing in firmware runtime (**High**)
 
 Observed:
 
-- VS-02 added `ConfigTransportRuntimeAdapter` implementing serial-first newline framing, request parsing, service dispatch, and response serialization.
-- Host-side `ConfigTransportRuntimeAdapterTest` evidence is passing locally.
+- `ConfigTransportService` implements validated command semantics.
+- No serial framing/parser runtime integration in app bootstrap to feed service requests/responses.
 
 Impact:
 
-- **Status: closed by VS-02 implementation/evidence closure.**
+- Contract-level config operations exist; end-to-end host↔firmware config transport path is incomplete.
 
 ## G-004 — NVS initialization lifecycle not shown in startup path (**Medium**)
 
 Observed:
 
-- VS-04 added explicit startup storage initialization (`nvs_flash_init`) with bounded recoverable handling (erase + reinit) before config activation.
-- Startup now fail-closes and records a persistence fault when initialization cannot complete.
+- `ConfigStoreNvs` uses `nvs_open`/read/write/commit/close.
+- No explicit `nvs_flash_init` orchestration is present in current app startup code.
 
 Impact:
 
-- **Status: closed by VS-04 implementation/evidence closure.**
+- Correct behavior depends on external initialization assumptions not shown in this repo’s startup wiring.
 
 ## G-005 — Host test portability depends on preinstalled GTest (**Low / DX**)
 
 Observed:
 
-- VS-05 updated unit-test bootstrap to prefer system GTest but fall back to a repo-local FetchContent path when absent.
-- Clean-environment configuration/build evidence was executed with `CMAKE_DISABLE_FIND_PACKAGE_GTest=ON`.
+- Unit test CMake uses `find_package(GTest REQUIRED)` with no fallback.
 
 Impact:
 
-- **Status: closed by VS-05 implementation/evidence closure.**
+- Fresh environments fail configuration unless GTest is installed manually.
 
 ## G-006 — Dual web runtime trees increase drift risk (**Low / Maintainability**)
 
 Observed:
 
-- VS-06 consolidated runtime web to one canonical tree (`web/`) and removed non-canonical `web-next/`.
+- `web/` and `web-next/` both exist with near-parity module structure.
 
 Impact:
 
-- **Status: closed by VS-06 implementation/evidence closure.**
+- Parallel maintenance can diverge behavior, tests, and operator guidance over time.
 
 ---
 
 ## 3) Missing Components / Recommended Work
 
-1. **BLE production integration hardening**:
+1. **Runtime pipeline coordinator** in firmware app layer:
+   - USB listener events -> registry/descriptor model
+   - decode -> mapping -> logical state
+   - profile encode -> BLE notify
+2. **Firmware config transport adapter**:
+   - serial framing/parsing
+   - command dispatch to `ConfigTransportService`
+   - timeouts/retry/error mapping
+3. **BLE production integration hardening**:
    - explicit callback registration wiring
    - hardware validation traces and failure injection coverage
-2. **Test bootstrap portability improvements**:
+4. **Test bootstrap portability improvements**:
    - vendored/fetched GTest fallback
    - CI bootstrap scripts
-3. **Web runtime drift prevention (post-consolidation)**:
-   - keep `web/` as the single runtime source of truth
-   - reject introducing parallel runtime trees without explicit governance
+5. **Web runtime consolidation plan**:
+   - define canonical runtime (`web` vs `web-next`)
+   - document promotion/deprecation flow
 
 ---
 
 ## 4) Priority Snapshot
 
-- **High:** none
-- **Medium:** none
-- **Low:** none
+- **High:** G-001, G-003
+- **Medium:** G-002, G-004
+- **Low:** G-005, G-006
 
 ---
 
 ## 5) Exit Criteria (When to Close Each Gap)
 
-- **G-001:** closed (VS-01): app runtime demonstrates USB input → BLE output flow with host-test evidence; additional hardware evidence is tracked in VS-07.
-- **G-002:** closed (VS-03): real stack callback registration/dispatch path exists with host evidence; remaining hardware-attached validation is tracked in VS-07.
-- **G-003:** closed (VS-02): serial parser/serializer adapter integrated with host evidence; remaining hardware-attached evidence is tracked in VS-07.
-- **G-004:** closed (VS-04): startup performs explicit NVS init with bounded failure handling and fail-closed activation gating.
-- **G-005:** closed (VS-05): tests configure/build with system-or-fetched GTest without manual preinstall.
-- **G-006:** closed (VS-06): one canonical runtime path (`web/`) remains and ambiguity from parallel trees is removed.
+- **G-001:** app runtime demonstrates USB input → BLE output flow with tests/hardware evidence.
+- **G-002:** real stack callback registration path exists and is validated.
+- **G-003:** serial transport parser/serializer integrated and exercised end-to-end.
+- **G-004:** startup performs explicit NVS init with failure handling.
+- **G-005:** tests build in clean environments without manual GTest installation.
+- **G-006:** one runtime path is canonical or documented promotion path prevents drift.

@@ -9,7 +9,7 @@ Charm is an ESP32-S3 project that translates USB HID controller input into BLE H
 - The repository has substantial firmware/web infrastructure and a complete control-history trail.
 - Core modules and platform adapters exist, but verified implementation gaps remain open and are tracked in `IMPLEMENTATION_GAPS.md`.
 - The active execution posture is now the **vertical-slice program** (`VS-01`..`VS-08`) focused on closing verified gaps G-001..G-006 in a narrow, testable sequence.
-- Runtime web shell is canonical at `web/`; non-canonical `web-next/` has been removed to prevent drift.
+- Runtime web shell remains active at `web/`; `web-next/` still exists and is treated as a drift risk until consolidation.
 
 ## Active Program
 
@@ -64,5 +64,4 @@ See [`IMPLEMENTATION_GAPS.md`](./IMPLEMENTATION_GAPS.md) for authoritative gap t
 - [`IMPLEMENTATION_GAPS.md`](./IMPLEMENTATION_GAPS.md)
 - [`IMPLEMENTATION_SLICES.md`](./IMPLEMENTATION_SLICES.md)
 - [`PRODUCTION_VERTICAL_SLICES.md`](./PRODUCTION_VERTICAL_SLICES.md)
-- [`VS_01_RUNTIME_DATA_PLANE_READINESS.md`](./VS_01_RUNTIME_DATA_PLANE_READINESS.md)
 - [`CHANGELOG_AI.md`](./CHANGELOG_AI.md)

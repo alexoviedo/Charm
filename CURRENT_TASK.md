@@ -1,24 +1,24 @@
 # CURRENT_TASK.md
 
 ## Active Task
-- ID: AUTH-HOLD-001
-- Title: Final Post-Program Audit / Authorization Hold
+- ID: VS-01
+- Title: Runtime Data Plane Integration
 - Status: in_progress
 
 ## Goal
-Maintain an authorization hold while running final post-program audit actions against the completed VS-08 closure package until pending evidence and sign-offs are resolved.
+Execute the first production vertical slice by wiring the firmware runtime USB input path through decode/mapping/profile encode into BLE notify, while preserving ports/adapters boundaries and deterministic core behavior.
 
 ## Why this is active now
-- VS-08 closure package was completed and records a blocked/do-not-ship posture pending hardware evidence, rollback rehearsal execution, and approvals.
-- AUTH-HOLD-001 final audit record (`AUTH_HOLD_001_FINAL_AUDIT.md`) confirms hold remains retained until closeout items are evidenced.
+- `VS-PROG-001` reset control posture from prior production-tracking program into a gap-driven vertical-slice execution program.
+- Code-first audit still shows open implementation gaps G-001..G-006 and they are now the authoritative execution drivers.
 
 ## Entry Facts (must remain true)
 - Runtime replacement webapp remains active at `web/`.
-- Canonical runtime web path is `web/`; non-canonical `web-next/` has been removed.
-- Firmware serial-first config transport runtime boundary now exists; BLE config transport remains deferred.
+- `web-next/` still exists and is treated as drift risk until consolidated (`VS-06`).
+- Config transport command semantics exist in firmware service layer, but runtime transport integration remains a dedicated slice.
 - Previous PROD/FW/CFG/WEB/CI/QA/OPS/REL program history is preserved as historical record.
 
-## Exit Criteria for AUTH-HOLD-001
-- All pending VS-08 closure conditions are satisfied and evidenced, or an explicit no-ship decision is ratified.
-- Sign-off matrix is complete and auditable.
-- Final authorization record is published with accountable approvers.
+## Exit Criteria for VS-01
+- App runtime demonstrates USB report intake -> decode/mapping/logical state -> profile encode -> BLE notify dispatch path.
+- Negative-path behavior for malformed/unsupported input remains deterministic and fail-safe.
+- Evidence is recorded in validation docs and any newly discovered blockers are explicitly documented.

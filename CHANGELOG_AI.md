@@ -2,17 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- Executed AUTH-HOLD-001 final post-program audit and published a retained authorization-hold decision record (`AUTH_HOLD_001_FINAL_AUDIT.md`) with explicit do-not-ship posture.
-- Completed VS-08 by publishing a final release/rollback/gate-closure package with explicit blocked/do-not-ship posture, evidence map, rollback status, and sign-off placeholders.
-- Completed VS-07 by defining an auditable end-to-end hardware validation pack with scenario IDs, reproducible procedures, mandatory coverage, and explicit evidence captured/pending tracking.
-- Completed VS-06 by consolidating runtime web to canonical `web/` and removing non-canonical `web-next/` to eliminate drift ambiguity.
-- Completed VS-05 by adding a repo-local GTest bootstrap fallback for host/unit tests and validating clean-environment configure/build without manual preinstallation.
-- Completed VS-04 by adding explicit startup storage initialization/recovery and fail-closed config-activation gating with host-test evidence.
-- Completed VS-03 by wiring BLE stack callback registration/dispatch into `BleTransportAdapter` lifecycle/report-channel handlers with bounded fail-closed recovery and host-test evidence.
-- Completed VS-02 by implementing a serial-first runtime config transport adapter (`ConfigTransportRuntimeAdapter`) and passing adapter/service host tests locally.
-- Completed VS-01 evidence closure by installing local GTest prerequisites and executing `RuntimeDataPlaneTest` plus full unit test suite locally.
-- Implemented VS-01 runtime data-plane orchestration in app layer (`runtime_data_plane`) plus unit-test coverage scaffold (validation execution pending environment dependencies).
-- Executed `VS-01` readiness/planning phase and added `VS_01_RUNTIME_DATA_PLANE_READINESS.md` (no runtime code changes).
 - Executed `VS-PROG-001 — Control reset into the production vertical-slice program`.
 - Set the active execution queue to `VS-01`..`VS-08`, explicitly mapped to verified gaps `G-001`..`G-006`.
 - Executed `WR-014 — Cutover and legacy web removal`.
@@ -36,14 +25,6 @@
 - Executed `REL-002 — Final production-readiness audit and handoff` (audit/handoff scope).
 
 ### Changed
-- Marked VS-08 done after closure-package publication and moved active work to AUTH-HOLD-001 final authorization hold.
-- Marked VS-07 done after validation-pack completion and moved active slice to VS-08.
-- Marked VS-06 done after local execution evidence and moved active slice to VS-07.
-- Marked VS-05 done after local execution evidence and moved active slice to VS-06.
-- Marked VS-04 done after local execution evidence and moved active slice to VS-05.
-- Marked VS-03 done after local execution evidence and moved active slice to VS-04.
-- Marked VS-02 done after local execution evidence and moved active slice to VS-03.
-- Marked VS-01 done after local execution evidence and moved active slice to VS-02.
 - Replaced active current-task posture with `VS-01 Runtime Data Plane Integration` as the single in-progress slice.
 - Re-aligned control files for a code-first vertical-slice program while preserving prior WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL history as historical record.
 - Replaced legacy runtime `web/` implementation with the validated replacement implementation formerly staged in `web-next/`.

@@ -14,8 +14,23 @@ project(CharmUnitTests)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find GTest
-find_package(GTest REQUIRED)
+# GTest bootstrap: prefer system package, but provide repo-local fallback
+# so clean environments do not require manual preinstallation.
+option(CHARM_FETCH_GTEST "Fetch GoogleTest when no system package is found" ON)
+find_package(GTest QUIET)
+if(NOT GTest_FOUND)
+  if(NOT CHARM_FETCH_GTEST)
+    message(FATAL_ERROR "GTest not found and CHARM_FETCH_GTEST=OFF")
+  endif()
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+  )
+  # On some platforms this avoids overriding parent compiler/linker flags.
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif()
 
 # The directories for contracts and ports (just headers)
 set(CONTRACTS_INC "${CMAKE_CURRENT_SOURCE_DIR}/../../components/charm_contracts/include")
@@ -147,3 +162,26 @@ target_include_directories(test_config_transport_service PRIVATE ${CONTRACTS_INC
 target_sources(test_config_transport_service PRIVATE "../../components/charm_app/src/config_transport_service.cpp")
 target_link_libraries(test_config_transport_service PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
 add_test(NAME ConfigTransportServiceTest COMMAND test_config_transport_service)
+
+
+# VS-01 Runtime Data Plane
+add_executable(test_runtime_data_plane test_runtime_data_plane.cpp)
+target_include_directories(test_runtime_data_plane PRIVATE ${CONTRACTS_INC} ${PORTS_INC} ${CORE_INC} ${APP_INC} ${TEST_SUPPORT_INC})
+target_sources(test_runtime_data_plane PRIVATE "../../components/charm_app/src/runtime_data_plane.cpp")
+target_link_libraries(test_runtime_data_plane PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME RuntimeDataPlaneTest COMMAND test_runtime_data_plane)
+
+
+# VS-02 Config Transport Runtime Adapter
+add_executable(test_config_transport_runtime_adapter test_config_transport_runtime_adapter.cpp)
+target_include_directories(test_config_transport_runtime_adapter PRIVATE ${CONTRACTS_INC} ${PORTS_INC} ${TEST_SUPPORT_INC} ${APP_INC})
+target_sources(test_config_transport_runtime_adapter PRIVATE "../../components/charm_app/src/config_transport_service.cpp" "../../components/charm_app/src/config_transport_runtime_adapter.cpp")
+target_link_libraries(test_config_transport_runtime_adapter PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME ConfigTransportRuntimeAdapterTest COMMAND test_config_transport_runtime_adapter)
+
+# VS-04 Startup Storage Lifecycle
+add_executable(test_startup_storage_lifecycle test_startup_storage_lifecycle.cpp)
+target_include_directories(test_startup_storage_lifecycle PRIVATE ${CONTRACTS_INC} ${PORTS_INC} ${TEST_SUPPORT_INC} ${CORE_INC} ${APP_INC})
+target_sources(test_startup_storage_lifecycle PRIVATE "../../components/charm_app/src/startup_storage_lifecycle.cpp")
+target_link_libraries(test_startup_storage_lifecycle PRIVATE charm_core_obj GTest::gtest_main GTest::gtest)
+add_test(NAME StartupStorageLifecycleTest COMMAND test_startup_storage_lifecycle)

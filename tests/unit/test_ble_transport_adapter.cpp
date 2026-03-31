@@ -6,6 +6,16 @@ namespace charm::platform::test {
 
 class FakeBleLifecycleBackend final : public charm::platform::BleLifecycleBackend {
  public:
+  bool RegisterStackEventSink(StackEventSink* sink) override {
+    sink_ = sink;
+    register_calls++;
+    return register_result;
+  }
+
+  bool UsesStackEventCallbacks() const override {
+    return use_stack_callbacks;
+  }
+
   bool Start() override {
     start_calls++;
     return start_result;
@@ -41,9 +51,12 @@ class FakeBleLifecycleBackend final : public charm::platform::BleLifecycleBacken
 
   bool start_result{true};
   bool stop_result{true};
+  bool register_result{true};
+  bool use_stack_callbacks{false};
   bool configure_result{true};
   bool send_result{true};
   bool report_channel_ready{false};
+  int register_calls{0};
   int start_calls{0};
   int stop_calls{0};
   int configure_calls{0};
@@ -55,6 +68,47 @@ class FakeBleLifecycleBackend final : public charm::platform::BleLifecycleBacken
   std::uint16_t last_connection_id{0};
   std::uint16_t last_value_handle{0};
   bool last_require_confirmation{false};
+
+  void EmitAdvertisingReady() {
+    if (sink_ != nullptr) {
+      sink_->OnStackAdvertisingReady();
+    }
+  }
+
+  void EmitPeerConnected(const charm::ports::BlePeerInfo& peer) {
+    if (sink_ != nullptr) {
+      sink_->OnStackPeerConnected(peer);
+    }
+  }
+
+  void EmitPeerDisconnected(const charm::ports::BlePeerInfo& peer) {
+    if (sink_ != nullptr) {
+      sink_->OnStackPeerDisconnected(peer);
+    }
+  }
+
+  void EmitReportChannelReady(std::uint32_t transport_if, std::uint16_t connection_id,
+                              std::uint16_t value_handle, bool require_confirmation) {
+    if (sink_ != nullptr) {
+      sink_->OnStackReportChannelReady(transport_if, connection_id, value_handle,
+                                       require_confirmation);
+    }
+  }
+
+  void EmitReportChannelClosed() {
+    if (sink_ != nullptr) {
+      sink_->OnStackReportChannelClosed();
+    }
+  }
+
+  void EmitLifecycleError(std::uint32_t reason) {
+    if (sink_ != nullptr) {
+      sink_->OnStackLifecycleError(reason);
+    }
+  }
+
+ private:
+  StackEventSink* sink_{nullptr};
 };
 
 class MockBleTransportPortListener : public charm::ports::BleTransportPortListener {
@@ -97,6 +151,7 @@ TEST_F(BleTransportAdapterTest, StartSucceedsAndNotifiesListener) {
   charm::contracts::StartRequest req;
   auto result = adapter.Start(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(backend_raw->register_calls, 1);
   EXPECT_EQ(backend_raw->start_calls, 1);
 
   EXPECT_EQ(listener.status_changed_count, 1);
@@ -154,12 +209,31 @@ TEST_F(BleTransportAdapterTest, NotifyWhenStoppedIsRejected) {
 }
 
 TEST_F(BleTransportAdapterTest, StartFailureSurfacesAdapterFailureStatus) {
-  backend_raw->start_result = false;
+  backend_raw->register_result = false;
   charm::contracts::StartRequest req;
   auto result = adapter.Start(req);
   EXPECT_EQ(result.status, charm::contracts::ContractStatus::kFailed);
   EXPECT_EQ(result.fault_code.category, charm::contracts::ErrorCategory::kAdapterFailure);
   EXPECT_EQ(listener.last_status.status, charm::contracts::ContractStatus::kFailed);
+}
+
+TEST_F(BleTransportAdapterTest, StackCallbackModeWaitsForAdvertisingReadyEvent) {
+  backend_raw->use_stack_callbacks = true;
+
+  charm::contracts::StartRequest req;
+  const auto start_result = adapter.Start(req);
+  EXPECT_EQ(start_result.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(listener.status_changed_count, 0);
+
+  charm::ports::NotifyInputReportRequest notify_request;
+  notify_request.report.report_id = 1;
+  notify_request.report.size = 1;
+  auto notify_before_ready = adapter.NotifyInputReport(notify_request);
+  EXPECT_EQ(notify_before_ready.status, charm::contracts::ContractStatus::kUnavailable);
+
+  backend_raw->EmitAdvertisingReady();
+  EXPECT_EQ(listener.status_changed_count, 1);
+  EXPECT_EQ(listener.last_status.state, charm::contracts::AdapterState::kRunning);
 }
 
 TEST_F(BleTransportAdapterTest, PeerLifecycleEventsAreSurfacedToListener) {
@@ -194,6 +268,42 @@ TEST_F(BleTransportAdapterTest, NotifyInputReportUsesBackendWhenPeerAndReportCha
   EXPECT_EQ(backend_raw->configure_calls, 1);
   EXPECT_EQ(backend_raw->send_calls, 1);
   EXPECT_EQ(backend_raw->last_report_size, 4u);
+}
+
+TEST_F(BleTransportAdapterTest, StackCallbacksDriveOrderingForReportChannel) {
+  backend_raw->use_stack_callbacks = true;
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+
+  backend_raw->EmitAdvertisingReady();
+
+  std::uint8_t bytes[2] = {5, 6};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 8;
+  req.report.bytes = bytes;
+  req.report.size = 2;
+
+  backend_raw->EmitReportChannelReady(3, 10, 99, false);
+  auto without_peer = adapter.NotifyInputReport(req);
+  EXPECT_EQ(without_peer.status, charm::contracts::ContractStatus::kUnavailable);
+  EXPECT_EQ(backend_raw->send_calls, 0);
+
+  charm::ports::BlePeerInfo peer{};
+  peer.address = {9, 8, 7, 6, 5, 4};
+  backend_raw->EmitPeerConnected(peer);
+
+  auto after_connect_before_ready = adapter.NotifyInputReport(req);
+  EXPECT_EQ(after_connect_before_ready.status, charm::contracts::ContractStatus::kUnavailable);
+  EXPECT_EQ(backend_raw->send_calls, 0);
+
+  backend_raw->EmitReportChannelReady(3, 10, 99, false);
+  auto with_peer = adapter.NotifyInputReport(req);
+  EXPECT_EQ(with_peer.status, charm::contracts::ContractStatus::kOk);
+  EXPECT_EQ(backend_raw->send_calls, 1);
+
+  backend_raw->EmitReportChannelClosed();
+  auto after_close = adapter.NotifyInputReport(req);
+  EXPECT_EQ(after_close.status, charm::contracts::ContractStatus::kUnavailable);
 }
 
 TEST_F(BleTransportAdapterTest, NotifyInputReportSurfacesTransportFailure) {
@@ -247,11 +357,72 @@ TEST_F(BleTransportAdapterTest, LifecycleErrorAttemptsRecovery) {
   charm::contracts::StartRequest start_req;
   adapter.Start(start_req);
 
-  adapter.OnLifecycleError(77);
+  backend_raw->EmitLifecycleError(77);
 
   EXPECT_EQ(backend_raw->stop_calls, 1);
   EXPECT_EQ(backend_raw->start_calls, 2);
   EXPECT_EQ(listener.last_status.status, charm::contracts::ContractStatus::kFailed);
+}
+
+TEST_F(BleTransportAdapterTest, StackDisconnectClosesReportChannelBeforeNotify) {
+  backend_raw->use_stack_callbacks = true;
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+  backend_raw->EmitAdvertisingReady();
+
+  charm::ports::BlePeerInfo peer{};
+  backend_raw->EmitPeerConnected(peer);
+  backend_raw->EmitReportChannelReady(4, 5, 6, false);
+
+  std::uint8_t bytes[1] = {1};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 9;
+  req.report.bytes = bytes;
+  req.report.size = 1;
+  EXPECT_EQ(adapter.NotifyInputReport(req).status, charm::contracts::ContractStatus::kOk);
+
+  backend_raw->EmitPeerDisconnected(peer);
+  const auto after_disconnect = adapter.NotifyInputReport(req);
+  EXPECT_EQ(after_disconnect.status, charm::contracts::ContractStatus::kUnavailable);
+}
+
+TEST_F(BleTransportAdapterTest, RecoveryExhaustionFailClosesAfterBoundedAttempts) {
+  backend_raw->use_stack_callbacks = true;
+  backend_raw->send_result = false;
+  charm::contracts::StartRequest start_req;
+  adapter.Start(start_req);
+  backend_raw->EmitAdvertisingReady();
+  charm::ports::BlePeerInfo peer{};
+  backend_raw->EmitPeerConnected(peer);
+  backend_raw->EmitReportChannelReady(1, 2, 3, true);
+
+  std::uint8_t bytes[1] = {2};
+  charm::ports::NotifyInputReportRequest req;
+  req.report.report_id = 4;
+  req.report.bytes = bytes;
+  req.report.size = 1;
+
+  auto first = adapter.NotifyInputReport(req);
+  EXPECT_EQ(first.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(backend_raw->stop_calls, 1);
+  EXPECT_EQ(backend_raw->start_calls, 2);
+
+  backend_raw->EmitPeerConnected(peer);
+  backend_raw->EmitReportChannelReady(1, 2, 3, true);
+  auto second = adapter.NotifyInputReport(req);
+  EXPECT_EQ(second.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(backend_raw->stop_calls, 2);
+  EXPECT_EQ(backend_raw->start_calls, 3);
+
+  backend_raw->EmitPeerConnected(peer);
+  backend_raw->EmitReportChannelReady(1, 2, 3, true);
+  auto third = adapter.NotifyInputReport(req);
+  EXPECT_EQ(third.status, charm::contracts::ContractStatus::kFailed);
+  EXPECT_EQ(backend_raw->stop_calls, 3);
+  EXPECT_EQ(backend_raw->start_calls, 3);
+
+  auto after_exhaustion = adapter.NotifyInputReport(req);
+  EXPECT_EQ(after_exhaustion.status, charm::contracts::ContractStatus::kRejected);
 }
 
 TEST_F(BleTransportAdapterTest, BondingMaterialRoundTripAndClear) {

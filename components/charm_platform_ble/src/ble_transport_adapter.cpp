@@ -3,6 +3,7 @@
 #if __has_include("esp_bt.h") && __has_include("esp_bt_main.h")
 #include "esp_bt.h"
 #include "esp_bt_main.h"
+#include "esp_gap_ble_api.h"
 #include "esp_gatts_api.h"
 #define CHARM_BLE_ESP_STACK_AVAILABLE 1
 #else
@@ -15,6 +16,29 @@ namespace {
 
 class EspBleLifecycleBackend final : public BleLifecycleBackend {
  public:
+  bool RegisterStackEventSink(StackEventSink* sink) override {
+    sink_ = sink;
+#if CHARM_BLE_ESP_STACK_AVAILABLE
+    if (sink_ == nullptr) {
+      return false;
+    }
+    active_instance_ = this;
+    if (esp_ble_gap_register_callback(&EspBleLifecycleBackend::GapCallback) != ESP_OK) {
+      active_instance_ = nullptr;
+      return false;
+    }
+    if (esp_ble_gatts_register_callback(&EspBleLifecycleBackend::GattsCallback) != ESP_OK) {
+      active_instance_ = nullptr;
+      return false;
+    }
+#endif
+    return true;
+  }
+
+  bool UsesStackEventCallbacks() const override {
+    return CHARM_BLE_ESP_STACK_AVAILABLE == 1;
+  }
+
   bool Start() override {
 #if CHARM_BLE_ESP_STACK_AVAILABLE
     esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
@@ -66,11 +90,81 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
   }
 
  private:
+#if CHARM_BLE_ESP_STACK_AVAILABLE
+  static void GapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param) {
+    if (active_instance_ == nullptr || active_instance_->sink_ == nullptr) {
+      return;
+    }
+    if (event == ESP_GAP_BLE_ADV_START_COMPLETE_EVT) {
+      if (param != nullptr &&
+          param->adv_start_cmpl.status == ESP_BT_STATUS_SUCCESS) {
+        active_instance_->sink_->OnStackAdvertisingReady();
+      } else {
+        const std::uint32_t reason = param == nullptr
+                                         ? 10u
+                                         : static_cast<std::uint32_t>(
+                                               param->adv_start_cmpl.status);
+        active_instance_->sink_->OnStackLifecycleError(reason);
+      }
+    }
+  }
+
+  static void GattsCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
+                            esp_ble_gatts_cb_param_t* param) {
+    if (active_instance_ == nullptr || active_instance_->sink_ == nullptr ||
+        param == nullptr) {
+      return;
+    }
+
+    switch (event) {
+      case ESP_GATTS_CONNECT_EVT: {
+        charm::ports::BlePeerInfo peer{};
+        for (std::size_t i = 0; i < peer.address.size(); ++i) {
+          peer.address[i] = param->connect.remote_bda[i];
+        }
+        active_instance_->sink_->OnStackPeerConnected(peer);
+        break;
+      }
+      case ESP_GATTS_DISCONNECT_EVT: {
+        charm::ports::BlePeerInfo peer{};
+        for (std::size_t i = 0; i < peer.address.size(); ++i) {
+          peer.address[i] = param->disconnect.remote_bda[i];
+        }
+        active_instance_->sink_->OnStackReportChannelClosed();
+        active_instance_->sink_->OnStackPeerDisconnected(peer);
+        break;
+      }
+      case ESP_GATTS_WRITE_EVT: {
+        if (!param->write.is_prep && param->write.len >= 2) {
+          const std::uint16_t cccd = static_cast<std::uint16_t>(
+              static_cast<std::uint16_t>(param->write.value[0]) |
+              (static_cast<std::uint16_t>(param->write.value[1]) << 8u));
+          if (cccd == 0x0000u) {
+            active_instance_->sink_->OnStackReportChannelClosed();
+          } else if (cccd == 0x0001u || cccd == 0x0002u) {
+            active_instance_->sink_->OnStackReportChannelReady(
+                static_cast<std::uint32_t>(gatts_if), param->write.conn_id,
+                param->write.handle, cccd == 0x0002u);
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+#endif
+
+  StackEventSink* sink_{nullptr};
   std::uint32_t transport_if_{0};
   std::uint16_t connection_id_{0};
   std::uint16_t value_handle_{0};
   bool require_confirmation_{false};
   bool report_ready_{false};
+
+#if CHARM_BLE_ESP_STACK_AVAILABLE
+  static inline EspBleLifecycleBackend* active_instance_{nullptr};
+#endif
 };
 
 }  // namespace
@@ -88,7 +182,8 @@ charm::contracts::StartResult BleTransportAdapter::Start(const charm::contracts:
     return result;
   }
 
-  if (backend_ == nullptr || !backend_->Start()) {
+  if (backend_ == nullptr || !backend_->RegisterStackEventSink(this) ||
+      !backend_->Start()) {
     result.status = charm::contracts::ContractStatus::kFailed;
     result.fault_code.category = charm::contracts::ErrorCategory::kAdapterFailure;
     result.fault_code.reason = 1;
@@ -103,7 +198,9 @@ charm::contracts::StartResult BleTransportAdapter::Start(const charm::contracts:
   report_channel_ready_ = false;
   recovery_attempts_ = 0;
   result.status = charm::contracts::ContractStatus::kOk;
-  OnAdvertisingReady();
+  if (!backend_->UsesStackEventCallbacks()) {
+    OnAdvertisingReady();
+  }
   return result;
 }
 
@@ -209,6 +306,10 @@ void BleTransportAdapter::OnLifecycleError(std::uint32_t reason) {
 void BleTransportAdapter::OnReportChannelReady(std::uint32_t transport_if, std::uint16_t connection_id,
                                                std::uint16_t value_handle, bool require_confirmation) {
   if (state_ != charm::contracts::AdapterState::kRunning || backend_ == nullptr) return;
+  if (!peer_connected_) {
+    report_channel_ready_ = false;
+    return;
+  }
   report_channel_ready_ = backend_->ConfigureReportChannel(transport_if, connection_id, value_handle, require_confirmation);
   if (!report_channel_ready_) {
     (void)TryRecover(6);
@@ -239,6 +340,36 @@ charm::ports::BondingMaterialRef BleTransportAdapter::GetBondingMaterial() const
 
 void BleTransportAdapter::ClearBondingMaterial() {
   bonding_material_.clear();
+}
+
+void BleTransportAdapter::OnStackAdvertisingReady() {
+  OnAdvertisingReady();
+}
+
+void BleTransportAdapter::OnStackPeerConnected(
+    const charm::ports::BlePeerInfo& peer_info) {
+  OnPeerConnected(peer_info);
+}
+
+void BleTransportAdapter::OnStackPeerDisconnected(
+    const charm::ports::BlePeerInfo& peer_info) {
+  OnPeerDisconnected(peer_info);
+}
+
+void BleTransportAdapter::OnStackLifecycleError(std::uint32_t reason) {
+  OnLifecycleError(reason);
+}
+
+void BleTransportAdapter::OnStackReportChannelReady(std::uint32_t transport_if,
+                                                    std::uint16_t connection_id,
+                                                    std::uint16_t value_handle,
+                                                    bool require_confirmation) {
+  OnReportChannelReady(transport_if, connection_id, value_handle,
+                       require_confirmation);
+}
+
+void BleTransportAdapter::OnStackReportChannelClosed() {
+  OnReportChannelClosed();
 }
 
 bool BleTransportAdapter::TryRecover(std::uint32_t reason) {
@@ -276,7 +407,6 @@ bool BleTransportAdapter::TryRecover(std::uint32_t reason) {
   OnAdvertisingReady();
   EmitStatus(charm::contracts::ContractStatus::kOk, state_,
              charm::contracts::ErrorCategory::kAdapterFailure, reason);
-  recovery_attempts_ = 0;
   return true;
 }
 

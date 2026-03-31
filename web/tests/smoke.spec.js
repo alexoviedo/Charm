@@ -1,16 +1,42 @@
 const { test, expect } = require('@playwright/test');
 
-async function openWithCapabilities(page, { secure = true, serial = true, gamepad = true } = {}) {
-  await page.addInitScript(({ secureContext, hasSerial, hasGamepad }) => {
+async function openWithCapabilities(page, { secure = true, serial = true, gamepad = true, serialInitiallyOpen = false } = {}) {
+  await page.addInitScript(({ secureContext, hasSerial, hasGamepad, serialPortInitiallyOpen }) => {
     Object.defineProperty(window, 'isSecureContext', {
       configurable: true,
       value: secureContext,
     });
 
     if (hasSerial) {
+      const pendingRead = new Promise(() => {});
+      const reader = {
+        read: () => pendingRead,
+        cancel: async () => {},
+        releaseLock: () => {},
+      };
+      const port = {
+        readable: serialPortInitiallyOpen ? { getReader: () => reader } : null,
+        writable: serialPortInitiallyOpen ? {} : null,
+        openCalls: [],
+        closeCalls: 0,
+        lastOpenOptions: null,
+        async open(options) {
+          this.lastOpenOptions = options;
+          this.openCalls.push(options);
+          this.readable = { getReader: () => reader };
+          this.writable = {};
+        },
+        async close() {
+          this.closeCalls += 1;
+          this.readable = null;
+          this.writable = null;
+        },
+        async forget() {},
+      };
+      window.__mockSerialPort = port;
       Object.defineProperty(navigator, 'serial', {
         configurable: true,
-        value: { requestPort: async () => ({}) },
+        value: { requestPort: async () => port },
       });
     } else {
       Object.defineProperty(navigator, 'serial', {
@@ -30,7 +56,7 @@ async function openWithCapabilities(page, { secure = true, serial = true, gamepa
         value: undefined,
       });
     }
-  }, { secureContext: secure, hasSerial: serial, hasGamepad: gamepad });
+  }, { secureContext: secure, hasSerial: serial, hasGamepad: gamepad, serialPortInitiallyOpen: serialInitiallyOpen });
 
   await page.goto('/index.html');
 }
@@ -185,4 +211,23 @@ test('flash path completes and returns to post-flash idle ownership state', asyn
   await expect(page.locator('#flash-status')).not.toContainText('FLASH_FAILED');
   await expect(page.locator('#flash-status')).not.toContainText('write_flash is not a function');
   await expect(page.locator('#flash-status')).not.toContainText('hard_reset is not a function');
+});
+
+test('monitor reconnect forces port reopen at 115200 baud when port is already open', async ({ page }) => {
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true, serialInitiallyOpen: true });
+
+  await page.getByRole('button', { name: 'Request Serial Permission' }).click();
+  await page.getByRole('button', { name: 'Claim Owner: Console' }).click();
+  await page.getByRole('button', { name: 'Connect Monitor' }).click();
+
+  await expect(page.locator('#monitor-status')).toContainText('MONITOR_CONNECTED');
+  await expect(page.locator('#monitor-status')).toContainText('115200');
+
+  const portState = await page.evaluate(() => ({
+    closeCalls: window.__mockSerialPort.closeCalls,
+    lastOpenOptions: window.__mockSerialPort.lastOpenOptions,
+  }));
+
+  expect(portState.closeCalls).toBe(1);
+  expect(portState.lastOpenOptions.baudRate).toBe(115200);
 });

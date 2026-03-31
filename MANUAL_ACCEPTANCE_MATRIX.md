@@ -10,6 +10,27 @@ This document defines the **human-executable** acceptance process for the curren
 
 It is deliberately aligned to existing code/docs and is not a generic QA template.
 
+### VS-07 Pack Completion State
+- **Pack defined:** YES (this document defines scenarios, procedures, evidence schema, and reporting formats).
+- **Hardware evidence captured:** PER-SCENARIO (tracked in Section 1.1 and Section 5 result rows).
+- **Evidence pending:** explicitly recorded as `PENDING`/`BLOCKED` with owner + reason; never implied as pass.
+- **No fabricated evidence policy:** if hardware is unavailable, record `PENDING` with blocker details instead of synthetic PASS.
+
+## 1.1 Scenario Status Ledger (Authoritative for VS-07)
+Use this ledger to distinguish definition-complete vs evidence-complete.
+
+| Scenario ID | Category | Mandatory for Production Confidence | Pack Status | Evidence Status (`CAPTURED` / `PENDING` / `BLOCKED`) | Last Run (UTC) | Evidence Path / Link | Blocker Owner |
+|---|---|---|---|---|---|---|---|
+| FL-01 | Flash success | Yes | Defined | PENDING | TBD | TBD | HW QA Owner |
+| FL-03 | Flash failure/recovery | Yes | Defined | PENDING | TBD | TBD | HW QA Owner |
+| MON-01 | Serial monitor connect/disconnect/read | Yes | Defined | PENDING | TBD | TBD | HW QA Owner |
+| CFG-01 | Config transport success | Yes | Defined | PENDING | TBD | TBD | FW App Owner |
+| CFG-06 | Config transport malformed/error | Yes | Defined | PENDING | TBD | TBD | FW App Owner |
+| BLE-01 | BLE connection/report path | Yes | Defined | PENDING | TBD | TBD | BLE Owner |
+| BLE-03 | BLE disconnect/recovery behavior | Yes | Defined | PENDING | TBD | TBD | BLE Owner |
+| STG-01 | Startup storage visible behavior | Yes | Defined | PENDING | TBD | TBD | FW App Owner |
+| REL-01 | Build/artifact traceability | Yes | Defined | PENDING | TBD | TBD | Release Owner |
+
 ---
 
 ## 2) Supported Test Matrix (Hardware / Browser / Environment)
@@ -63,6 +84,7 @@ Use these IDs in evidence and pass/fail records.
 | CFG-03 | Persist validated draft | Edit draft to valid state → Validate Local Draft → Device: Persist Local Draft | Persist success shown; no timeout/ownership errors | Screenshot of validation state + write status |
 | CFG-04 | Clear persisted config | Device: Clear Config then Device: Load Config | Clear success; reload shows cleared/default state | Screenshot pair (before/after) |
 | CFG-05 | Negative: blocked during monitor/flash | Keep monitor connected or flash in progress, then run device config command | Command blocked with expected guardrail message | Screenshot of blocked action/message |
+| CFG-06 | Negative: malformed config transport request | Send malformed frame through serial config channel (missing required field / invalid command) and observe response path | Deterministic reject/error status surfaced, no crash, monitor remains usable | Raw serial transcript + screenshot of surfaced error state |
 
 ### D. BLE Runtime Behavior
 | ID | Scenario | Steps (exact) | Expected Outcome | Evidence |
@@ -85,6 +107,13 @@ Use these IDs in evidence and pass/fail records.
 | REC-02 | Port disconnect during active session | Disconnect cable during monitor/config/flash | Session error surfaced; recover path documented and works | Error screenshot + retry success proof |
 | REC-03 | Invalid local artifact/config input | Provide malformed file where applicable | Validation/error messaging explicit and non-crashing | Screenshot + file name/hash in notes |
 
+### H. Startup Storage Lifecycle (Operator-Visible)
+| ID | Scenario | Steps (exact) | Expected Outcome | Evidence |
+|---|---|---|---|---|
+| STG-01 | Normal startup with initialized storage | Boot device with valid persisted storage state; connect runtime/monitor and run config capability/load checks | Startup proceeds normally; config operations available and deterministic | Boot log excerpt + config panel screenshot + timestamp |
+| STG-02 | Startup with recoverable storage condition | Prepare recoverable NVS condition (where supported), reboot, then observe startup and retry behavior | Bounded recovery path completes; runtime becomes usable without manual firmware patching | Boot log excerpt showing recover path + post-boot capability/load proof |
+| STG-03 | Startup unrecoverable storage failure | Force unrecoverable storage init failure (lab procedure), reboot | Fail-closed behavior: startup flow blocked appropriately; fault visibility captured for operator/tester | Boot log excerpt + operator-visible failure screenshot + blocker record |
+
 ### G. Deployment / Release Verification
 | ID | Scenario | Steps (exact) | Expected Outcome | Evidence |
 |---|---|---|---|---|
@@ -101,19 +130,39 @@ For every scenario row executed, capture all of:
 2. **Outcome proof:** screenshot/video/log excerpt directly showing expected result.
 3. **Traceability:** scenario ID, environment ID, and gate relevance (`PG-INT`, `PG-EXT`, `PG-PROD`).
 4. **Defect linkage:** if failed, include defect/regression ID and owner.
+5. **Artifact linkage:** artifact/checksum/provenance references used in execution (`manifest.json`, `SHA256SUMS`, `provenance.json` where applicable).
 
 Minimum evidence package folder naming:
 - `evidence/<YYYYMMDD>/<scenario-id>/<tester>-<utc-time>/...`
+
+Minimum files per scenario evidence folder:
+- `result.json` (structured metadata + PASS/FAIL/PENDING/BLOCKED)
+- `notes.md` (human observations + anomalies)
+- `logs/` (serial/runtime logs)
+- `media/` (screenshots/photos/video snippets as applicable)
+- `traceability.json` (commit SHA, release id, artifact paths, checksums references)
+
+---
+
+## 4.1 Reproducible Execution Procedure (Apply to Every Scenario)
+1. Record baseline metadata (tester, UTC start, device ID, firmware build/release ID, browser/version, scenario ID).
+2. Verify required prerequisites (HW/BR/ENV lanes and artifact availability).
+3. Execute exact scenario steps from Section 3 without deviation; if deviation is needed, document it in `notes.md`.
+4. Capture required evidence artifacts immediately (logs/media/traceability files).
+5. Assign result status (`PASS`, `FAIL`, `PENDING`, `BLOCKED`) and update Section 1.1 + Section 5 row.
+6. For non-pass outcomes, create/attach defect or blocker owner and mitigation/next action.
+7. Store all artifacts under the required evidence folder naming convention.
 
 ---
 
 ## 5) Pass/Fail Recording Format (Operator Sheet)
 Use one row per scenario execution.
 
-| Scenario ID | Date (UTC) | Tester | HW/BR/ENV IDs | Build/Release ID | Result (PASS/FAIL/BLOCKED) | Evidence Path | Defect/Issue ID | Notes |
+| Scenario ID | Date (UTC) | Tester | HW/BR/ENV IDs | Build/Release ID | Commit SHA | Artifact/Checksum Ref | Result (PASS/FAIL/PENDING/BLOCKED) | Evidence Path | Defect/Issue ID | Notes |
 |---|---|---|---|---|---|---|---|---|
-| CFG-03 | 2026-03-28 | initials | HW-A / BR-A / ENV-B | `<release_id>` | PASS | `evidence/20260328/CFG-03/...` | n/a | Persist ack in status panel |
+| CFG-03 | 2026-03-28 | initials | HW-A / BR-A / ENV-B | `<release_id>` | `<commit_sha>` | `SHA256SUMS:OK` | PASS | `evidence/20260328/CFG-03/...` | n/a | Persist ack in status panel |
 
+`PENDING` means not yet executed (no claim).
 `BLOCKED` is allowed only with explicit blocker owner + ETA.
 
 ---
@@ -153,7 +202,7 @@ No-Go triggers:
 - Unowned blocker in external beta scope.
 
 ### Production (`PG-PROD`) Go Conditions
-- All scenario groups `FL/MON/CFG/BLE/VAL/REC/REL` have pass evidence in production-like environment.
+- All mandatory scenario groups `FL/MON/CFG/BLE/STG/VAL/REC/REL` have pass evidence in production-like environment.
 - BLE scenarios (`BLE-01..03`) passed with no unresolved P0/P1 in release candidate.
 - Integrity/provenance verification passed for release artifact.
 - Residual risks documented with owner, mitigation, and explicit acceptance.

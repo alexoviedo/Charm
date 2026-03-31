@@ -35,6 +35,68 @@ async function openWithCapabilities(page, { secure = true, serial = true, gamepa
   await page.goto('/index.html');
 }
 
+async function mockSameSiteArtifacts(page) {
+  const manifest = {
+    version: 'test-smoke',
+    target: 'esp32s3',
+    files: {
+      bootloader: 'bootloader.bin',
+      partition_table: 'partition-table.bin',
+      app: 'charm.bin',
+    },
+  };
+
+  await page.route('**/firmware/manifest.json', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(manifest),
+    });
+  });
+
+  const binaryBody = Buffer.from([0x00, 0x01, 0x02, 0x03]);
+  for (const filename of ['bootloader.bin', 'partition-table.bin', 'charm.bin']) {
+    await page.route(`**/firmware/${filename}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/octet-stream',
+        body: binaryBody,
+      });
+    });
+  }
+}
+
+async function mockBrowserSafeEsptoolModule(page) {
+  await page.route('**/vendor/esptool-js-0.4.3.esm.js', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `
+        export class Transport {
+          constructor(port) { this.port = port; this.baudrate = 115200; }
+          async disconnect() {}
+        }
+        export class ESPLoader {
+          constructor(options) {
+            this.options = options;
+            this.chip = {
+              CHIP_NAME: 'ESP32-S3',
+              async readMac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; },
+            };
+          }
+          async main() { return 'ESP32-S3'; }
+          async writeFlash({ reportProgress }) {
+            reportProgress?.(0, 4, 4);
+            reportProgress?.(1, 4, 4);
+            reportProgress?.(2, 4, 4);
+          }
+          async hardReset() {}
+        }
+      `,
+    });
+  });
+}
+
 test('shell renders top-level runtime sections', async ({ page }) => {
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
 
@@ -75,9 +137,60 @@ test('config panel renders operator guidance and device command controls', async
   await expect(page.locator('#cfg-write-status')).toContainText('CONFIG_DEVICE');
 });
 
+test('config command is blocked unless flash owner is claimed', async ({ page }) => {
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+  await page.getByRole('button', { name: 'Config' }).click();
+  const btn = page.getByRole('button', { name: 'Device: Get Capabilities' });
+  await expect(btn).toBeDisabled();
+  await expect(btn).toHaveAttribute('title', /Requires serial permission, Flash owner/);
+});
+
 test('artifact mode toggle preserves flow affordances', async ({ page }) => {
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
   await page.getByRole('combobox', { name: 'Source mode' }).selectOption('manual_local_import');
   await expect(page.locator('#artifact-local-picker-wrap')).toBeVisible();
   await expect(page.locator('#artifact-load-site-btn')).toBeHidden();
+});
+
+test('identify path succeeds with current esptool-js camelCase API surface', async ({ page }) => {
+  await mockBrowserSafeEsptoolModule(page);
+  await mockSameSiteArtifacts(page);
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+
+  await page.getByRole('button', { name: 'Request Serial Permission' }).click();
+  await page.getByRole('button', { name: 'Claim Owner: Flash' }).click();
+  await page.getByRole('button', { name: 'Load Same-Site Artifacts' }).click();
+
+  await expect(page.locator('#artifact-status')).toContainText('Same-site artifact bundle loaded and validated.');
+  await expect(page.locator('#artifact-summary')).toContainText('esp32s3');
+
+  await page.getByRole('button', { name: 'Identify Device (Flashing Path)' }).click();
+
+  await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
+  await expect(page.locator('#flash-device-info')).toContainText('ESP32-S3');
+  await expect(page.locator('#flash-status')).not.toContainText('Failed to resolve module specifier "pako"');
+  await expect(page.locator('#flash-status')).not.toContainText('Buffer is not defined');
+  await expect(page.locator('#flash-status')).not.toContainText('read_mac is not a function');
+});
+
+test('flash path completes and returns to post-flash idle ownership state', async ({ page }) => {
+  await mockBrowserSafeEsptoolModule(page);
+  await mockSameSiteArtifacts(page);
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+
+  await page.getByRole('button', { name: 'Request Serial Permission' }).click();
+  await page.getByRole('button', { name: 'Claim Owner: Flash' }).click();
+  await page.getByRole('button', { name: 'Load Same-Site Artifacts' }).click();
+  await page.getByRole('button', { name: 'Identify Device (Flashing Path)' }).click();
+  await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
+
+  await page.getByRole('button', { name: 'Flash Firmware Bundle' }).click();
+
+  await expect(page.locator('#flash-progress-label')).toContainText('100%');
+  await expect(page.locator('#serial-owner-state')).toHaveText('none');
+  await expect(page.locator('#serial-model-message')).toContainText('handoff=flash_to_console_ready');
+  await expect(page.locator('#flash-status')).toContainText('FLASH_BLOCKED');
+  await expect(page.locator('#flash-status')).not.toContainText('FLASH_FAILED');
+  await expect(page.locator('#flash-status')).not.toContainText('write_flash is not a function');
+  await expect(page.locator('#flash-status')).not.toContainText('hard_reset is not a function');
 });

@@ -1,12 +1,11 @@
 # CONFIG_TRANSPORT_CONTRACT.md
 
 ## Purpose
-Freeze the first production-ready host/device config transport contract after proof planning.
-This is a contract/design artifact only (no protocol-code implementation in this slice).
+Define the production serial-first host/device config transport contract and framing used by live firmware/web runtime integration.
 
-## Slice
-- `CFG-001 — Host/device config transport contract freeze`
-- Status: done
+## Status
+- Contract version: `v1`
+- Runtime status: implemented in firmware parser/runtime adapter + web config transport client
 
 ## Chosen First Transport Path
 1. **First transport path:** Web Serial request/response command channel over the existing browser-to-device serial link.
@@ -28,7 +27,14 @@ This is a contract/design artifact only (no protocol-code implementation in this
 - `payload` (command-specific)
 - `integrity` (required metadata for validation)
 
-### Response Shape (logical contract)
+### Wire Framing (production serial-safe)
+- **Frame prefix:** `@CFG:`
+- **Wire request format:** `@CFG:{json}\n`
+- **Wire response format:** `@CFG:{json}\n`
+- Frames without `@CFG:` prefix are ignored by firmware config runtime transport so human-readable logs can coexist on the same serial stream without contaminating config parsing.
+- Web client must only parse response lines that start with `@CFG:`.
+
+### Response Shape (logical contract payload after `@CFG:` prefix)
 - `protocol_version` (required)
 - `request_id` (required; must match request)
 - `status` (required; maps to firmware `ContractStatus`)
@@ -65,6 +71,7 @@ This is a contract/design artifact only (no protocol-code implementation in this
 - Deterministic request/response behavior for `persist/load/clear/get_capabilities`.
 - Stable status/fault mapping aligned to existing firmware contracts.
 - Capability response that indicates supported protocol version and command set.
+- Robust coexistence with boot/runtime logs over the same serial channel via explicit frame prefix filtering.
 
 ## Explicit Non-Support in First Config-Transport Slice
 - No BLE config transport in first production path.

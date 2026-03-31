@@ -1,7 +1,38 @@
+## 2026-03-31
+Executed `VS-08 — closeout truthfulness/CI/docs/validation artifacts`.
+
+Files covered:
+- `.github/workflows/ci.yml`
+- `tests/unit/CMakeLists.txt`
+- `tests/unit/test_usb_host_adapter.cpp`
+- `tests/unit/test_runtime_data_plane.cpp`
+- `tests/unit/test_config_transport_runtime_adapter.cpp`
+- `web/tests/smoke.spec.js`
+- `README.md`
+- `ARCHITECTURE.md`
+- `VALIDATION.md`
+- `CURRENT_TASK.md`
+- `TODO.md`
+- `PRODUCTION_VERTICAL_SLICES.md`
+- `IMPLEMENTATION_GAPS.md`
+- `PRODUCTION_CLOSEOUT_STATUS.md`
+- `HARDWARE_VALIDATION_PACK.md`
+- `RELEASE_ROLLBACK.md`
+
+What changed:
+- Added CI workflow to run host unit tests and web Playwright smoke tests on PR/push.
+- Added regression tests for USB adapter simulated interface/report events, runtime-data-plane unknown-interface ignore path, and mixed-stream `@CFG:` frame filtering.
+- Added smoke coverage for config ownership guard (`Flash` owner required).
+- Improved clean-env test bootstrap robustness by setting `DOWNLOAD_EXTRACT_TIMESTAMP TRUE` for GTest FetchContent.
+- Rewrote closeout/control docs to remove stale contradictions and explicitly separate CI-proved behavior from hardware-required validation.
+- Added concrete hardware validation pack and release/rollback procedure documents with commands, expected anchors, pass/fail criteria, and evidence paths.
+
 # Changelog (AI)
 
 ## [Unreleased]
 ### Added
+- Executed `VS-PROG-001 — Control reset into the production vertical-slice program`.
+- Set the active execution queue to `VS-01`..`VS-08`, explicitly mapped to verified gaps `G-001`..`G-006`.
 - Executed `WR-014 — Cutover and legacy web removal`.
 - Executed a control-only `WR-015` planning update to define the serial control/config proof matrix requirements.
 - Executed `PROD-001 — Production program control reset`.
@@ -23,6 +54,11 @@
 - Executed `REL-002 — Final production-readiness audit and handoff` (audit/handoff scope).
 
 ### Changed
+- Fixed runtime web flasher identify-path dependency loading by switching `esptool-js` import from the Browserify `bundle.js` entry to a browser-safe, version-pinned ESM CDN endpoint, eliminating the `Buffer is not defined` failure during identify.
+- Hardened runtime web flasher `esptool-js` integration against API-surface mismatches by using the actual v0.4.3 camelCase methods (`readMac`, `writeFlash`, `hardReset`) with compatibility fallbacks, and by configuring ROM/flash baudrates through loader options instead of calling nonexistent legacy methods after connect.
+- Extended smoke coverage so the mocked browser flasher path now exercises current `esptool-js` camelCase identify and flash flows, catching regressions around MAC lookup, flash write, and reset method names.
+- Replaced active current-task posture with `VS-01 Runtime Data Plane Integration` as the single in-progress slice.
+- Re-aligned control files for a code-first vertical-slice program while preserving prior WR/PROD/FW/CFG/WEB/CI/QA/OPS/REL history as historical record.
 - Replaced legacy runtime `web/` implementation with the validated replacement implementation formerly staged in `web-next/`.
 - Runtime truth updated: replacement shell is now the active runtime webapp at `web/`.
 - Updated control tracking: WR-014 done and WR-015 in progress (planning), with runtime write/persist still blocked on transport proof evidence.

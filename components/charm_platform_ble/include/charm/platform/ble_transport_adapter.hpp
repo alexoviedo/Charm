@@ -15,6 +15,22 @@ namespace charm::platform {
 class BleLifecycleBackend {
  public:
   virtual ~BleLifecycleBackend() = default;
+  class StackEventSink {
+   public:
+    virtual ~StackEventSink() = default;
+    virtual void OnStackAdvertisingReady() = 0;
+    virtual void OnStackPeerConnected(const charm::ports::BlePeerInfo& peer_info) = 0;
+    virtual void OnStackPeerDisconnected(const charm::ports::BlePeerInfo& peer_info) = 0;
+    virtual void OnStackLifecycleError(std::uint32_t reason) = 0;
+    virtual void OnStackReportChannelReady(std::uint32_t transport_if,
+                                           std::uint16_t connection_id,
+                                           std::uint16_t value_handle,
+                                           bool require_confirmation) = 0;
+    virtual void OnStackReportChannelClosed() = 0;
+  };
+
+  virtual bool RegisterStackEventSink(StackEventSink* sink) = 0;
+  virtual bool UsesStackEventCallbacks() const = 0;
   virtual bool Start() = 0;
   virtual bool Stop() = 0;
   virtual bool ConfigureReportChannel(std::uint32_t transport_if, std::uint16_t connection_id,
@@ -23,7 +39,8 @@ class BleLifecycleBackend {
   virtual bool SendReport(const charm::contracts::EncodedInputReport& report) = 0;
 };
 
-class BleTransportAdapter : public charm::ports::BleTransportPort {
+class BleTransportAdapter : public charm::ports::BleTransportPort,
+                            public BleLifecycleBackend::StackEventSink {
  public:
   BleTransportAdapter();
   explicit BleTransportAdapter(std::unique_ptr<BleLifecycleBackend> backend);
@@ -46,6 +63,16 @@ class BleTransportAdapter : public charm::ports::BleTransportPort {
   void SetBondingMaterial(const std::uint8_t* bytes, std::size_t size);
   charm::ports::BondingMaterialRef GetBondingMaterial() const;
   void ClearBondingMaterial();
+
+  // StackEventSink overrides for backend callback registration/dispatch.
+  void OnStackAdvertisingReady() override;
+  void OnStackPeerConnected(const charm::ports::BlePeerInfo& peer_info) override;
+  void OnStackPeerDisconnected(const charm::ports::BlePeerInfo& peer_info) override;
+  void OnStackLifecycleError(std::uint32_t reason) override;
+  void OnStackReportChannelReady(std::uint32_t transport_if, std::uint16_t connection_id,
+                                 std::uint16_t value_handle,
+                                 bool require_confirmation) override;
+  void OnStackReportChannelClosed() override;
 
  private:
   static constexpr std::size_t kMaxRecoveryAttempts = 2;

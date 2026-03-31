@@ -67,13 +67,7 @@ export class WebFlasherService {
     onStatus('FLASH_PREPARING', 'Preparing bundle for flashing...');
 
     const toBinaryString = (buffer) => {
-      let binary = '';
-      const bytes = new Uint8Array(buffer);
-      const chunkSize = 8192;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-      }
-      return binary;
+      return new TextDecoder('latin1').decode(new Uint8Array(buffer));
     };
 
     const fileArray = [

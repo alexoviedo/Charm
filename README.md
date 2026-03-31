@@ -4,10 +4,11 @@ Charm is an ESP32-S3 firmware + static web tooling project for bridging USB HID 
 
 ## Current Status
 
-**Milestone state (as of 2026-03-28):**
+**Milestone state (as of 2026-03-31):**
 - Core logic, contract models, and platform adapter boundaries are implemented.
 - Unit tests exist for core modules, supervisor/recovery, BLE adapter behavior, USB adapter behavior, and config transport service logic.
 - A runtime web shell (`web/`) and a near-parity next shell (`web-next/`) exist for flashing, monitor workflows, artifact loading, and config-draft operations.
+- The firmware bootstrap now initializes NVS before attempting persisted-config activation.
 - Several production-critical integration paths remain partial/stubbed (see [Known Limitations & Gaps](#known-limitations--gaps)).
 
 ## Repository Layout
@@ -36,7 +37,7 @@ Contracts in `charm_contracts` define strongly typed requests, results, status/f
 - **Supervisor + recovery policy**: mode/profile/mapping/recovery state transitions.
 
 ### 3) App Layer
-- `InitializeAndRun` wires static instances and starts USB/BLE/supervisor.
+- `InitializeAndRun` wires static instances, initializes NVS, and starts USB/BLE/supervisor.
 - `ActivatePersistedConfig` loads persisted mapping/profile and applies them to supervisor.
 - `ConfigTransportService` handles config `persist/load/clear/get_capabilities` requests over a validated envelope and delegates to `ConfigStorePort`.
 
@@ -52,7 +53,7 @@ Contracts in `charm_contracts` define strongly typed requests, results, status/f
 
 - CMake 3.16+
 - C++20 compiler toolchain
-- ESP-IDF (for firmware build targets)
+- **ESP-IDF v6.1.x** for firmware builds (the release workflow is pinned to `v6.1` for reproducibility)
 - (Optional) GTest installed system-wide for `tests/unit`
 - (Optional) Node.js for web QA automation in `web/`
 
@@ -61,6 +62,14 @@ Contracts in `charm_contracts` define strongly typed requests, results, status/f
 From repository root:
 
 ```bash
+idf.py set-target esp32s3
+idf.py build
+```
+
+For a clean reconfigure on a fresh machine or after dependency updates:
+
+```bash
+idf.py fullclean
 idf.py set-target esp32s3
 idf.py build
 ```
@@ -99,10 +108,11 @@ npm run qa:smoke
 
 ### Firmware boot and config activation
 On startup, the app:
-1. Starts USB adapter
-2. Starts BLE adapter
-3. Starts supervisor
-4. Loads persisted mapping/profile from config store and activates them
+1. Initializes NVS for persisted config/bonding storage.
+2. Starts USB adapter.
+3. Starts BLE adapter.
+4. Starts supervisor.
+5. Loads persisted mapping/profile from config store and activates them when NVS is available.
 
 ### Config transport service usage pattern (firmware side)
 - Validate envelope fields (`protocol_version`, `request_id`, `integrity`)
@@ -127,8 +137,7 @@ A concise audit is in [`IMPLEMENTATION_GAPS.md`](./IMPLEMENTATION_GAPS.md). Key 
 1. **Main runtime pipeline is not fully connected end-to-end** (USB reports are not yet wired through decode→mapping→profile encode→BLE notify in `InitializeAndRun`).
 2. **BLE callback wiring to real stack events is incomplete** (adapter has callback handlers, but no full production callback registration path shown in current repo).
 3. **Config transport framing/parsing is not implemented in firmware app runtime** (service exists, but serial protocol IO boundary is outside current implementation).
-4. **`ConfigStoreNvs` open/init assumptions are implicit** (startup NVS init and namespace prep not shown in app bootstrap).
-5. **Unit tests require external GTest package** (no vendored fallback).
+4. **Unit tests require external GTest package** (no vendored fallback).
 
 ## Roadmap (Implementation-Oriented)
 

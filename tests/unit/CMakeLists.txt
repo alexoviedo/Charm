@@ -25,6 +25,7 @@ if(NOT GTest_FOUND)
   include(FetchContent)
   FetchContent_Declare(
     googletest
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
   )
   # On some platforms this avoids overriding parent compiler/linker flags.

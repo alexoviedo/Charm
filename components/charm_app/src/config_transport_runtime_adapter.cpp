@@ -15,6 +15,7 @@ constexpr std::uint32_t kParserRejectRequestId = 0;
 constexpr std::uint32_t kParserRejectIntegrity = 0;
 constexpr std::uint32_t kReasonFrameTooLarge = 100;
 constexpr std::uint32_t kReasonMalformedFrame = 101;
+constexpr std::string_view kControlPrefix = "@CFG:";
 
 charm::contracts::ConfigTransportResponse MakeParserRejection(
     charm::contracts::ErrorCategory category, std::uint32_t reason) {
@@ -64,7 +65,17 @@ void ConfigTransportRuntimeAdapter::ConsumeBytes(const std::uint8_t* bytes,
       continue;
     }
 
-    const auto response = HandleFrame(frame);
+    auto payload_begin = SkipWhitespace(frame, 0);
+    if (payload_begin >= frame.size()) {
+      continue;
+    }
+    if (frame.compare(payload_begin, kControlPrefix.size(), kControlPrefix) != 0) {
+      // Not a config/control frame. Ignore so logs/noise can coexist on the same stream.
+      continue;
+    }
+    payload_begin += kControlPrefix.size();
+    const auto payload = frame.substr(payload_begin);
+    const auto response = HandleFrame(payload);
     output_frames_.push_back(SerializeResponseFrame(response));
   }
 }
@@ -190,6 +201,7 @@ bool ConfigTransportRuntimeAdapter::ParseRequestFrame(
 std::string ConfigTransportRuntimeAdapter::SerializeResponseFrame(
     const charm::contracts::ConfigTransportResponse& response) {
   std::ostringstream out;
+  out << kControlPrefix;
   out << '{';
   out << "\"protocol_version\":" << response.protocol_version << ',';
   out << "\"request_id\":" << response.request_id << ',';

@@ -203,7 +203,7 @@ async function sendConfigTransportCommand(command, payload = {}) {
   };
 
   try {
-    const encoded = new TextEncoder().encode(`${JSON.stringify(request)}\n`);
+    const encoded = new TextEncoder().encode(`@CFG:${JSON.stringify(request)}\n`);
     await writer.write(encoded);
 
     let raw = '';
@@ -214,11 +214,19 @@ async function sendConfigTransportCommand(command, payload = {}) {
       if (done) break;
       if (value) {
         raw += new TextDecoder().decode(value);
-        const idx = raw.indexOf('\n');
-        if (idx >= 0) {
+        while (true) {
+          const idx = raw.indexOf('\n');
+          if (idx < 0) break;
           const line = raw.slice(0, idx).trim();
-          if (!line) break;
-          return JSON.parse(line);
+          raw = raw.slice(idx + 1);
+          if (!line) {
+            continue;
+          }
+          if (!line.startsWith('@CFG:')) {
+            continue;
+          }
+          const payloadText = line.slice('@CFG:'.length).trim();
+          return JSON.parse(payloadText);
         }
       }
     }

@@ -121,7 +121,7 @@ let esptoolModulePromise = null;
  * `pako` unresolved in browsers, while the `+esm` endpoint rewrites/bundles
  * those dependencies into browser-loadable modules.
  */
-const ESPTOOL_BROWSER_MODULE_URL = 'https://cdn.jsdelivr.net/npm/esptool-js@0.4.3/+esm';
+const ESPTOOL_BROWSER_MODULE_URL = '../vendor/esptool-js-0.4.3.esm.js';
 
 async function importEsptoolJs() {
   if (!esptoolModulePromise) {
@@ -215,8 +215,6 @@ function normalizeMac(mac) {
 }
 
 function calculateMd5Hash(image) {
-  if (!globalThis.CryptoJS?.MD5 || !globalThis.CryptoJS?.enc?.Latin1?.parse) {
-    throw new Error('CryptoJS is unavailable; cannot compute image MD5.');
-  }
-  return globalThis.CryptoJS.MD5(globalThis.CryptoJS.enc.Latin1.parse(image)).toString();
+  return md5HexFromBinaryString(image);
 }
+import { md5HexFromBinaryString } from './md5.js';

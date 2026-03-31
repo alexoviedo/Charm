@@ -1,67 +1,51 @@
 # Charm
 
-Charm is an ESP32-S3 project that translates USB HID controller input into BLE HID gamepad output, with a static web runtime for artifact flashing, monitoring, and serial-first configuration transport operations.
+Charm is an ESP32-S3 firmware + static web runtime that delivers:
+- USB HID input ingestion on device
+- runtime decode/map/profile pipeline
+- BLE HID report output
+- serial-framed config transport (`@CFG:`)
+- browser-based flashing/console/config tooling (`web/`)
 
-## Current State (Code-First)
+## Current Truth (March 31, 2026)
 
-**As of March 30, 2026:**
+What is implemented in this branch:
+- Firmware runtime wiring exists from USB host listener to BLE notify via `RuntimeDataPlane`.
+- ESP-IDF-backed USB host and BLE adapter implementations are present in platform adapters.
+- Startup storage lifecycle includes explicit NVS initialization handling.
+- Config transport runtime adapter is integrated in app bootstrap and uses `@CFG:` line framing to coexist with normal logs.
+- Web runtime uses local vendored flasher dependency (`esptool-js`) and local MD5 hashing implementation (no runtime CDN dependency for those critical paths).
+- Host-side unit tests and Playwright smoke tests are both in CI.
 
-- The repository has substantial firmware/web infrastructure and a complete control-history trail.
-- Core modules and platform adapters exist, but verified implementation gaps remain open and are tracked in `IMPLEMENTATION_GAPS.md`.
-- The active execution posture is now the **vertical-slice program** (`VS-01`..`VS-08`) focused on closing verified gaps G-001..G-006 in a narrow, testable sequence.
-- Runtime web shell remains active at `web/`; `web-next/` still exists and is treated as a drift risk until consolidation.
+What is still not proven by CI:
+- Physical USB hardware behavior on target hub/device matrix.
+- Physical BLE pairing/reconnect/runtime stability under sustained load.
+- End-to-end flashing/monitor/config interaction against real boards in operator workflows.
 
-## Active Program
+## Repo Entry Points
 
-The authoritative active program is documented in:
-- [`CURRENT_TASK.md`](./CURRENT_TASK.md)
-- [`TODO.md`](./TODO.md)
-- [`IMPLEMENTATION_SLICES.md`](./IMPLEMENTATION_SLICES.md)
-- [`PRODUCTION_VERTICAL_SLICES.md`](./PRODUCTION_VERTICAL_SLICES.md)
+- Firmware app/runtime: `components/charm_app/`
+- USB adapter: `components/charm_platform_usb/`
+- BLE adapter: `components/charm_platform_ble/`
+- Unit tests: `tests/unit/`
+- Web runtime: `web/`
+- CI workflows: `.github/workflows/`
 
-### Vertical Slice Sequence
-1. VS-01 Runtime Data Plane Integration (G-001)
-2. VS-02 Firmware Config Transport Adapter (G-003)
-3. VS-03 BLE Stack Callback Wiring Hardening (G-002)
-4. VS-04 Startup Storage Lifecycle Hardening (G-004)
-5. VS-05 Test Bootstrap Portability (G-005)
-6. VS-06 Web Runtime Consolidation (G-006)
-7. VS-07 End-to-End Hardware Validation Pack
-8. VS-08 Release, Rollback, and Production Gate Closure
+## Validation + Release Documents
 
-## Architecture Overview
+- Hardware execution pack: `HARDWARE_VALIDATION_PACK.md`
+- Validation policy and evidence boundaries: `VALIDATION.md`
+- Release and rollback instructions: `RELEASE_ROLLBACK.md`
+- Current closeout truth: `PRODUCTION_CLOSEOUT_STATUS.md`
 
-- `main/` firmware entrypoint
-- `components/charm_contracts/` shared contract types
-- `components/charm_ports/` boundary interfaces
-- `components/charm_core/` platform-agnostic core logic
-- `components/charm_app/` app bootstrap + config service semantics
-- `components/charm_platform_*` platform adapters (USB/BLE/storage/time)
-- `web/` active runtime web shell
+## Quick test commands
 
-## Development Rules
+```bash
+cmake -S tests/unit -B build/unit
+cmake --build build/unit --parallel
+ctest --test-dir build/unit --output-on-failure
 
-- Code is the source of truth.
-- One narrow slice at a time.
-- Preserve ports/adapters boundaries and deterministic core behavior.
-- Keep serial-first config transport and zero-backend web posture unless explicitly re-decided.
-- Keep control Markdown files truthful and current at every slice boundary.
-
-## Known Gaps
-
-See [`IMPLEMENTATION_GAPS.md`](./IMPLEMENTATION_GAPS.md) for authoritative gap tracking (G-001..G-006).
-
-## Historical Programs
-
-- WR restart-track history and prior production-tracking history are preserved in control docs.
-- They are retained for auditability and must not be erased.
-
-## Additional Documentation
-
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md)
-- [`INTERFACES.md`](./INTERFACES.md)
-- [`VALIDATION.md`](./VALIDATION.md)
-- [`IMPLEMENTATION_GAPS.md`](./IMPLEMENTATION_GAPS.md)
-- [`IMPLEMENTATION_SLICES.md`](./IMPLEMENTATION_SLICES.md)
-- [`PRODUCTION_VERTICAL_SLICES.md`](./PRODUCTION_VERTICAL_SLICES.md)
-- [`CHANGELOG_AI.md`](./CHANGELOG_AI.md)
+npm --prefix web ci
+npx --prefix web playwright install --with-deps chromium
+npm --prefix web run qa:smoke
+```

@@ -49,6 +49,7 @@ class CapturingBleTransport final : public charm::ports::BleTransportPort {
   std::size_t notify_calls() const { return notify_calls_; }
   std::size_t last_size() const { return last_size_; }
   charm::contracts::ReportId last_report_id() const { return last_report_id_; }
+  const std::vector<std::uint8_t>& last_bytes() const { return last_bytes_; }
 
  private:
   charm::ports::NotifyInputReportResult notify_result_{
@@ -220,4 +221,116 @@ TEST(RuntimeDataPlaneTest, NotifyFailureDoesNotCauseUnboundedRetryLoop) {
   usb_host.EmitReport(report);
 
   EXPECT_EQ(ble_transport.notify_calls(), 1u);
+}
+
+TEST(RuntimeDataPlaneTest, UnknownInterfaceReportIsIgnoredDeterministically) {
+  charm::test_support::FakeUsbHostPort usb_host;
+  CapturingBleTransport ble_transport;
+  charm::core::InMemoryDeviceRegistry registry;
+  charm::core::DefaultHidDescriptorParser parser;
+  charm::core::DefaultDecodePlanBuilder decode_plan_builder;
+  charm::core::DefaultHidDecoder decoder;
+  charm::core::CanonicalLogicalStateStore state_store({1});
+  charm::core::DefaultMappingEngine mapping_engine(state_store);
+  charm::core::CanonicalProfileManager profile_manager;
+  charm::core::DefaultSupervisor supervisor;
+
+  charm::app::RuntimeDataPlane runtime_data_plane(
+      usb_host, ble_transport, registry, parser, decode_plan_builder, decoder,
+      mapping_engine, profile_manager, supervisor);
+  usb_host.SetListener(&runtime_data_plane);
+
+  std::array<std::uint8_t, 3> report_bytes{0b00000011, 0x20, 0x40};
+  charm::contracts::RawHidReportRef report{};
+  report.device_handle = charm::contracts::DeviceHandle{7};
+  report.interface_handle = charm::contracts::InterfaceHandle{999};
+  report.report_meta.report_id = 0;
+  report.report_meta.declared_length = report_bytes.size();
+  report.byte_length = report_bytes.size();
+  report.timestamp.ticks = 100;
+  report.bytes = report_bytes.data();
+
+  usb_host.EmitReport(report);
+
+  EXPECT_EQ(ble_transport.notify_calls(), 0u);
+}
+
+namespace {
+
+std::vector<std::uint8_t> RunDualInterfaceScenario(bool first_interface_a) {
+  charm::test_support::FakeUsbHostPort usb_host;
+  CapturingBleTransport ble_transport;
+  charm::core::InMemoryDeviceRegistry registry;
+  charm::core::DefaultHidDescriptorParser parser;
+  charm::core::DefaultDecodePlanBuilder decode_plan_builder;
+  charm::core::DefaultHidDecoder decoder;
+  charm::core::CanonicalLogicalStateStore state_store({1});
+  charm::core::DefaultMappingEngine mapping_engine(state_store);
+  charm::core::CanonicalProfileManager profile_manager;
+  charm::core::DefaultSupervisor supervisor;
+
+  charm::app::RuntimeDataPlane runtime_data_plane(
+      usb_host, ble_transport, registry, parser, decode_plan_builder, decoder,
+      mapping_engine, profile_manager, supervisor);
+  usb_host.SetListener(&runtime_data_plane);
+
+  const auto descriptor = MakeSimpleGamepadDescriptor();
+  charm::ports::InterfaceDescriptorRef iface_a{};
+  iface_a.device_handle = charm::contracts::DeviceHandle{7};
+  iface_a.interface_number = 1;
+  iface_a.descriptor.bytes = descriptor.data();
+  iface_a.descriptor.size = descriptor.size();
+
+  charm::ports::InterfaceDescriptorRef iface_b = iface_a;
+  iface_b.device_handle = charm::contracts::DeviceHandle{8};
+  iface_b.interface_number = 2;
+
+  if (first_interface_a) {
+    usb_host.SetClaimInterfaceResult({charm::contracts::ContractStatus::kOk, {},
+                                      charm::contracts::InterfaceHandle{42}});
+    usb_host.EmitInterfaceDescriptor(iface_a);
+    usb_host.SetClaimInterfaceResult({charm::contracts::ContractStatus::kOk, {},
+                                      charm::contracts::InterfaceHandle{43}});
+    usb_host.EmitInterfaceDescriptor(iface_b);
+  } else {
+    usb_host.SetClaimInterfaceResult({charm::contracts::ContractStatus::kOk, {},
+                                      charm::contracts::InterfaceHandle{43}});
+    usb_host.EmitInterfaceDescriptor(iface_b);
+    usb_host.SetClaimInterfaceResult({charm::contracts::ContractStatus::kOk, {},
+                                      charm::contracts::InterfaceHandle{42}});
+    usb_host.EmitInterfaceDescriptor(iface_a);
+  }
+
+  std::array<std::uint8_t, 3> report_a{0b00000001, 0x20, 0x40};
+  charm::contracts::RawHidReportRef raw_a{};
+  raw_a.device_handle = iface_a.device_handle;
+  raw_a.interface_handle = charm::contracts::InterfaceHandle{42};
+  raw_a.report_meta.report_id = 0;
+  raw_a.report_meta.declared_length = report_a.size();
+  raw_a.byte_length = report_a.size();
+  raw_a.timestamp.ticks = 200;
+  raw_a.bytes = report_a.data();
+
+  std::array<std::uint8_t, 3> report_b{0b00000010, 0x10, 0x60};
+  charm::contracts::RawHidReportRef raw_b{};
+  raw_b.device_handle = iface_b.device_handle;
+  raw_b.interface_handle = charm::contracts::InterfaceHandle{43};
+  raw_b.report_meta.report_id = 0;
+  raw_b.report_meta.declared_length = report_b.size();
+  raw_b.byte_length = report_b.size();
+  raw_b.timestamp.ticks = 201;
+  raw_b.bytes = report_b.data();
+
+  usb_host.EmitReport(raw_a);
+  usb_host.EmitReport(raw_b);
+  EXPECT_GE(ble_transport.notify_calls(), 2u);
+  return ble_transport.last_bytes();
+}
+
+}  // namespace
+
+TEST(RuntimeDataPlaneTest, MultiDeviceMergeIsDeterministicAcrossEnumerationOrder) {
+  const auto ordered = RunDualInterfaceScenario(true);
+  const auto reversed = RunDualInterfaceScenario(false);
+  EXPECT_EQ(ordered, reversed);
 }

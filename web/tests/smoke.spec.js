@@ -67,7 +67,7 @@ async function mockSameSiteArtifacts(page) {
 }
 
 async function mockBrowserSafeEsptoolModule(page) {
-  await page.route('https://cdn.jsdelivr.net/npm/esptool-js@0.4.3/+esm', async (route) => {
+  await page.route('**/vendor/esptool-js-0.4.3.esm.js', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/javascript',
@@ -135,6 +135,14 @@ test('config panel renders operator guidance and device command controls', async
   await expect(page.getByRole('button', { name: 'Device: Persist Local Draft' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Device: Clear Config' })).toBeVisible();
   await expect(page.locator('#cfg-write-status')).toContainText('CONFIG_DEVICE');
+});
+
+test('config command is blocked unless flash owner is claimed', async ({ page }) => {
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+  await page.getByRole('button', { name: 'Config' }).click();
+  const btn = page.getByRole('button', { name: 'Device: Get Capabilities' });
+  await expect(btn).toBeDisabled();
+  await expect(btn).toHaveAttribute('title', /Requires serial permission, Flash owner/);
 });
 
 test('artifact mode toggle preserves flow affordances', async ({ page }) => {

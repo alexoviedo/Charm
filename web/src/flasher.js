@@ -108,7 +108,7 @@ export class WebFlasherService {
 }
 
 let esptoolModulePromise = null;
-const ESPTOOL_MODULE_URL = 'https://unpkg.com/esptool-js@0.4.3/bundle.js';
+const ESPTOOL_MODULE_URL = 'https://unpkg.com/esptool-js@0.4.3/lib/index.js';
 
 async function importEsptoolJs() {
   if (!esptoolModulePromise) {

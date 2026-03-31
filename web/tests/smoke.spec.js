@@ -81,3 +81,33 @@ test('artifact mode toggle preserves flow affordances', async ({ page }) => {
   await expect(page.locator('#artifact-local-picker-wrap')).toBeVisible();
   await expect(page.locator('#artifact-load-site-btn')).toBeHidden();
 });
+
+test('identify path succeeds with browser-safe esptool module import (no Buffer global dependency)', async ({ page }) => {
+  await page.route('https://unpkg.com/esptool-js@0.4.3/lib/index.js', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `
+        export class Transport {
+          constructor(port) { this.port = port; }
+          async disconnect() {}
+        }
+        export class ESPLoader {
+          constructor() {}
+          async main() { return 'ESP32-S3'; }
+          async read_mac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; }
+        }
+      `,
+    });
+  });
+
+  await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
+
+  await page.getByRole('button', { name: 'Request Serial Permission' }).click();
+  await page.getByRole('button', { name: 'Claim Owner: Flash' }).click();
+  await page.getByRole('button', { name: 'Load Same-Site Artifacts' }).click();
+  await page.getByRole('button', { name: 'Identify Device (Flashing Path)' }).click();
+
+  await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
+  await expect(page.locator('#flash-status')).not.toContainText('Buffer is not defined');
+});

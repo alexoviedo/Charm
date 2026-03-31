@@ -35,6 +35,57 @@ async function openWithCapabilities(page, { secure = true, serial = true, gamepa
   await page.goto('/index.html');
 }
 
+async function mockSameSiteArtifacts(page) {
+  const manifest = {
+    version: 'test-smoke',
+    target: 'esp32s3',
+    files: {
+      bootloader: 'bootloader.bin',
+      partition_table: 'partition-table.bin',
+      app: 'charm.bin',
+    },
+  };
+
+  await page.route('**/firmware/manifest.json', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(manifest),
+    });
+  });
+
+  const binaryBody = Buffer.from([0x00, 0x01, 0x02, 0x03]);
+  for (const filename of ['bootloader.bin', 'partition-table.bin', 'charm.bin']) {
+    await page.route(`**/firmware/${filename}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/octet-stream',
+        body: binaryBody,
+      });
+    });
+  }
+}
+
+async function mockBrowserSafeEsptoolModule(page) {
+  await page.route('https://unpkg.com/esptool-js@0.4.3/lib/index.js', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `
+        export class Transport {
+          constructor(port) { this.port = port; }
+          async disconnect() {}
+        }
+        export class ESPLoader {
+          constructor() {}
+          async main() { return 'ESP32-S3'; }
+          async read_mac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; }
+        }
+      `,
+    });
+  });
+}
+
 test('shell renders top-level runtime sections', async ({ page }) => {
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
 
@@ -83,31 +134,20 @@ test('artifact mode toggle preserves flow affordances', async ({ page }) => {
 });
 
 test('identify path succeeds with browser-safe esptool module import (no Buffer global dependency)', async ({ page }) => {
-  await page.route('https://unpkg.com/esptool-js@0.4.3/lib/index.js', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: `
-        export class Transport {
-          constructor(port) { this.port = port; }
-          async disconnect() {}
-        }
-        export class ESPLoader {
-          constructor() {}
-          async main() { return 'ESP32-S3'; }
-          async read_mac() { return [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]; }
-        }
-      `,
-    });
-  });
-
+  await mockBrowserSafeEsptoolModule(page);
+  await mockSameSiteArtifacts(page);
   await openWithCapabilities(page, { secure: true, serial: true, gamepad: true });
 
   await page.getByRole('button', { name: 'Request Serial Permission' }).click();
   await page.getByRole('button', { name: 'Claim Owner: Flash' }).click();
   await page.getByRole('button', { name: 'Load Same-Site Artifacts' }).click();
+
+  await expect(page.locator('#artifact-status')).toContainText('Same-site artifact bundle loaded and validated.');
+  await expect(page.locator('#artifact-summary')).toContainText('esp32s3');
+
   await page.getByRole('button', { name: 'Identify Device (Flashing Path)' }).click();
 
   await expect(page.locator('#flash-status')).toContainText('FLASH_IDENTIFIED');
+  await expect(page.locator('#flash-device-info')).toContainText('ESP32-S3');
   await expect(page.locator('#flash-status')).not.toContainText('Buffer is not defined');
 });

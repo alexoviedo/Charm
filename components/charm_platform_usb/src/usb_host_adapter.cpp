@@ -1,6 +1,7 @@
 #include "charm/platform/usb_host_adapter.hpp"
 
 #include <array>
+#include <cstring>
 
 #if CHARM_USB_HOST_ESP_IDF_AVAILABLE
 #include "esp_log.h"
@@ -241,23 +242,24 @@ void UsbHostAdapter::ShutdownInterfacesLocked() {
 bool UsbHostAdapter::InstallHostStack() {
 #if CHARM_USB_HOST_ESP_IDF_AVAILABLE
   ESP_LOGI(kTag, "Installing USB host stack");
-  const usb_host_config_t host_config{
-      .skip_phy_setup = false,
-      .intr_flags = ESP_INTR_FLAG_LOWMED,
-  };
+  usb_host_config_t host_config;
+  std::memset(&host_config, 0, sizeof(host_config));
+  host_config.skip_phy_setup = false;
+  host_config.intr_flags = ESP_INTR_FLAG_LOWMED;
+
   if (usb_host_install(&host_config) != ESP_OK) {
     ESP_LOGE(kTag, "usb_host_install failed");
     return false;
   }
 
-  const hid_host_driver_config_t hid_config{
-      .create_background_task = true,
-      .task_priority = 5,
-      .stack_size = 4096,
-      .core_id = tskNO_AFFINITY,
-      .callback = &UsbHostAdapter::OnHidDriverEvent,
-      .callback_arg = this,
-  };
+  hid_host_driver_config_t hid_config;
+  std::memset(&hid_config, 0, sizeof(hid_config));
+  hid_config.create_background_task = true;
+  hid_config.task_priority = 5;
+  hid_config.stack_size = 4096;
+  hid_config.core_id = tskNO_AFFINITY;
+  hid_config.callback = &UsbHostAdapter::OnHidDriverEvent;
+  hid_config.callback_arg = this;
   if (hid_host_install(&hid_config) != ESP_OK) {
     ESP_LOGE(kTag, "hid_host_install failed");
     (void)usb_host_uninstall();
@@ -360,18 +362,21 @@ void UsbHostAdapter::OnHidInterfaceEvent(
 void UsbHostAdapter::HandleHidDriverConnected(
     hid_host_device_handle_t hid_device_handle) {
 #if CHARM_USB_HOST_ESP_IDF_AVAILABLE
-  hid_host_dev_params_t params{};
+  hid_host_dev_params_t params;
+  std::memset(&params, 0, sizeof(params));
   if (hid_host_device_get_params(hid_device_handle, &params) != ESP_OK) {
     return;
   }
 
-  hid_host_dev_info_t info{};
+  hid_host_dev_info_t info;
+  std::memset(&info, 0, sizeof(info));
   (void)hid_host_get_device_info(hid_device_handle, &info);
 
-  const hid_host_device_config_t dev_config{
-      .callback = &UsbHostAdapter::OnHidInterfaceEvent,
-      .callback_arg = this,
-  };
+  hid_host_device_config_t dev_config;
+  std::memset(&dev_config, 0, sizeof(dev_config));
+  dev_config.callback = &UsbHostAdapter::OnHidInterfaceEvent;
+  dev_config.callback_arg = this;
+
   if (hid_host_device_open(hid_device_handle, &dev_config) != ESP_OK) {
     ESP_LOGE(kTag, "hid_host_device_open failed, addr=%u iface=%u", params.addr,
              params.iface_num);
@@ -505,7 +510,7 @@ void UsbHostAdapter::HandleHidInputReport(
   report_ref.byte_length = length;
   report_ref.report_meta.report_id = length > 0 ? report[0] : 0;
   report_ref.timestamp.ticks =
-      static_cast<std::uint64_t>(esp_timer_get_time()) * 1000ULL;
+      static_cast<std::uint64_t>(esp_timer_get_time());
   report_ref.bytes = report.data();
 
   ESP_LOGD(kTag, "HID input addr=%u iface=%u size=%u report_id=%u",

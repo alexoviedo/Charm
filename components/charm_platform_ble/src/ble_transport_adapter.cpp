@@ -238,7 +238,8 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
 
   void ConfigureAdvertising() {
     static std::uint16_t hid_service_uuid = kHidServiceUuid;
-    esp_ble_adv_data_t adv_data{};
+    esp_ble_adv_data_t adv_data;
+    std::memset(&adv_data, 0, sizeof(adv_data));
     adv_data.set_scan_rsp = false;
     adv_data.include_name = true;
     adv_data.include_txpower = true;
@@ -251,7 +252,8 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
   }
 
   void StartAdvertising() {
-    esp_ble_adv_params_t adv_params{};
+    esp_ble_adv_params_t adv_params;
+    std::memset(&adv_params, 0, sizeof(adv_params));
     adv_params.adv_int_min = ESP_BLE_GAP_ADV_ITVL_MS(30);
     adv_params.adv_int_max = ESP_BLE_GAP_ADV_ITVL_MS(60);
     adv_params.adv_type = ADV_TYPE_IND;
@@ -262,7 +264,8 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
   }
 
   void EnsureHidServiceCreated(esp_gatt_if_t gatts_if) {
-    esp_gatt_srvc_id_t service_id{};
+    esp_gatt_srvc_id_t service_id;
+    std::memset(&service_id, 0, sizeof(service_id));
     service_id.is_primary = true;
     service_id.id.inst_id = 0;
     service_id.id.uuid.len = ESP_UUID_LEN_16;
@@ -271,8 +274,10 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
   }
 
   void AddHidCharacteristics() {
-    esp_bt_uuid_t uuid{};
-    esp_attr_value_t value{};
+    esp_bt_uuid_t uuid;
+    std::memset(&uuid, 0, sizeof(uuid));
+    esp_attr_value_t value;
+    std::memset(&value, 0, sizeof(value));
 
     uuid.len = ESP_UUID_LEN_16;
     uuid.uuid.uuid16 = kHidInfoUuid;
@@ -401,7 +406,8 @@ class EspBleLifecycleBackend final : public BleLifecycleBackend {
         if (param->add_char.char_uuid.len == ESP_UUID_LEN_16 &&
             param->add_char.char_uuid.uuid.uuid16 == kHidReportCharUuid) {
           active_instance_->report_value_handle_ = param->add_char.attr_handle;
-          esp_bt_uuid_t descr_uuid{};
+          esp_bt_uuid_t descr_uuid;
+          std::memset(&descr_uuid, 0, sizeof(descr_uuid));
           descr_uuid.len = ESP_UUID_LEN_16;
           descr_uuid.uuid.uuid16 = kClientConfigUuid;
           (void)esp_ble_gatts_add_char_descr(

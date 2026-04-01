@@ -7,12 +7,12 @@
 
 namespace charm::contracts {
 
-struct HubPath {
+struct __attribute__((packed)) HubPath {
   std::array<PortNumber, kMaxHubPathDepth> ports{};
   std::uint8_t depth{0};
 };
 
-struct ElementKey {
+struct __attribute__((packed)) ElementKey {
   VendorId vendor_id{0};
   ProductId product_id{0};
   HubPath hub_path{};

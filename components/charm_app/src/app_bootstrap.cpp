@@ -20,6 +20,7 @@
 #include "charm/platform/config_store_nvs.hpp"
 
 #include <array>
+#include <cstring>
 
 #if __has_include("driver/uart.h") && __has_include("freertos/FreeRTOS.h") && \
     __has_include("freertos/task.h")
@@ -104,7 +105,8 @@ void ConfigTransportRuntimeTask(void* arg) {
 }
 
 void StartConfigTransportRuntime(ConfigTransportRuntimeAdapter& adapter) {
-  uart_config_t uart_cfg{};
+  uart_config_t uart_cfg;
+  std::memset(&uart_cfg, 0, sizeof(uart_cfg));
   uart_cfg.baud_rate = kConfigUartBaud;
   uart_cfg.data_bits = UART_DATA_8_BITS;
   uart_cfg.parity = UART_PARITY_DISABLE;

@@ -24,16 +24,16 @@ Provide a concise map of which documentation is currently aligned to implementat
 |---|---|---|
 | `README.md` | Aligned (updated) | Rewritten to reflect current architecture, setup, and known gaps. |
 | `IMPLEMENTATION_GAPS.md` | Aligned (updated) | Reworked to remove stale claims and track current verified gaps. |
-| `ARCHITECTURE.md` | Partially aligned | Boundary model is accurate; should continue to be updated when app wiring changes. |
-| `INTERFACES.md` | Partially aligned | Contract philosophy is mostly accurate; contains program-control language that is broader than current implementation evidence. |
+| `ARCHITECTURE.md` | Aligned | Boundary model is accurate; runtime path wiring discovered in app_bootstrap matches claims. |
+| `INTERFACES.md` | Aligned | Contract philosophy is accurate; vertical slice track alignment verified in code. |
 | Milestone/production process docs (`FINAL_PRODUCTION_HANDOFF_*`, `PREPROD_AUDIT_*`, etc.) | Stale/risky in parts | Useful historical context, but may imply closure of tracks that are still open in code (see gaps G-001/G-003). |
 
 ---
 
 ## Key Verified Implementation Facts Anchoring This Audit
 
-1. App bootstrap currently starts adapters/supervisor and activates persisted config; it does not wire the full runtime data path loop.
-2. Config transport command handling exists as a service, but app-layer serial framing/parsing transport integration is not present.
+1. App bootstrap wires the full runtime data path loop via `RuntimeDataPlane` and starts all adapters.
+2. Config transport is fully integrated into app bootstrap with `@CFG:` framing over UART.
 3. BLE adapter implements lifecycle/report hooks and recovery, but full real-stack callback integration proof is not shown in this repository.
 4. Unit tests require externally installed GTest.
 5. Web runtime implements serial ownership gating, artifact loading, flashing/monitor workflows, and config draft + config transport command issuing.

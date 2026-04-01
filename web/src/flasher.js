@@ -11,6 +11,8 @@
  * - No console streaming implemented here.
  */
 
+import { md5HexFromBinaryString } from './md5.js';
+
 const ROM_BAUDRATE = 115200;
 const FLASH_BAUDRATE = 921600;
 
@@ -115,7 +117,7 @@ let esptoolModulePromise = null;
  * `pako` unresolved in browsers, while the `+esm` endpoint rewrites/bundles
  * those dependencies into browser-loadable modules.
  */
-const ESPTOOL_BROWSER_MODULE_URL = '../vendor/esptool-js-0.4.3.esm.js';
+const ESPTOOL_BROWSER_MODULE_URL = new URL('../vendor/esptool-js-0.4.3.esm.js', import.meta.url).href;
 
 async function importEsptoolJs() {
   if (!esptoolModulePromise) {
@@ -211,4 +213,3 @@ function normalizeMac(mac) {
 function calculateMd5Hash(image) {
   return md5HexFromBinaryString(image);
 }
-import { md5HexFromBinaryString } from './md5.js';

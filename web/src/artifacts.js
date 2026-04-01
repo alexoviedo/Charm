@@ -50,7 +50,7 @@ export function buildRequiredFilenameSet(manifest) {
 }
 
 export async function loadFromSameSite(fetchImpl = fetch) {
-  const manifestPath = './firmware/manifest.json';
+  const manifestPath = new URL('../firmware/manifest.json', import.meta.url).href;
   const manifestRes = await fetchImpl(manifestPath);
   if (!manifestRes.ok) {
     throw new Error(`Failed to fetch manifest.json (${manifestRes.status}).`);
@@ -63,10 +63,11 @@ export async function loadFromSameSite(fetchImpl = fetch) {
   }
 
   const required = buildRequiredFilenameSet(manifest);
+  const firmwareBase = new URL('../firmware/', import.meta.url).href;
   const filePaths = {
-    bootloader: `./firmware/${required.bootloader}`,
-    partition_table: `./firmware/${required.partition_table}`,
-    app: `./firmware/${required.app}`,
+    bootloader: `${firmwareBase}${required.bootloader}`,
+    partition_table: `${firmwareBase}${required.partition_table}`,
+    app: `${firmwareBase}${required.app}`,
   };
 
   const [bootloaderRes, partitionRes, appRes] = await Promise.all([

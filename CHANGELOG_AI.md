@@ -1,3 +1,24 @@
+## 2026-04-01
+Fixed `FLASH_IDENTIFY_FAILED` and web application path resolution issues.
+
+Files covered:
+- `web/vendor/esptool-js-0.4.3.esm.js`
+- `web/src/flasher.js`
+- `web/src/artifacts.js`
+
+What changed:
+- Fixed absolute `/npm/` imports in `web/vendor/esptool-js-0.4.3.esm.js` by replacing them with full `https://cdn.jsdelivr.net/npm/` URLs. This allows the vendored module to correctly load its dependencies (like `pako`) when the application is hosted on a subpath like GitHub Pages.
+- Hardened path resolution in `web/src/flasher.js` and `web/src/artifacts.js` by using `new URL(path, import.meta.url).href`. This ensures that dynamic imports and fetch calls correctly resolve relative to the Javascript module's location regardless of the deployment's base URL.
+- Moved the `md5.js` import to the top of `web/src/flasher.js` for better module structure.
+
+Why:
+- To resolve a critical failure where the web flasher could not load the `esptool-js` module or its dependencies when hosted on GitHub Pages, preventing device identification and flashing.
+
+Validation:
+- Verified that all 9 Playwright smoke tests pass with `npm --prefix web run qa:smoke`.
+- Performed visual verification of the UI using a custom Playwright script and screenshots.
+- Confirmed with `grep` that all absolute `/npm/` imports were successfully replaced in the vendored code.
+
 ## 2026-03-31
 Executed `VS-08 — closeout truthfulness/CI/docs/validation artifacts`.
 

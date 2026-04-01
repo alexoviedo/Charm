@@ -43,6 +43,47 @@ export class WebFlasherService {
         terminal: buildTerminalAdapter(terminal),
       });
 
+      // WR-007 Professional Hot Patch: Fix esptool-js 0.4.3 binary string corruption bug.
+      // Modifies the instance method to use charCodeAt/fromCharCode instead of incorrect parseInt/toString.
+      this.loader._updateImageFlashParams = function (image, address, flash_size, flash_mode, flash_freq) {
+        if (this.debug) this.debug(`_update_image_flash_params ${flash_size} ${flash_mode} ${flash_freq}`);
+        if (image.length < 8) return image;
+        if (address !== this.chip.BOOTLOADER_FLASH_OFFSET) return image;
+        if (flash_size === 'keep' && flash_mode === 'keep' && flash_freq === 'keep') {
+          if (this.info) this.info('Not changing the image');
+          return image;
+        }
+        const magic = image.charCodeAt(0);
+        let mode = image.charCodeAt(2);
+        const speed = image.charCodeAt(3);
+        if (magic !== this.ESP_IMAGE_MAGIC) {
+          if (this.info) this.info(`Warning: Image file at 0x${address.toString(16)} doesn't look like an image file, so not changing any flash settings.`);
+          return image;
+        }
+        if (flash_mode !== 'keep') {
+          const flash_modes = { qio: 0, qout: 1, dio: 2, dout: 3 };
+          mode = flash_modes[flash_mode];
+        }
+        let freq = speed & 0x0f;
+        if (flash_freq !== 'keep') {
+          const flash_freqs = { '40m': 0, '26m': 1, '20m': 2, '80m': 15 };
+          freq = flash_freqs[flash_freq];
+        }
+        let size = speed & 0xf0;
+        if (flash_size !== 'keep') {
+          size = this.parseFlashSizeArg(flash_size);
+        }
+        const params = mode << 8 | (freq + size);
+        if (this.info) this.info(`Flash params set to ${params.toString(16)}`);
+        if (image.charCodeAt(2) !== mode) {
+          image = image.substring(0, 2) + String.fromCharCode(mode) + image.substring(3);
+        }
+        if (image.charCodeAt(3) !== (freq + size)) {
+          image = image.substring(0, 3) + String.fromCharCode(freq + size) + image.substring(4);
+        }
+        return image;
+      };
+
       const chip = await invokeCompatibleMethod(this.loader, ['main']);
       const mac = await readLoaderMacAddress(this.loader);
       const chipString = normalizeChipName(chip, this.loader);

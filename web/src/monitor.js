@@ -11,7 +11,7 @@ export class SerialMonitorService {
     this.port = null;
     this.reader = null;
     this.isReading = false;
-    this.decoder = new TextDecoder();
+    this.decoder = new TextDecoder('x-user-defined');
   }
 
   async connect(port, hooks = {}) {

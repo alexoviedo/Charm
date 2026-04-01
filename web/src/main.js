@@ -213,7 +213,7 @@ async function sendConfigTransportCommand(command, payload = {}) {
       const { value, done } = await reader.read();
       if (done) break;
       if (value) {
-        raw += new TextDecoder().decode(value);
+        raw += new TextDecoder('x-user-defined').decode(value);
         while (true) {
           const idx = raw.indexOf('\n');
           if (idx < 0) break;

@@ -103,10 +103,10 @@ function md5blk(binaryString, offset) {
   const out = new Array(16);
   for (let i = 0; i < 16; i += 1) {
     const idx = offset + (i * 4);
-    out[i] = binaryString.charCodeAt(idx)
-      + (binaryString.charCodeAt(idx + 1) << 8)
-      + (binaryString.charCodeAt(idx + 2) << 16)
-      + (binaryString.charCodeAt(idx + 3) << 24);
+    out[i] = (binaryString.charCodeAt(idx) & 0xff)
+      + ((binaryString.charCodeAt(idx + 1) & 0xff) << 8)
+      + ((binaryString.charCodeAt(idx + 2) & 0xff) << 16)
+      + ((binaryString.charCodeAt(idx + 3) & 0xff) << 24);
   }
   return out;
 }
@@ -132,7 +132,7 @@ export function md5HexFromBinaryString(binaryString) {
   const tail = new Array(16).fill(0);
   let remaining = length - (i - 64);
   for (let j = 0; j < remaining; j += 1) {
-    tail[j >> 2] |= binaryString.charCodeAt((i - 64) + j) << ((j % 4) * 8);
+    tail[j >> 2] |= (binaryString.charCodeAt((i - 64) + j) & 0xff) << ((j % 4) * 8);
   }
   tail[remaining >> 2] |= 0x80 << ((remaining % 4) * 8);
   if (remaining > 55) {

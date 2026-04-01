@@ -53,9 +53,9 @@ export class WebFlasherService {
           if (this.info) this.info('Not changing the image');
           return image;
         }
-        const magic = image.charCodeAt(0);
-        let mode = image.charCodeAt(2);
-        const speed = image.charCodeAt(3);
+        const magic = image.charCodeAt(0) & 0xff;
+        let mode = image.charCodeAt(2) & 0xff;
+        const speed = image.charCodeAt(3) & 0xff;
         if (magic !== this.ESP_IMAGE_MAGIC) {
           if (this.info) this.info(`Warning: Image file at 0x${address.toString(16)} doesn't look like an image file, so not changing any flash settings.`);
           return image;
@@ -75,11 +75,12 @@ export class WebFlasherService {
         }
         const params = mode << 8 | (freq + size);
         if (this.info) this.info(`Flash params set to ${params.toString(16)}`);
-        if (image.charCodeAt(2) !== mode) {
-          image = image.substring(0, 2) + String.fromCharCode(mode) + image.substring(3);
+        if ((image.charCodeAt(2) & 0xff) !== mode) {
+          image = image.substring(0, 2) + String.fromCharCode(mode < 0x80 ? mode : 0xf700 | mode) + image.substring(3);
         }
-        if (image.charCodeAt(3) !== (freq + size)) {
-          image = image.substring(0, 3) + String.fromCharCode(freq + size) + image.substring(4);
+        if ((image.charCodeAt(3) & 0xff) !== (freq + size)) {
+          const val = freq + size;
+          image = image.substring(0, 3) + String.fromCharCode(val < 0x80 ? val : 0xf700 | val) + image.substring(4);
         }
         return image;
       };
@@ -110,7 +111,7 @@ export class WebFlasherService {
     onStatus('FLASH_PREPARING', 'Preparing bundle for flashing...');
 
     const toBinaryString = (buffer) => {
-      return new TextDecoder('latin1').decode(new Uint8Array(buffer));
+      return new TextDecoder('x-user-defined').decode(new Uint8Array(buffer));
     };
 
     const fileArray = [

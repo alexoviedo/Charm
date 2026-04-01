@@ -271,15 +271,17 @@ function renderConfigTransportState() {
       : 'Requires serial permission, Flash owner, and idle flash/monitor sessions.',
   );
 
-  if (!hasPermission) {
+  const isTransportOutcome = cfgWriteStatusEl.textContent.includes('_OK:') || cfgWriteStatusEl.textContent.includes('_ERROR:');
+
+  if (isTransportOutcome && !blockedBySession && hasPermission && ownsFlash) {
+    /* preserve existing status */
+  } else if (!hasPermission) {
     setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Request serial permission to use config transport.', 'error');
     return;
-  }
-  if (!ownsFlash) {
+  } else if (!ownsFlash) {
     setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Claim Serial Owner = Flash before config transport commands.', 'error');
     return;
-  }
-  if (blockedBySession) {
+  } else if (blockedBySession) {
     setConfigWriteStatus('CONFIG_DEVICE_BLOCKED: Disconnect monitor and wait for flash idle before config commands.', 'error');
     return;
   }
@@ -768,7 +770,10 @@ function renderFlashState() {
     'Requires successful identify, loaded artifacts, and Flash ownership.',
   );
 
+  const isFlashOutcome = sessionState.handoffState === 'flash_to_console_ready' || sessionState.handoffState === 'flash_recovery_required';
+
   if (flashState.inProgress) setFlashStatus('FLASH_ACTIVE', 'Flashing in progress. Console remains blocked until completion.');
+  else if (isFlashOutcome) { /* preserve existing status */ }
   else if (!hasBundle) setFlashStatus('FLASH_BLOCKED', 'Load a valid artifact bundle first.');
   else if (!hasPermission) setFlashStatus('FLASH_BLOCKED', 'Serial permission must be granted first.');
   else if (monitorState.connected || monitorState.connecting) setFlashStatus('FLASH_BLOCKED', 'Monitor must fully disconnect before flash flow.');
